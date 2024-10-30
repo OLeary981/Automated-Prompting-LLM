@@ -1,0 +1,117 @@
+import sqlite3
+import os
+
+CREATE_STORIES_TABLE = """
+CREATE TABLE IF NOT EXISTS stories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT
+);
+"""
+
+CREATE_QUESTIONS_TABLE = """
+CREATE TABLE IF NOT EXISTS questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT
+);
+"""
+
+CREATE_PROMPT_TESTS_TABLE = """
+CREATE TABLE IF NOT EXISTS prompt_tests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    story_id INTEGER,
+    question_id INTEGER,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (story_id) REFERENCES stories(id),
+    FOREIGN KEY (question_id) REFERENCES questions(id)
+);
+"""
+
+CREATE_RESPONSES_TABLE = """
+CREATE TABLE IF NOT EXISTS responses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    test_id INTEGER,
+    response TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (test_id) REFERENCES prompt_tests(id)
+);
+"""
+
+INSERT_STORY = "INSERT INTO stories (content) VALUES (?);"
+INSERT_QUESTION = "INSERT INTO questions (content) VALUES (?);"
+INSERT_PROMPT_TEST = """
+INSERT INTO prompt_tests (story_id, question_id)
+VALUES (?, ?);
+"""
+INSERT_RESPONSE = """
+INSERT INTO responses (test_id, response)
+VALUES (?, ?);
+"""
+
+GET_ALL_STORIES= "SELECT * FROM stories;"
+GET_ALL_QUESTIONS = "SELECT * FROM questions;"
+GET_STORY_BY_ID = """
+SELECT * FROM stories WHERE id = ?;
+"""
+
+GET_QUESTION_BY_ID = """
+SELECT * FROM questions WHERE id = ?;
+"""
+
+def connect():
+    return sqlite3.connect('database.db')
+
+def create_tables(connection):
+    with connection:
+        connection.execute(CREATE_STORIES_TABLE)
+        connection.execute(CREATE_QUESTIONS_TABLE)
+        connection.execute(CREATE_PROMPT_TESTS_TABLE)
+        connection.execute(CREATE_RESPONSES_TABLE)
+
+def delete_database(db_file):
+    if os.path.exists(db_file):
+        os.remove(db_file)
+        print(f"Deleted {db_file}")
+    else:
+        print(f"{db_file} does not exist")
+
+def add_story(connection, content):
+    with connection:
+        connection.execute(INSERT_STORY, (content,))
+
+def add_question(connection, content):
+    with connection:
+        connection.execute(INSERT_QUESTION, (content,))
+        
+def add_prompt_test(connection, story_id, question_id):
+    with connection:
+        cursor = connection.execute(INSERT_PROMPT_TEST, (story_id, question_id))
+        return cursor.lastrowid  # Return the ID of the newly inserted row
+
+def add_response(connection, test_id, response):
+    with connection:
+        connection.execute(INSERT_RESPONSE, (test_id, response))
+        
+def get_all_stories(connection):
+    with connection:
+        return connection.execute(GET_ALL_STORIES).fetchall()
+
+def get_all_questions(connection):
+    with connection:
+        return connection.execute(GET_ALL_QUESTIONS).fetchall()
+
+   
+def get_story_by_id(connection, story_id):
+    with connection:
+        return connection.execute(GET_STORY_BY_ID, (story_id,)).fetchone()
+
+def get_question_by_id(connection, question_id):
+    with connection:
+        return connection.execute(GET_QUESTION_BY_ID, (question_id,)).fetchone()
+
+if __name__ == "__main__":
+    db_file = 'database.db'
+    delete_database(db_file)
+    connection = connect()
+    create_tables(connection)
+    print("Database and tables created.")
+    connection.close()
