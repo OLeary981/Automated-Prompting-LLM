@@ -1,6 +1,13 @@
 import datetime
+import os
+from dotenv import load_dotenv
 from groq import Groq
-GROQ_API_KEY = "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"
+
+
+load_dotenv()
+
+GROQ_API_KEY = os.getenv("GRO_API_KEY")
+
 
 client = Groq(
     api_key = GROQ_API_KEY,
