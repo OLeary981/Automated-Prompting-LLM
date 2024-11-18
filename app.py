@@ -2,6 +2,7 @@ import time
 import database
 import csv
 import textwrap
+import random
 from groq import Groq
 import os
 from dotenv import load_dotenv
@@ -21,11 +22,15 @@ Please choose one of these options:
 2) See all stories
 3) Add a question
 4) See all questions
-5) Create and send a prompt from a manually entered story and question
+5) Create and send a prompt from a manually entered story and question (not currently working)
 6) Create and send a prompt from database stories and questions
 7) Import stories from CSV
 8) Import questions from CSV
-9) Exit
+9) Import nouns from CSV
+10) Import adjectives from CSV
+11) Import story templates from CSV
+12) Generate stories from templates
+13) Exit
 
 Your selection:
 """
@@ -39,6 +44,49 @@ Please choose a model:
 Your selection:
 """
 
+def import_nouns_from_csv(connection, csv_file):
+    with open(csv_file, newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            database.add_noun(connection, row[0])
+    print("Nouns imported successfully.")
+
+def import_adjectives_from_csv(connection, csv_file):
+    with open(csv_file, newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            database.add_adjective(connection, row[0])
+    print("Adjectives imported successfully.")
+
+def import_story_templates_from_csv(connection, csv_file):
+    with open(csv_file, newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            database.add_story_template(connection, row[0])
+    print("Story templates imported successfully.")
+
+def generate_stories_from_templates(connection, num_stories):
+    story_templates = database.get_all_story_templates(connection)
+    nouns = database.get_all_nouns(connection)
+    adjectives = database.get_all_adjectives(connection)
+
+    if not story_templates or not nouns or not adjectives:
+        print("No story templates, nouns, or adjectives available in the database.")
+        return
+
+    for _ in range(num_stories):
+        template = random.choice(story_templates)[1]
+        filled_story = template
+
+        while "[noun]" in filled_story:
+            filled_story = filled_story.replace("[noun]", random.choice(nouns)[1], 1)
+
+        while "[adjective]" in filled_story:
+            filled_story = filled_story.replace("[adjective]", random.choice(adjectives)[1], 1)
+
+        print("\nGenerated Story:")
+        print(filled_story)
+        print("\n" + "-" * 80 + "\n")
 
 def menu():
     connection = database.connect()
@@ -77,10 +125,28 @@ def menu():
         elif user_input == "7":
             csv_file = input("Enter the path to the CSV file for stories: ")
             user_interaction.import_stories_from_csv(connection, csv_file)
+            time.sleep(1.5)
         elif user_input == "8":
             csv_file = input("Enter the path to the CSV file for questions: ")
             user_interaction.import_questions_from_csv(connection, csv_file)
+            time.sleep(1.5)
         elif user_input == "9":
+            csv_file = input("Enter the path to the CSV file for nouns: ")
+            import_nouns_from_csv(connection, csv_file)
+            time.sleep(1.5)
+        elif user_input == "10":
+            csv_file = input("Enter the path to the CSV file for adjectives: ")
+            import_adjectives_from_csv(connection, csv_file)
+            time.sleep(1.5)
+        elif user_input == "11":
+            csv_file = input("Enter the path to the CSV file for story templates: ")
+            import_story_templates_from_csv(connection, csv_file)
+            time.sleep(1.5)
+        elif user_input == "12":
+            num_stories = int(input("Enter the number of stories to generate: "))
+            generate_stories_from_templates(connection, num_stories)
+            time.sleep(1.5)
+        elif user_input == "13":
             connection.close()
             print("Connection closed. Exiting the application.")
             break

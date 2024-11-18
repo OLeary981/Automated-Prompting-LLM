@@ -14,6 +14,26 @@ CREATE TABLE IF NOT EXISTS questions (
     content TEXT NOT NULL
 );
 """
+CREATE_STORY_TEMPLATES_TABLE = """
+CREATE TABLE IF NOT EXISTS story_templates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    template TEXT NOT NULL
+);
+"""
+
+CREATE_ADJECTIVES_TABLE = """
+CREATE TABLE IF NOT EXISTS adjectives (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    adjective TEXT NOT NULL
+);
+"""
+
+CREATE_NOUNS_TABLE = """
+CREATE TABLE IF NOT EXISTS nouns (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    noun TEXT NOT NULL
+);
+"""
 
 CREATE_PROMPT_TESTS_TABLE = """
 CREATE TABLE IF NOT EXISTS prompt_tests (
@@ -66,6 +86,9 @@ def create_tables(connection):
         connection.execute(CREATE_QUESTIONS_TABLE)
         connection.execute(CREATE_PROMPT_TESTS_TABLE)
         connection.execute(CREATE_RESPONSES_TABLE)
+        connection.execute(CREATE_STORY_TEMPLATES_TABLE)
+        connection.execute(CREATE_ADJECTIVES_TABLE)
+        connection.execute(CREATE_NOUNS_TABLE)
 
 def delete_database(db_file):
     if os.path.exists(db_file):
@@ -95,6 +118,18 @@ def add_response(connection, test_id, response):
     with connection:
         connection.execute(INSERT_RESPONSE, (test_id, response))
 
+def add_story_template(connection, template):
+    with connection:
+        connection.execute("INSERT INTO story_templates (template) VALUES (?)", (template,))
+
+def add_adjective(connection, adjective):
+    with connection:
+        connection.execute("INSERT INTO adjectives (adjective) VALUES (?)", (adjective,))
+
+def add_noun(connection, noun):
+    with connection:
+        connection.execute("INSERT INTO nouns (noun) VALUES (?)", (noun,))
+
 def get_all_stories(connection):
     with connection:
         return connection.execute(GET_ALL_STORIES).fetchall()
@@ -110,6 +145,7 @@ def get_story_by_id(connection, story_id):
 def get_question_by_id(connection, question_id):
     with connection:
         return connection.execute(GET_QUESTION_BY_ID, (question_id,)).fetchone()
+
 
 if __name__ == "__main__":
     db_file = 'database.db'
