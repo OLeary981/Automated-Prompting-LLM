@@ -1,6 +1,9 @@
 import textwrap
 import database
 from llm import call_LLM_GROQ
+import json
+import llm
+import csv
 
 def prompt_add_story(connection):
     content = input("Enter story content: ")
@@ -82,7 +85,7 @@ def prompt_create_and_send_manual_prompt(connection):
     print(response)
     # You can add code here to save the response to the database
 
-def prompt_create_and_send_db_prompt(connection):
+def prompt_create_and_send_db_prompt(connection, model, provider):
     stories = database.get_all_stories(connection)
     questions = database.get_all_questions(connection)
 
@@ -105,27 +108,47 @@ def prompt_create_and_send_db_prompt(connection):
     story = database.get_story_by_id(connection, story_id)
     question = database.get_question_by_id(connection, question_id)
 
-    if not story or not question:
-        print("Invalid story or question ID.")
-        return
+    temperature = float(input("Enter the temperature: "))
+    max_tokens = int(input("Enter the max tokens: "))
+    top_p = float(input("Enter the top_p: "))
 
-    # Explanation of parameters
-    print("\nParameter Explanations:")
-    print("1. Temperature (0.0 to 1.0): Controls the randomness of the output. Lower values make the output more deterministic (less random).")
-    print("2. Max Tokens (1 to 2048): The maximum number of tokens to generate in the response.")
-    print("3. Top P (0.0 to 1.0): Controls nucleus sampling. Only the tokens with the top cumulative probability are considered.\n")
-    
-    # Prompt the user for temperature, max_tokens, and top_p
-    temperature = float(input("Enter temperature (e.g., 0.5): "))
-    max_tokens = int(input("Enter max tokens (e.g., 1024): "))
-    top_p = float(input("Enter top_p (e.g., 0.65): "))
 
-    response = call_LLM_GROQ(story[1], question[1], temperature, max_tokens, top_p)
-    print("Response from LLM:", response)
 
-    # Insert into prompt_tests table
-    prompt_test_id = database.add_prompt_test(connection, story_id, question_id)
+    # with connection:
+    #     cursor = connection.execute(
+    #         "INSERT INTO prompt_tests (provider, model, temperature, max_tokens, top_p, story, question) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    #         (provider, model, temperature, max_tokens, top_p, story[1], question[1])
+    #     )
+    #     prompt_test_id = cursor.lastrowid
 
-    # Insert into responses table
-    database.add_response(connection, prompt_test_id, response)
-    print("Response saved to database.")
+    # Send the prompt to the appropriate LLM
+    if provider == "groq":
+        response = llm.call_LLM_GROQ(connection, story[1], question[1], story_id, question_id, model, temperature, max_tokens, top_p)
+    elif provider == "hf":
+        response = llm.call_LLM_HF(story[1], question[1], model, temperature, max_tokens, top_p)
+
+    # Insert the response into the responses table
+    # with connection:
+    #     connection.execute(
+    #         "INSERT INTO responses (test_id, response) VALUES (?, ?)",
+    #         (prompt_test_id, response)
+    #     )
+
+    # print("Response from LLM:")
+    # print(response)
+
+def import_stories_from_csv(connection, csv_file):
+    with open(csv_file, newline='', encoding='utf-8') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            if row:  # Ensure the row is not empty
+                database.add_story(connection, row[0])
+    print(f"Stories imported from {csv_file}")
+
+def import_questions_from_csv(connection, csv_file):
+    with open(csv_file, newline='', encoding='utf-8') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            if row:  # Ensure the row is not empty
+                database.add_question(connection, row[0])
+    print(f"Questions imported from {csv_file}")

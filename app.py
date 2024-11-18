@@ -23,7 +23,18 @@ Please choose one of these options:
 4) See all questions
 5) Create and send a prompt from a manually entered story and question
 6) Create and send a prompt from database stories and questions
-7) Exit
+7) Import stories from CSV
+8) Import questions from CSV
+9) Exit
+
+Your selection:
+"""
+
+MODEL_PROMPT = """
+Please choose a model:
+1) Groq - llama3-groq-70b-8192-tool-use-preview
+2) Groq - llama-3.1-70b-versatile
+3) Hugging Face - meta-llama/Llama-3.1-8B-Instruct
 
 Your selection:
 """
@@ -49,9 +60,26 @@ def menu():
             user_interaction.prompt_create_and_send_manual_prompt(connection)
             time.sleep(1.5)
         elif user_input == "6":
-            user_interaction.prompt_create_and_send_db_prompt(connection)
+            model_input = input(MODEL_PROMPT)
+            if model_input == "1":
+                model = "llama3-groq-70b-8192-tool-use-preview"
+                user_interaction.prompt_create_and_send_db_prompt(connection, model, "groq")
+            elif model_input == "2":
+                model = "llama-3.1-70b-versatile"
+                user_interaction.prompt_create_and_send_db_prompt(connection, model, "groq")
+            elif model_input == "3":
+                model = "meta-llama/Llama-3.1-8B-Instruct"
+                user_interaction.prompt_create_and_send_db_prompt(connection, model, "hf")
+            else:
+                print("Invalid model selection. Please try again.")
             time.sleep(1.5)
         elif user_input == "7":
+            csv_file = input("Enter the path to the CSV file for stories: ")
+            user_interaction.import_stories_from_csv(connection, csv_file)
+        elif user_input == "8":
+            csv_file = input("Enter the path to the CSV file for questions: ")
+            user_interaction.import_questions_from_csv(connection, csv_file)
+        elif user_input == "9":
             connection.close()
             print("Connection closed. Exiting the application.")
             break
