@@ -39,6 +39,7 @@ Please choose a model:
 Your selection:
 """
 
+
 def menu():
     connection = database.connect()
     database.create_tables(connection)

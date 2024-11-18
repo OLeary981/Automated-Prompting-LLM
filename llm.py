@@ -6,7 +6,7 @@ import sqlite3
 from dotenv import load_dotenv
 from config import GROQ_API_KEY
 from huggingface_hub import InferenceClient
-from groq import Groq
+from groq import Groq, APIError
 
 import database  # Assuming you have a Groq client library
 
@@ -36,37 +36,47 @@ def query(payload, retries=3, delay=5):
                 raise
 
 def call_LLM_GROQ(connection, story, question, story_id, question_id, model, temperature=0.5, max_tokens=1024, top_p=0.65):
-    # Construct the payload
-    payload = {
-        "model": model,
-        "messages": [
-            {
-                "role": "user",
-                "content": f"Read my story: {story} now respond to these queries about it: {question}"
-            }
-        ],
-        "temperature": temperature,
-        "max_tokens": max_tokens,
-        "top_p": top_p,
-        "stream": True,
-        "stop": None
-    }
-    payload_json = json.dumps(payload)
-
     try:
         # Send the prompt to Groq
-        completion = groq_client.chat.completions.create(**payload)
+        completion = groq_client.chat.completions.create(
+            model=model,
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"Read my story: {story} now respond to these queries about it: {question}"
+                }
+            ],
+            temperature=temperature,
+            max_tokens=max_tokens,
+            top_p=top_p,
+            stream=True,
+            stop=None,
+        )
 
         # Extract the response content from the Stream object
-        if completion.status_code==200:
-            print("Success - call sent to Groq and a response was received")    
-            response_content = completion.choices[0].message.content
+        response_content = ""
+        for chunk in completion:
+            response_content += chunk.choices[0].delta.content or ""
 
         # Print the response to the console
         print("Response from Groq LLM:")
         print(response_content)
 
         # Insert prompt details into the prompt_tests table
+        payload_json = json.dumps({
+            "model": model,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": f"Read my story: {story} now respond to these queries about it: {question}"
+                }
+            ],
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "top_p": top_p,
+            "stream": True,
+            "stop": None
+        })
         prompt_test_id = database.add_prompt_test(connection, "groq", model, temperature, max_tokens, top_p, story_id, question_id, payload_json)
 
         # Insert the response into the responses table
@@ -74,7 +84,7 @@ def call_LLM_GROQ(connection, story, question, story_id, question_id, model, tem
 
         return response_content
 
-    except Exception as e:
+    except APIError as e:
         # Print an error message to the console
         print("Failed to get response from Groq LLM:")
         print(e)
