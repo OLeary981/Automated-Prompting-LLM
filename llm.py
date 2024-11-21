@@ -49,23 +49,19 @@ def call_LLM_GROQ(connection, story, question, story_id, question_id, model, tem
             temperature=temperature,
             max_tokens=max_tokens,
             top_p=top_p,
-            stream=True,
+            stream=False,  # Indicate no streaming
             stop=None,
         )
 
-        # Extract the response content from the Stream object
-        response_content = ""
-        for chunk in completion:
-            response_content += chunk.choices[0].delta.content or ""
+        # Extract the response content from the completion object
+        response_content = completion.choices[0].message.content
 
-        # Print the response content to console.
+        # Print the response to the console
         print("Response from Groq LLM:")
         print(response_content)
-        
-        # Prepare the full response object for storage in the databsae
-        print(type(completion))
-        result = "".join(chunk for chunk in completion)
-        full_response_json = json.dumps(result)
+
+        # Serialize the full response to JSON
+        full_response_json = json.dumps(completion, default=lambda o: o.__dict__)
 
         # Insert prompt details into the prompt_tests table
         payload_json = json.dumps({
@@ -79,11 +75,9 @@ def call_LLM_GROQ(connection, story, question, story_id, question_id, model, tem
             "temperature": temperature,
             "max_tokens": max_tokens,
             "top_p": top_p,
-            "stream": True,
+            "stream": False,
             "stop": None
         })
-        
-
 
         # Insert the response into the responses table
         prompt_test_id = database.add_prompt_test(connection, "groq", model, temperature, max_tokens, top_p, story_id, question_id, payload_json)
@@ -96,6 +90,7 @@ def call_LLM_GROQ(connection, story, question, story_id, question_id, model, tem
         print("Failed to get response from Groq LLM:")
         print(e)
         return None
+
 
 def call_LLM_HF(connection, story, question, model, story_id, question_id, temperature=0.5, max_tokens=1024, top_p=0.65):
     payload = {
