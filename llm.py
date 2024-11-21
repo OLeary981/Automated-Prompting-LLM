@@ -58,9 +58,14 @@ def call_LLM_GROQ(connection, story, question, story_id, question_id, model, tem
         for chunk in completion:
             response_content += chunk.choices[0].delta.content or ""
 
-        # Print the response to the console
+        # Print the response content to console.
         print("Response from Groq LLM:")
         print(response_content)
+        
+        # Prepare the full response object for storage in the databsae
+        print(type(completion))
+        result = "".join(chunk for chunk in completion)
+        full_response_json = json.dumps(result)
 
         # Insert prompt details into the prompt_tests table
         payload_json = json.dumps({
@@ -77,10 +82,12 @@ def call_LLM_GROQ(connection, story, question, story_id, question_id, model, tem
             "stream": True,
             "stop": None
         })
-        prompt_test_id = database.add_prompt_test(connection, "groq", model, temperature, max_tokens, top_p, story_id, question_id, payload_json)
+        
+
 
         # Insert the response into the responses table
-        database.add_response(connection, prompt_test_id, response_content)
+        prompt_test_id = database.add_prompt_test(connection, "groq", model, temperature, max_tokens, top_p, story_id, question_id, payload_json)
+        database.add_response(connection, prompt_test_id, response_content, full_response_json)
 
         return response_content
 

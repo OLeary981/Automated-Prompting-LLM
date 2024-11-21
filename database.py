@@ -55,9 +55,11 @@ CREATE TABLE IF NOT EXISTS prompt_tests (
 CREATE_RESPONSES_TABLE = """
 CREATE TABLE IF NOT EXISTS responses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    test_id INTEGER NOT NULL,
-    response TEXT NOT NULL,
-    FOREIGN KEY (test_id) REFERENCES prompt_tests (id)
+    prompt_test_id INTEGER NOT NULL,
+    response_content TEXT NOT NULL,
+    full_response TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (prompt_test_id) REFERENCES prompt_tests(id)
 );
 """
 
@@ -68,8 +70,8 @@ INSERT INTO prompt_tests (provider, model, temperature, max_tokens, top_p, story
 VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 """
 INSERT_RESPONSE = """
-INSERT INTO responses (test_id, response)
-VALUES (?, ?);
+INSERT INTO responses (prompt_test_id, response_content, full_response)
+VALUES (?, ?, ?);
 """
 
 GET_ALL_STORIES = "SELECT * FROM stories;"
@@ -114,9 +116,9 @@ def add_prompt_test(connection, provider, model, temperature, max_tokens, top_p,
         cursor = connection.execute(INSERT_PROMPT_TEST, (provider, model, temperature, max_tokens, top_p, story_id, question_id, payload))
         return cursor.lastrowid  # Return the ID of the newly inserted row
 
-def add_response(connection, test_id, response):
+def add_response(connection, prompt_test_id, response_content, full_response):
     with connection:
-        connection.execute(INSERT_RESPONSE, (test_id, response))
+        connection.execute(INSERT_RESPONSE, (prompt_test_id, response_content, full_response))
 
 def add_story_template(connection, template):
     with connection:
