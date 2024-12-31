@@ -1,44 +1,31 @@
 import os
 import sqlite3
 
-CREATE_STORIES_TABLE = """
-CREATE TABLE IF NOT EXISTS stories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+CREATE_STORY_TABLE = """
+CREATE TABLE IF NOT EXISTS story (
+    story_id INTEGER PRIMARY KEY AUTOINCREMENT,
     content TEXT NOT NULL
 );
 """
 
-CREATE_QUESTIONS_TABLE = """
-CREATE TABLE IF NOT EXISTS questions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+CREATE_QUESTION_TABLE = """
+CREATE TABLE IF NOT EXISTS question (
+    question_id INTEGER PRIMARY KEY AUTOINCREMENT,
     content TEXT NOT NULL
 );
 """
 
-CREATE_STORY_TEMPLATES_TABLE = """
-CREATE TABLE IF NOT EXISTS story_templates (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+CREATE_STORY_TEMPLATE_TABLE = """
+CREATE TABLE IF NOT EXISTS story_template (
+    story_template_id INTEGER PRIMARY KEY AUTOINCREMENT,
     template TEXT NOT NULL
 );
 """
 
-# CREATE_ADJECTIVES_TABLE = """
-# CREATE TABLE IF NOT EXISTS adjectives (
-#     id INTEGER PRIMARY KEY AUTOINCREMENT,
-#     adjective TEXT NOT NULL
-# );
-# """
 
-# CREATE_NOUNS_TABLE = """
-# CREATE TABLE IF NOT EXISTS nouns (
-#     id INTEGER PRIMARY KEY AUTOINCREMENT,
-#     noun TEXT NOT NULL
-# );
-# """
-
-CREATE_PROMPT_TESTS_TABLE = """
-CREATE TABLE IF NOT EXISTS prompt_tests (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+CREATE_PROMPT_TABLE = """
+CREATE TABLE IF NOT EXISTS prompt (
+    prompt_id INTEGER PRIMARY KEY AUTOINCREMENT,
     provider TEXT NOT NULL,
     model TEXT NOT NULL,
     temperature REAL NOT NULL,
@@ -46,51 +33,50 @@ CREATE TABLE IF NOT EXISTS prompt_tests (
     top_p REAL NOT NULL,
     story_id INTEGER NOT NULL,
     question_id INTEGER NOT NULL,
-    payload TEXT NOT NULL,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (story_id) REFERENCES stories(id),
-    FOREIGN KEY (question_id) REFERENCES questions(id)
+    payload TEXT NOT NULL,    
+    FOREIGN KEY (story_id) REFERENCES story(story_id),
+    FOREIGN KEY (question_id) REFERENCES question(question_id)
 );
 """
 
-CREATE_RESPONSES_TABLE = """
-CREATE TABLE IF NOT EXISTS responses (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    prompt_test_id INTEGER NOT NULL,
+CREATE_RESPONSE_TABLE = """
+CREATE TABLE IF NOT EXISTS response (
+    response_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    prompt_id INTEGER NOT NULL,
     response_content TEXT NOT NULL,
     full_response TEXT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (prompt_test_id) REFERENCES prompt_tests(id)
+    FOREIGN KEY (prompt_id) REFERENCES prompt(prompt_id)
 );
 """
 
 # Story generator section
-CREATE_WORDS_TABLE = """
-CREATE TABLE IF NOT EXISTS words (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+CREATE_WORD_TABLE = """
+CREATE TABLE IF NOT EXISTS word (
+    word_id INTEGER PRIMARY KEY AUTOINCREMENT,
     word TEXT NOT NULL UNIQUE
 );
 """
 
-CREATE_CATEGORIES_TABLE = """
-CREATE TABLE IF NOT EXISTS categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    category_name TEXT NOT NULL UNIQUE
+CREATE_CATEGORY_TABLE = """
+CREATE TABLE IF NOT EXISTS category (
+    category_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category TEXT NOT NULL UNIQUE
 );
 """
 
-CREATE_WORD_CATEGORIES_TABLE = """
-CREATE TABLE IF NOT EXISTS word_categories (
+CREATE_WORD_CATEGORY_TABLE = """
+CREATE TABLE IF NOT EXISTS word_category (
     word_id INTEGER NOT NULL,
     category_id INTEGER NOT NULL,
     PRIMARY KEY (word_id, category_id),
-    FOREIGN KEY (word_id) REFERENCES words (id) ON DELETE CASCADE,
-    FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE
+    FOREIGN KEY (word_id) REFERENCES word (word_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES category (category_id) ON DELETE CASCADE
 );
 """
 
-INSERT_WORDS = """
-INSERT INTO words (word) VALUES 
+INSERT_BASELINE_WORD = """
+INSERT OR IGNORE INTO word (word) VALUES 
 ('France'),
 ('Spain'),
 ('man'),
@@ -104,8 +90,8 @@ INSERT INTO words (word) VALUES
 ('falling');
 """
 
-INSERT_CATEGORIES = """
-INSERT INTO categories (category_name) VALUES 
+INSERT_BASELINE_CATEGORY = """
+INSERT INTO category (category) VALUES 
 ('country'),
 ('character'),
 ('object'),
@@ -113,38 +99,36 @@ INSERT INTO categories (category_name) VALUES
 ('verb');
 """
 
-INSERT_WORD_CATEGORIES = """
-INSERT INTO word_categories (word_id, category_id) VALUES
-((SELECT id FROM words WHERE word = 'France'), (SELECT id FROM categories WHERE category_name = 'country')),
-((SELECT id FROM words WHERE word = 'Spain'), (SELECT id FROM categories WHERE category_name = 'country')),
-((SELECT id FROM words WHERE word = 'man'), (SELECT id FROM categories WHERE category_name = 'character')),
-((SELECT id FROM words WHERE word = 'dog'), (SELECT id FROM categories WHERE category_name = 'character')),
-((SELECT id FROM words WHERE word = 'cat'), (SELECT id FROM categories WHERE category_name = 'character')),
-((SELECT id FROM words WHERE word = 'ball'), (SELECT id FROM categories WHERE category_name = 'object')),
-((SELECT id FROM words WHERE word = 'hat'), (SELECT id FROM categories WHERE category_name = 'object')),
-((SELECT id FROM words WHERE word = 'running'), (SELECT id FROM categories WHERE category_name = 'verb')),
-((SELECT id FROM words WHERE word = 'falling'), (SELECT id FROM categories WHERE category_name = 'verb'));
+INSERT_WORD_CATEGORY = """
+INSERT INTO word_category (word_id, category_id) VALUES
+((SELECT word_id FROM word WHERE word = 'France'), (SELECT category_id FROM category WHERE category = 'country')),
+((SELECT word_id FROM word WHERE word = 'Spain'), (SELECT category_id FROM category WHERE category = 'country')),
+((SELECT word_id FROM word WHERE word = 'man'), (SELECT category_id FROM category WHERE category = 'character')),
+((SELECT word_id FROM word WHERE word = 'dog'), (SELECT category_id FROM category WHERE category = 'character')),
+((SELECT word_id FROM word WHERE word = 'cat'), (SELECT category_id FROM category WHERE category = 'character')),
+((SELECT word_id FROM word WHERE word = 'ball'), (SELECT category_id FROM category WHERE category = 'object')),
+((SELECT word_id FROM word WHERE word = 'hat'), (SELECT category_id FROM category WHERE category = 'object')),
+((SELECT word_id FROM word WHERE word = 'running'), (SELECT category_id FROM category WHERE category = 'verb')),
+((SELECT word_id FROM word WHERE word = 'falling'), (SELECT category_id FROM category WHERE category = 'verb'));
 """
 
 # Functions to create tables and add data
 def create_tables(connection):
     with connection:
-        connection.execute(CREATE_STORIES_TABLE)
-        connection.execute(CREATE_QUESTIONS_TABLE)
-        connection.execute(CREATE_PROMPT_TESTS_TABLE)
-        connection.execute(CREATE_RESPONSES_TABLE)
-        connection.execute(CREATE_STORY_TEMPLATES_TABLE)
-        #connection.execute(CREATE_ADJECTIVES_TABLE)
-        #connection.execute(CREATE_NOUNS_TABLE)
-        connection.execute(CREATE_WORDS_TABLE)
-        connection.execute(CREATE_CATEGORIES_TABLE)
-        connection.execute(CREATE_WORD_CATEGORIES_TABLE)
+        connection.execute(CREATE_STORY_TABLE)
+        connection.execute(CREATE_QUESTION_TABLE)
+        connection.execute(CREATE_PROMPT_TABLE)
+        connection.execute(CREATE_RESPONSE_TABLE)
+        connection.execute(CREATE_STORY_TEMPLATE_TABLE)      
+        connection.execute(CREATE_WORD_TABLE)
+        connection.execute(CREATE_CATEGORY_TABLE)
+        connection.execute(CREATE_WORD_CATEGORY_TABLE)
 
 def insert_initial_data(connection):
     with connection:
-        connection.executescript(INSERT_WORDS)
-        connection.executescript(INSERT_CATEGORIES)
-        connection.executescript(INSERT_WORD_CATEGORIES)
+        connection.executescript(INSERT_BASELINE_WORD)
+        connection.executescript(INSERT_BASELINE_CATEGORY)
+        connection.executescript(INSERT_WORD_CATEGORY)
 
 def delete_database(db_file):
     if os.path.exists(db_file):
@@ -155,55 +139,63 @@ def delete_database(db_file):
 
 def add_story(connection, content):
     with connection:
-        connection.execute("INSERT INTO stories (content) VALUES (?)", (content,))
+        connection.execute("INSERT INTO storY (content) VALUES (?)", (content,))
 
 def add_question(connection, content):
     with connection:
-        connection.execute("INSERT INTO questions (content) VALUES (?)", (content,))
+        connection.execute("INSERT INTO question (content) VALUES (?)", (content,))
 
-def add_prompt_test(connection, provider, model, temperature, max_tokens, top_p, story_id, question_id, payload):
+def add_prompt(connection, provider, model, temperature, max_tokens, top_p, story_id, question_id, payload):
     with connection:
         cursor = connection.execute(
-            "INSERT INTO prompt_tests (provider, model, temperature, max_tokens, top_p, story_id, question_id, payload) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO promptY(provider, model, temperature, max_tokens, top_p, story_id, question_id, payload) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (provider, model, temperature, max_tokens, top_p, story_id, question_id, payload)
         )
         return cursor.lastrowid
 
-def add_response(connection, prompt_test_id, response_content, full_response):
+def add_response(connection, prompt_id, response_content, full_response):
     with connection:
-        connection.execute("INSERT INTO responses (prompt_test_id, response_content, full_response) VALUES (?, ?, ?)", (prompt_test_id, response_content, full_response))
+        connection.execute("INSERT INTO responses (prompt_id, response_content, full_response) VALUES (?, ?, ?)", (prompt_id, response_content, full_response))
+        
+def add_word_with_category(connection, word, category):
+    with connection:
+        # Insert the word if it does not exist
+        connection.execute("INSERT OR IGNORE INTO words (word) VALUES (?)", (word,))
+        
+        # Insert the category if it does not exist
+        connection.execute("INSERT OR IGNORE INTO categories (category_name) VALUES (?)", (category,))
+        
+        # Get the word_id and category_id
+        word_id = connection.execute("SELECT id FROM words WHERE word = ?", (word,)).fetchone()[0]
+        category_id = connection.execute("SELECT id FROM categories WHERE category_name = ?", (category,)).fetchone()[0]
+        
+        # Insert the word-category relationship if it does not exist
+        connection.execute("INSERT OR IGNORE INTO word_categories (word_id, category_id) VALUES (?, ?)", (word_id, category_id))
 
 def get_all_stories(connection):
     with connection:
-        return connection.execute("SELECT * FROM stories").fetchall()
+        return connection.execute("SELECT * FROM story").fetchall()
 
 def get_all_questions(connection):
     with connection:
-        return connection.execute("SELECT * FROM questions").fetchall()
+        return connection.execute("SELECT * FROM question").fetchall()
 
 def get_all_story_templates(connection):
     with connection:
-        return connection.execute("SELECT * FROM story_templates").fetchall()
-
-def get_all_nouns(connection):
-    with connection:
-        return connection.execute("SELECT * FROM nouns").fetchall()
-
-def get_all_adjectives(connection):
-    with connection:
-        return connection.execute("SELECT * FROM adjectives").fetchall()
+        return connection.execute("SELECT * FROM story_template").fetchall()
 
 def get_story_by_id(connection, story_id):
     with connection:
-        return connection.execute("SELECT * FROM stories WHERE id = ?", (story_id,)).fetchone()
+        return connection.execute("SELECT * FROM story WHERE story_id = ?", (story_id,)).fetchone()
 
 def get_question_by_id(connection, question_id):
     with connection:
-        return connection.execute("SELECT * FROM questions WHERE id = ?", (question_id,)).fetchone()
+        return connection.execute("SELECT * FROM question WHERE question_id = ?", (question_id,)).fetchone()
 
 # Main execution
 if __name__ == "__main__":
     db_file = "database.db"
+    delete_database(db_file)
     connection = sqlite3.connect(db_file)
     create_tables(connection)
     insert_initial_data(connection)
