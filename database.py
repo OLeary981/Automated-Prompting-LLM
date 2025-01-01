@@ -42,14 +42,23 @@ CREATE TABLE IF NOT EXISTS story_category (
     FOREIGN KEY (category_id) REFERENCES category (category_id) ON DELETE CASCADE
 );
 """
+CREATE_PROVIDER_TABLE ="""
+CREATE TABLE provider (
+    provider_id INTEGER PRIMARY KEY,
+    provider_name TEXT NOT NULL,
+    
+);
+"""
 
 CREATE_MODEL_TABLE = """
 CREATE TABLE IF NOT EXISTS model (
     model_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    model TEXT NOT NULL
-    provider TEXT NOT NULL
-    endpoint TEXT NOT NULL
+    name TEXT NOT NULL
+    provider_id TEXT NOT NULL
+    endpoint TEXT
+    request_delay FLOAT NOT NULL
     parameters TEXT NOT NULL
+    FOREIGN KEY (provider_id) REFERENCES provider (provider_id)
 );
 """
 

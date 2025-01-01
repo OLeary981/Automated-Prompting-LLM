@@ -19,7 +19,7 @@ API_URL = "https://api-inference.huggingface.co/models/meta-llama/Llama-3.2-1B"
 headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
 
 # Initialize clients
-hf_client = InferenceClient(token=HUGGINGFACE_API_KEY) #not sure this works at the moment
+hf_client = InferenceClient(token=HUGGINGFACE_API_KEY) #not sure this works at the moment - not being used
 groq_client = Groq(api_key=GROQ_API_KEY)
 
 def query(payload, retries=3, delay=5):
