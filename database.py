@@ -1,12 +1,7 @@
 import os
 import sqlite3
 
-CREATE_STORY_TABLE = """
-CREATE TABLE IF NOT EXISTS story (
-    story_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    content TEXT NOT NULL
-);
-"""
+
 
 CREATE_QUESTION_TABLE = """
 CREATE TABLE IF NOT EXISTS question (
@@ -15,26 +10,62 @@ CREATE TABLE IF NOT EXISTS question (
 );
 """
 
-CREATE_STORY_TEMPLATE_TABLE = """
-CREATE TABLE IF NOT EXISTS story_template (
-    story_template_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    template TEXT NOT NULL
+CREATE_TEMPLATE_TABLE = """
+CREATE TABLE IF NOT EXISTS template (
+    template_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT NOT NULL
+);
+"""
+
+CREATE_STORY_TABLE = """
+CREATE TABLE IF NOT EXISTS story (
+    story_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT NOT NULL,
+    template_id INTEGER, 
+    FOREIGN KEY (template_id) REFERENCES template (template_id)
+);
+"""
+
+CREATE_CATEGORY_TABLE = """
+CREATE TABLE IF NOT EXISTS category (
+    category_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category TEXT NOT NULL
+);
+"""
+
+CREATE_STORY_CATEGORY_TABLE = """
+CREATE TABLE IF NOT EXISTS story_category (
+    story_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    PRIMARY KEY (story_id, category_id),
+    FOREIGN KEY (story_id) REFERENCES story (story_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES category (category_id) ON DELETE CASCADE
+);
+"""
+
+CREATE_MODEL_TABLE = """
+CREATE TABLE IF NOT EXISTS model (
+    model_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    model TEXT NOT NULL
+    provider TEXT NOT NULL
+    endpoint TEXT NOT NULL
+    parameters TEXT NOT NULL
 );
 """
 
 CREATE_PROMPT_TABLE = """
 CREATE TABLE IF NOT EXISTS prompt (
     prompt_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    provider TEXT NOT NULL,
-    model TEXT NOT NULL,
+    model_id INTEGER NOT NULL,
     temperature REAL NOT NULL,
     max_tokens INTEGER NOT NULL,
     top_p REAL NOT NULL,
     story_id INTEGER NOT NULL,
     question_id INTEGER NOT NULL,
-    payload TEXT NOT NULL,    
+    payload LONGTEXT NOT NULL,    
     FOREIGN KEY (story_id) REFERENCES story(story_id),
-    FOREIGN KEY (question_id) REFERENCES question(question_id)
+    FOREIGN KEY (question_id) REFERENCES question(question_id),
+    FOREIGN KEY (model_id) REFERENCES model(model_id)
 );
 """
 
@@ -43,7 +74,7 @@ CREATE TABLE IF NOT EXISTS response (
     response_id INTEGER PRIMARY KEY AUTOINCREMENT,
     prompt_id INTEGER NOT NULL,
     response_content TEXT NOT NULL,
-    full_response TEXT,
+    full_response LONGTEXT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (prompt_id) REFERENCES prompt(prompt_id)
 );
@@ -118,10 +149,13 @@ def create_tables(connection):
         connection.execute(CREATE_QUESTION_TABLE)
         connection.execute(CREATE_PROMPT_TABLE)
         connection.execute(CREATE_RESPONSE_TABLE)
-        connection.execute(CREATE_STORY_TEMPLATE_TABLE)      
+        connection.execute(CREATE_TEMPLATE_TABLE)      
         connection.execute(CREATE_WORD_TABLE)
         connection.execute(CREATE_FIELD_TABLE)
         connection.execute(CREATE_WORD_FIELD_TABLE)
+        connection.execute(CREATE_CATEGORY_TABLE)
+        connection.execute(CREATE_STORY_CATEGORY_TABLE)
+    
 
 def insert_initial_data(connection):
     with connection:
@@ -138,7 +172,15 @@ def delete_database(db_file):
 
 def add_story(connection, content):
     with connection:
-        connection.execute("INSERT INTO storY (content) VALUES (?)", (content,))
+        connection.execute("INSERT INTO story (content) VALUES (?)", (content,))
+        
+def add_template(connection, content):
+    with connection:
+        connection.execute("INSERT INTO template (content) VALUES (?)", (content,))
+        
+def add_category(connection, content):
+    with connection:
+        connection.execute("INSERT INTO category (category) VALUES (?)", (content,))
 
 def add_question(connection, content):
     with connection:
@@ -169,7 +211,22 @@ def add_word_with_field(connection, word, field):
         field_id = connection.execute("SELECT id FROM categories WHERE field = ?", (field,)).fetchone()[0]
         
         # Insert the word-field relationship if it does not exist
-        connection.execute("INSERT OR IGNORE INTO word_categories (word_id, field_id) VALUES (?, ?)", (word_id, field_id))
+        connection.execute("INSERT OR IGNORE INTO word_field (word_id, field_id) VALUES (?, ?)", (word_id, field_id))
+
+def add_story_with_category(connection, story_content, category_name):
+    with connection:
+        # Insert the story if it does not exist
+        connection.execute("INSERT OR IGNORE INTO story (content) VALUES (?)", (story_content,))
+        
+        # Insert the field if it does not exist
+        connection.execute("INSERT OR IGNORE INTO field (category_name) VALUES (?)", (category_name,))
+        
+        # Get the story_id and field_id
+        story_id = connection.execute("SELECT story_id FROM story WHERE content = ?", (story_content,)).fetchone()[0]
+        category_id = connection.execute("SELECT category_id FROM category WHERE category = ?", (category_name,)).fetchone()[0]
+        
+        # Insert the story-field relationship if it does not exist
+        connection.execute("INSERT OR IGNORE INTO story_field (story_id, category_id) VALUES (?, ?)", (story_id, category_id))
 
 def get_all_stories(connection):
     with connection:
@@ -197,5 +254,6 @@ if __name__ == "__main__":
     delete_database(db_file)
     connection = sqlite3.connect(db_file)
     create_tables(connection)
+    print("Database set up, let's rock and roll")
     insert_initial_data(connection)
 
