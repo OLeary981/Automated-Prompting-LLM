@@ -1,6 +1,10 @@
 import os
 import sqlite3
 
+def connect(db_file="database.db"):
+    """Create a database connection to the SQLite database specified by db_file."""
+    connection = sqlite3.connect(db_file)
+    return connection
 
 
 CREATE_QUESTION_TABLE = """
@@ -210,14 +214,14 @@ def add_response(connection, prompt_id, response_content, full_response):
 def add_word_with_field(connection, word, field):
     with connection:
         # Insert the word if it does not exist
-        connection.execute("INSERT OR IGNORE INTO words (word) VALUES (?)", (word,))
+        connection.execute("INSERT OR IGNORE INTO word (word) VALUES (?)", (word,))
         
         # Insert the field if it does not exist
-        connection.execute("INSERT OR IGNORE INTO categories (field) VALUES (?)", (field,))
+        connection.execute("INSERT OR IGNORE INTO field (field) VALUES (?)", (field,))
         
         # Get the word_id and field_id
-        word_id = connection.execute("SELECT id FROM words WHERE word = ?", (word,)).fetchone()[0]
-        field_id = connection.execute("SELECT id FROM categories WHERE field = ?", (field,)).fetchone()[0]
+        word_id = connection.execute("SELECT word_id FROM word WHERE word = ?", (word,)).fetchone()[0]
+        field_id = connection.execute("SELECT field_id FROM field WHERE field = ?", (field,)).fetchone()[0]
         
         # Insert the word-field relationship if it does not exist
         connection.execute("INSERT OR IGNORE INTO word_field (word_id, field_id) VALUES (?, ?)", (word_id, field_id))
@@ -247,7 +251,7 @@ def get_all_questions(connection):
 
 def get_all_story_templates(connection):
     with connection:
-        return connection.execute("SELECT * FROM story_template").fetchall()
+        return connection.execute("SELECT * FROM template").fetchall()
 
 def get_story_by_id(connection, story_id):
     with connection:
@@ -256,6 +260,25 @@ def get_story_by_id(connection, story_id):
 def get_question_by_id(connection, question_id):
     with connection:
         return connection.execute("SELECT * FROM question WHERE question_id = ?", (question_id,)).fetchone()
+
+def get_words_by_field(connection, field_name):
+    """Retrieve words for a given field from the database."""
+    cursor = connection.cursor()
+    cursor.execute("""
+        SELECT w.word
+        FROM word w
+        JOIN word_field wf ON w.word_id = wf.word_id
+        JOIN field f ON wf.field_id = f.field_id
+        WHERE f.field = ?
+    """, (field_name,))
+    return [row[0] for row in cursor.fetchall()]
+
+def get_template_by_id(connection, template_id):
+    """Retrieve a template by its ID."""
+    cursor = connection.cursor()
+    cursor.execute("SELECT content FROM template WHERE template_id = ?", (template_id,))
+    result = cursor.fetchone()
+    return result[0] if result else None
 
 # Main execution
 if __name__ == "__main__":

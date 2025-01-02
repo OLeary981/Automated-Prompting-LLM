@@ -10,31 +10,39 @@ def prompt_add_story(connection):
     database.add_story(connection, content)
     print(f"Story '{content}' added.")
 
-def prompt_see_all_stories(connection):
-    stories = database.get_all_stories(connection)
-    title = "DETAILS OF ALL STORIES"
-    total_width = 90
-    id_width = 5
+def display_longtext(title, items, id_width=5, total_width=90):
+    """Display long text items with a given title."""
     content_width = total_width - id_width - 10  # Adjust for ID width and separators
 
     print("*" * total_width)
     print(title.center(total_width))
     print("*" * total_width)
 
-    for story in stories:
-        story_id = story[0]
-        content = story[1]
+    for item in items:
+        item_id = item[0]
+        content = item[1]
         wrapped_content = textwrap.wrap(content, width=content_width)
 
         # Print the first line with the ID
-        print(f"| ID: {story_id:<{id_width}} | {wrapped_content[0].ljust(content_width)} |")
+        print(f"| ID: {item_id:<{id_width}} | {wrapped_content[0].ljust(content_width)} |")
         
         # Print subsequent lines with an empty ID column
         for line in wrapped_content[1:]:
             print(f"| {'':<{id_width + 4}} | {line.ljust(content_width)} |")
 
-        print("*" * total_width)  # Separator between stories
+        print("*" * total_width)  # Separator between items
 
+def prompt_see_all_stories(connection):
+    """Retrieve and display all stories."""
+    stories = database.get_all_stories(connection)
+    display_longtext("DETAILS OF ALL STORIES", stories)
+    
+def prompt_see_all_templates(connection):
+    """Retrieve and display all templates."""
+    templates = database.get_all_story_templates(connection)
+    display_longtext("DETAILS OF ALL STORIES", templates)
+    
+    
 def prompt_add_question(connection):
     content = input("Enter question content: ")
     database.add_question(connection, content)
