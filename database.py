@@ -187,6 +187,10 @@ def add_story(connection, content):
     with connection:
         connection.execute("INSERT INTO story (content) VALUES (?)", (content,))
         
+def add_story(connection, content, template_id):
+    with connection:
+        connection.execute("INSERT INTO story (content, template_id) VALUES (?, ?)", (content, template_id))
+        
 def add_template(connection, content):
     with connection:
         connection.execute("INSERT INTO template (content) VALUES (?)", (content,))
@@ -210,6 +214,7 @@ def add_prompt(connection, provider, model, temperature, max_tokens, top_p, stor
 def add_response(connection, prompt_id, response_content, full_response):
     with connection:
         connection.execute("INSERT INTO responses (prompt_id, response_content, full_response) VALUES (?, ?, ?)", (prompt_id, response_content, full_response))
+
         
 def add_word_with_field(connection, word, field):
     with connection:
@@ -279,6 +284,8 @@ def get_template_by_id(connection, template_id):
     cursor.execute("SELECT content FROM template WHERE template_id = ?", (template_id,))
     result = cursor.fetchone()
     return result[0] if result else None
+
+
 
 # Main execution
 if __name__ == "__main__":

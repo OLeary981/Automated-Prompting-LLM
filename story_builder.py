@@ -8,11 +8,11 @@ def generate_stories(connection):
     user_interaction.prompt_see_all_templates(connection)
     template_id = int(input("Enter the number of the template you are selecting: "))
     template = database.get_template_by_id(connection, template_id)
-    template_filler(connection, template)
+    template_filler(connection, template, template_id)
     return
 
 
-def template_filler(connection, template):
+def template_filler(connection, template, template_id):
      # Extract the field names from the template
     field_names = re.findall(r'\{(.*?)\}', template)
     print(field_names)
@@ -39,6 +39,7 @@ def template_filler(connection, template):
         for field, value in zip(field_names, permutation):
             story = story.replace(f"{{{field}}}", value)
         print(story)
+        database.add_story(connection, story, template_id)
     
 
 

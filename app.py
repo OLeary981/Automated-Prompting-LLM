@@ -27,7 +27,7 @@ Please choose one of these options:
 6) Create and send a prompt from database stories and questions
 7) Import stories from CSV
 8) Import questions from CSV
-9) Import templates from CSV
+9) Import templates from .txt
 10) Import words with fields from CSV
 11) See all templates
 12) Generate stories from templates
