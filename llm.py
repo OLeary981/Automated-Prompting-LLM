@@ -35,11 +35,11 @@ def query(payload, retries=3, delay=5):
             else:
                 raise
 
-def call_LLM_GROQ(connection, story, question, story_id, question_id, model, temperature=0.5, max_tokens=1024, top_p=0.65):
+def call_LLM_GROQ(connection, story, question, story_id, question_id, model_name, model_id, temperature=0.5, max_tokens=1024, top_p=0.65):
     try:
         # Send the prompt to Groq
         completion = groq_client.chat.completions.create(
-            model=model,
+            model=model_name,
             messages=[
                 {
                     "role": "user",
@@ -65,7 +65,7 @@ def call_LLM_GROQ(connection, story, question, story_id, question_id, model, tem
 
         # Insert prompt details into the prompt_tests table
         payload_json = json.dumps({
-            "model": model,
+            "model": model_name,
             "messages": [
                 {
                     "role": "user",
@@ -78,9 +78,10 @@ def call_LLM_GROQ(connection, story, question, story_id, question_id, model, tem
             "stream": False,
             "stop": None
         })
+        
 
         # Insert the response into the responses table
-        prompt_test_id = database.add_prompt_test(connection, "groq", model, temperature, max_tokens, top_p, story_id, question_id, payload_json)
+        prompt_test_id = database.add_prompt(connection, model_id, temperature, max_tokens, top_p, story_id, question_id, payload_json)
         database.add_response(connection, prompt_test_id, response_content, full_response_json)
 
         return response_content
@@ -92,7 +93,7 @@ def call_LLM_GROQ(connection, story, question, story_id, question_id, model, tem
         return None
 
 
-def call_LLM_HF(connection, story, question, model, story_id, question_id, temperature=0.5, max_tokens=1024, top_p=0.65):
+def call_LLM_HF(connection, story, question, model_id, story_id, question_id, temperature=0.5, max_tokens=1024, top_p=0.65):
     payload = {
         "inputs": f"{story}\n\n{question}",
         "parameters": {
@@ -104,7 +105,7 @@ def call_LLM_HF(connection, story, question, model, story_id, question_id, tempe
     payload_json = json.dumps(payload)
 
     # Insert prompt details into the prompt_tests table
-    prompt_test_id = database.add_prompt_test(connection, "hf", model, temperature, max_tokens, top_p, story_id, question_id, payload_json)
+    prompt_test_id = database.add_prompt_test(connection, "hf", model_id, temperature, max_tokens, top_p, story_id, question_id, payload_json)
 
     # Send the prompt to Hugging Face
     response = query(payload)
