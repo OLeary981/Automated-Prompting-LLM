@@ -48,20 +48,19 @@ CREATE TABLE IF NOT EXISTS story_category (
 """
 CREATE_PROVIDER_TABLE ="""
 CREATE TABLE provider (
-    provider_id INTEGER PRIMARY KEY,
-    provider_name TEXT NOT NULL,
-    
+    provider_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    provider_name TEXT NOT NULL    
 );
 """
 
 CREATE_MODEL_TABLE = """
 CREATE TABLE IF NOT EXISTS model (
     model_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL
-    provider_id TEXT NOT NULL
-    endpoint TEXT
-    request_delay FLOAT NOT NULL
-    parameters TEXT NOT NULL
+    name TEXT NOT NULL,
+    provider_id INTEGER NOT NULL,
+    endpoint TEXT,
+    request_delay REAL NOT NULL,
+    parameters TEXT NOT NULL,
     FOREIGN KEY (provider_id) REFERENCES provider (provider_id)
 );
 """
@@ -70,9 +69,9 @@ CREATE_PROMPT_TABLE = """
 CREATE TABLE IF NOT EXISTS prompt (
     prompt_id INTEGER PRIMARY KEY AUTOINCREMENT,
     model_id INTEGER NOT NULL,
-    temperature REAL NOT NULL,
-    max_tokens INTEGER NOT NULL,
-    top_p REAL NOT NULL,
+    temperature REAL,
+    max_tokens INTEGER,
+    top_p REAL,
     story_id INTEGER NOT NULL,
     question_id INTEGER NOT NULL,
     payload LONGTEXT NOT NULL,    
@@ -155,6 +154,20 @@ INSERT INTO word_field (word_id, field_id) VALUES
 ((SELECT word_id FROM word WHERE word = 'falling'), (SELECT field_id FROM field WHERE field = 'verb'));
 """
 
+INSERT_PROVIDER = """
+INSERT INTO provider (provider_id, provider_name) VALUES
+(1, 'groq'),
+(2, 'huggingface');
+"""
+
+INSERT_MODEL = """
+INSERT INTO model (model_id, name, provider_id, endpoint, request_delay, parameters) VALUES
+(1, 'llama3-groq-70b-8192-tool-use-preview', 1, 'placeholder', 5, 'temperature, max_tokens, top_p'),
+(2, 'llama-3.1-70b-versatile', 1, 'placeholder', 5, 'temperature, max_tokens, top_p'),
+(3, 'meta-llama/Llama-3.1-8B-Instruct', 2, 'placeholder', 5, 'temperature, max_tokens, top_p');
+"""
+
+
 # Functions to create tables and add data
 def create_tables(connection):
     with connection:
@@ -168,6 +181,8 @@ def create_tables(connection):
         connection.execute(CREATE_WORD_FIELD_TABLE)
         connection.execute(CREATE_CATEGORY_TABLE)
         connection.execute(CREATE_STORY_CATEGORY_TABLE)
+        connection.execute(CREATE_PROVIDER_TABLE)
+        connection.execute(CREATE_MODEL_TABLE)
     
 
 def insert_initial_data(connection):
@@ -175,6 +190,8 @@ def insert_initial_data(connection):
         connection.executescript(INSERT_BASELINE_WORD)
         connection.executescript(INSERT_BASELINE_FIELD)
         connection.executescript(INSERT_WORD_FIELD)
+        connection.executescript(INSERT_PROVIDER)
+        connection.executescript(INSERT_MODEL)
 
 def delete_database(db_file):
     if os.path.exists(db_file):
@@ -183,11 +200,7 @@ def delete_database(db_file):
     else:
         print(f"{db_file} does not exist")
 
-def add_story(connection, content):
-    with connection:
-        connection.execute("INSERT INTO story (content) VALUES (?)", (content,))
-        
-def add_story(connection, content, template_id):
+def add_story(connection, content, template_id=None):
     with connection:
         connection.execute("INSERT INTO story (content, template_id) VALUES (?, ?)", (content, template_id))
         
@@ -203,17 +216,17 @@ def add_question(connection, content):
     with connection:
         connection.execute("INSERT INTO question (content) VALUES (?)", (content,))
 
-def add_prompt(connection, provider, model, temperature, max_tokens, top_p, story_id, question_id, payload):
+def add_prompt(connection, model_id, temperature, max_tokens, top_p, story_id, question_id, payload):
     with connection:
         cursor = connection.execute(
-            "INSERT INTO promptY(provider, model, temperature, max_tokens, top_p, story_id, question_id, payload) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (provider, model, temperature, max_tokens, top_p, story_id, question_id, payload)
+            "INSERT INTO prompt(model_id, temperature, max_tokens, top_p, story_id, question_id, payload) VALUES ( ?, ?, ?, ?, ?, ?, ?)",
+            (model_id, temperature, max_tokens, top_p, story_id, question_id, payload)
         )
         return cursor.lastrowid
 
 def add_response(connection, prompt_id, response_content, full_response):
     with connection:
-        connection.execute("INSERT INTO responses (prompt_id, response_content, full_response) VALUES (?, ?, ?)", (prompt_id, response_content, full_response))
+        connection.execute("INSERT INTO response (prompt_id, response_content, full_response) VALUES (?, ?, ?)", (prompt_id, response_content, full_response))
 
         
 def add_word_with_field(connection, word, field):
@@ -259,12 +272,18 @@ def get_all_story_templates(connection):
         return connection.execute("SELECT * FROM template").fetchall()
 
 def get_story_by_id(connection, story_id):
-    with connection:
-        return connection.execute("SELECT * FROM story WHERE story_id = ?", (story_id,)).fetchone()
+    """Retrieve a story by its ID."""
+    cursor = connection.cursor()
+    cursor.execute("SELECT content FROM story WHERE story_id = ?", (story_id,))
+    result = cursor.fetchone()
+    return result[0] if result else None
 
 def get_question_by_id(connection, question_id):
-    with connection:
-        return connection.execute("SELECT * FROM question WHERE question_id = ?", (question_id,)).fetchone()
+    """Retrieve a question by its ID."""
+    cursor = connection.cursor()
+    cursor.execute("SELECT content FROM question WHERE question_id = ?", (question_id,))
+    result = cursor.fetchone()
+    return result[0] if result else None
 
 def get_words_by_field(connection, field_name):
     """Retrieve words for a given field from the database."""
@@ -285,7 +304,34 @@ def get_template_by_id(connection, template_id):
     result = cursor.fetchone()
     return result[0] if result else None
 
+def get_models_with_providers(connection):
+    """Retrieve the list of models along with their providers."""
+    cursor = connection.cursor()
+    cursor.execute("""
+        SELECT model.model_id, model.name, provider.provider_name
+        FROM model
+        JOIN provider ON model.provider_id = provider.provider_id
+    """)
+    return cursor.fetchall()
 
+def get_model_name_by_id(connection, model_id):
+    """Retrieve the model name by its ID."""
+    cursor = connection.cursor()
+    cursor.execute("SELECT name FROM model WHERE model_id = ?", (model_id,))
+    result = cursor.fetchone()
+    return result[0] if result else None
+
+def get_provider_name_by_model_id(connection, model_id):
+    """Retrieve the provider name by the model ID."""
+    cursor = connection.cursor()
+    cursor.execute("""
+        SELECT provider.provider_name
+        FROM provider
+        JOIN model ON provider.provider_id = model.provider_id
+        WHERE model.model_id = ?
+    """, (model_id,))
+    result = cursor.fetchone()
+    return result[0] if result else None
 
 # Main execution
 if __name__ == "__main__":

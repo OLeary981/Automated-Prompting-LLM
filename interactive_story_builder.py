@@ -4,6 +4,7 @@ import database
 
 def prompt_user_for_template():
     template = input("Enter the template, using {field} notation for blank types: ")
+    #template needs to be added to database here!!!
     return template
 
 def prompt_user_for_words(field_names):

@@ -36,14 +36,25 @@ Please choose one of these options:
 Your selection:
 """
 
-MODEL_PROMPT = """
-Please choose a model:
-1) Groq - llama3-groq-70b-8192-tool-use-preview
-2) Groq - llama-3.1-70b-versatile
-3) Hugging Face - meta-llama/Llama-3.1-8B-Instruct
+# MODEL_PROMPT = """
+# Please choose a model:
+# 1) Groq - llama3-groq-70b-8192-tool-use-preview
+# 2) Groq - llama-3.1-70b-versatile
+# 3) Hugging Face - meta-llama/Llama-3.1-8B-Instruct
 
-Your selection:
-"""
+# Your selection:
+# """
+
+def get_model_prompt(connection):
+    models = database.get_models_with_providers(connection)
+    model_prompt = "Please choose a model:\n"
+    for model in models:
+        model_id, model_name, provider_name = model
+        model_prompt += f"{model_id}) {provider_name} - {model_name}\n"
+    model_prompt += "\nYour selection:\n"
+    return model_prompt
+
+#these should maybe be moved to a different file - either user_interaction, database or 
 
 def import_nouns_from_csv(connection, csv_file):
     with open(csv_file, newline='') as csvfile:
@@ -67,32 +78,10 @@ def import_templates_from_txt(connection, txt_file):
             database.add_template(connection, template)
     print("Story templates imported successfully.")
 
-# def generate_stories_from_templates(connection, num_stories):
-#     story_templates = database.get_all_story_templates(connection)
-#     nouns = database.get_all_nouns(connection)
-#     adjectives = database.get_all_adjectives(connection)
 
-#     if not story_templates or not nouns or not adjectives:
-#         print("No story templates, nouns, or adjectives available in the database.")
-#         return
-
-#     for _ in range(num_stories):
-#         template = random.choice(story_templates)[1]
-#         filled_story = template
-
-#         while "[noun]" in filled_story:
-#             filled_story = filled_story.replace("[noun]", random.choice(nouns)[1], 1)
-
-#         while "[adjective]" in filled_story:
-#             filled_story = filled_story.replace("[adjective]", random.choice(adjectives)[1], 1)
-
-#         print("\nGenerated Story:")
-#         print(filled_story)
-#         print("\n" + "-" * 80 + "\n")
 
 def menu():
     connection = database.connect()
-    database.create_tables(connection)
     while True:
         user_input = input(MENU_PROMPT)
         if user_input == "1":
@@ -111,18 +100,9 @@ def menu():
             user_interaction.prompt_create_and_send_manual_prompt(connection)
             time.sleep(1.5)
         elif user_input == "6":
-            model_input = input(MODEL_PROMPT)
-            if model_input == "1":
-                model = "llama3-groq-70b-8192-tool-use-preview"
-                user_interaction.prompt_create_and_send_db_prompt(connection, model, "groq")
-            elif model_input == "2":
-                model = "llama-3.1-70b-versatile"
-                user_interaction.prompt_create_and_send_db_prompt(connection, model, "groq")
-            elif model_input == "3":
-                model = "meta-llama/Llama-3.1-8B-Instruct"
-                user_interaction.prompt_create_and_send_db_prompt(connection, model, "hf")
-            else:
-                print("Invalid model selection. Please try again.")
+            model_prompt = get_model_prompt(connection)
+            selected_model_id = input(model_prompt)
+            user_interaction.prompt_create_and_send_db_prompt(connection, selected_model_id)           
             time.sleep(1.5)
         elif user_input == "7":
             csv_file = input("Enter the path to the CSV file for stories: ")

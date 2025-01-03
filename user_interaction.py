@@ -48,7 +48,7 @@ def prompt_add_question(connection):
     database.add_question(connection, content)
     print(f"Question '{content}' added.")
 
-def prompt_see_all_questions(connection):
+def prompt_see_all_questions(connection): # could return to this to look at separation of concerns and have separate display method
     questions = database.get_all_questions(connection)
     title = "DETAILS OF ALL QUESTIONS"
     total_width = 90
@@ -93,17 +93,45 @@ def prompt_create_and_send_manual_prompt(connection):
     print(response)
     # You can add code here to save the response to the database
 
-def prompt_create_and_send_db_prompt(connection, model, provider):
-    stories = database.get_all_stories(connection)
-    questions = database.get_all_questions(connection)
+def prompt_create_and_send_db_prompt(connection, model_id):
+    stories = database.get_all_stories(connection)    
+    questions = database.get_all_questions(connection) 
 
     if not stories or not questions:
-        print("No stories or questions available in the database.")
-        return
+            if not stories and not questions:
+                print("No stories and questions available in the database.")
+            elif not stories:
+                print("No stories available in the database.")
+            elif not questions:
+                print("No questions available in the database.")
 
-    print("Available Stories:")
-    for story in stories:
-        print(f"ID: {story[0]}, Content: {story[1][:50]}...")  # Display first 50 characters
+            while True:
+                choice = input("Would you like to add a story, a question, or both? (story/question/both/none): ").strip().lower()
+                if choice == "story":
+                    story_content = input("Enter the story content: ")
+                    database.add_story(connection, story_content, None)  # Assuming template_id is not required here
+                    stories = database.get_all_stories(connection)
+                    break
+                elif choice == "question":
+                    question_content = input("Enter the question content: ")
+                    database.add_question(connection, question_content)
+                    questions = database.get_all_questions(connection)
+                    break
+                elif choice == "both":
+                    story_content = input("Enter the story content: ")
+                    database.add_story(connection, story_content, None)  # Assuming template_id is not required here
+                    question_content = input("Enter the question content: ")
+                    database.add_question(connection, question_content)
+                    stories = database.get_all_stories(connection)
+                    questions = database.get_all_questions(connection)
+                    break
+                elif choice == "none":
+                    print("Operation cancelled.")
+                    return
+                else:
+                    print("Invalid choice. Please enter 'story', 'question', 'both', or 'none'.")
+
+    display_longtext("DETAILS OF ALL STORIES", stories)
 
     story_id = int(input("Enter the ID of the story you want to use: "))
 
@@ -113,37 +141,29 @@ def prompt_create_and_send_db_prompt(connection, model, provider):
 
     question_id = int(input("Enter the ID of the question you want to use: "))
 
-    story = database.get_story_by_id(connection, story_id)
-    question = database.get_question_by_id(connection, question_id)
+    story = database.get_story_by_id(connection, story_id).lstrip('\ufeff')
+    question = database.get_question_by_id(connection, question_id).lstrip('\ufeff')
 
     temperature = float(input("Enter the temperature: "))
     max_tokens = int(input("Enter the max tokens: "))
     top_p = float(input("Enter the top_p: "))
+    
+    
+    # Get the model and provider names
+    model_name = database.get_model_name_by_id(connection, model_id)
+    provider_name = database.get_provider_name_by_model_id(connection, model_id)
 
 
 
-    # with connection:
-    #     cursor = connection.execute(
-    #         "INSERT INTO prompt_tests (provider, model, temperature, max_tokens, top_p, story, question) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    #         (provider, model, temperature, max_tokens, top_p, story[1], question[1])
-    #     )
-    #     prompt_test_id = cursor.lastrowid
+
 
     # Send the prompt to the appropriate LLM
-    if provider == "groq":
-        response = llm.call_LLM_GROQ(connection, story[1], question[1], story_id, question_id, model, temperature, max_tokens, top_p)
-    elif provider == "hf":
+    if provider_name == "groq":
+        response = llm.call_LLM_GROQ(connection, story, question, story_id, question_id, model_name, model_id, temperature, max_tokens, top_p)
+    elif provider_name == "hf":
         response = llm.call_LLM_HF(story[1], question[1], model, temperature, max_tokens, top_p)
 
-    # Insert the response into the responses table
-    # with connection:
-    #     connection.execute(
-    #         "INSERT INTO responses (test_id, response) VALUES (?, ?)",
-    #         (prompt_test_id, response)
-    #     )
-
-    # print("Response from LLM:")
-    # print(response)
+   
 
 def import_stories_from_csv(connection, csv_file):
     with open(csv_file, newline='', encoding='utf-8') as file:
