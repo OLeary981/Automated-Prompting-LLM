@@ -1,11 +1,11 @@
 import itertools
-import user_interaction
+import data_access
 import database
 import re
 
 
 def generate_stories(connection):
-    user_interaction.prompt_see_all_templates(connection)
+    data_access.prompt_see_all_templates(connection)
     template_id = int(input("Enter the number of the template you are selecting: "))
     template = database.get_template_by_id(connection, template_id)
     template_filler(connection, template, template_id)
