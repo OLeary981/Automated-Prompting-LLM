@@ -5,6 +5,23 @@ import json
 import llm
 import csv
 
+
+
+def import_words_and_fields_from_csv(connection, csv_file):
+    with open(csv_file, newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            word, field = row
+            database.add_word_with_field(connection, word, field)
+    print("Words and fields imported successfully.")
+
+def import_templates_from_txt(connection, txt_file):
+    with open(txt_file, 'r', encoding='utf-8-sig') as txtfile:
+        for line in txtfile:
+            template = line.strip()  # Remove any leading/trailing whitespace
+            database.add_template(connection, template)
+    print("Story templates imported successfully.")
+
 def prompt_add_story(connection):
     content = input("Enter story content: ")
     database.add_story(connection, content)
