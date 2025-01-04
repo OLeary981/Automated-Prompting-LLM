@@ -1,12 +1,8 @@
 import time
 import database
-import csv
-import textwrap
-import random
-from groq import Groq
 import os
 from dotenv import load_dotenv
-import user_interaction
+import data_access
 import story_builder
 
 # Load environment variables from .env file
@@ -53,43 +49,43 @@ def menu():
     while True:
         user_input = input(MENU_PROMPT)
         if user_input == "1":
-            user_interaction.prompt_add_story(connection)
+            data_access.prompt_add_story(connection)
             time.sleep(0.5)
         elif user_input == "2":
-            user_interaction.prompt_see_all_stories(connection)
+            data_access.prompt_see_all_stories(connection)
             time.sleep(1.5)
         elif user_input == "3":
-            user_interaction.prompt_add_question(connection)
+            data_access.prompt_add_question(connection)
             time.sleep(0.5)
         elif user_input == "4":
-            user_interaction.prompt_see_all_questions(connection)
+            data_access.prompt_see_all_questions(connection)
             time.sleep(1.5)
         elif user_input == "5":
-            user_interaction.prompt_create_and_send_manual_prompt(connection)
+            data_access.prompt_create_and_send_manual_prompt(connection)
             time.sleep(1.5)
         elif user_input == "6":
             model_prompt = get_model_prompt(connection)
             selected_model_id = input(model_prompt)
-            user_interaction.prompt_create_and_send_db_prompt(connection, selected_model_id)           
+            data_access.prompt_create_and_send_db_prompt(connection, selected_model_id)           
             time.sleep(1.5)
         elif user_input == "7":
             csv_file = input("Enter the path to the CSV file for stories: ")
-            user_interaction.import_stories_from_csv(connection, csv_file)
+            data_access.import_stories_from_csv(connection, csv_file)
             time.sleep(1.5)
         elif user_input == "8":
             csv_file = input("Enter the path to the CSV file for questions: ")
-            user_interaction.import_questions_from_csv(connection, csv_file)
+            data_access.import_questions_from_csv(connection, csv_file)
             time.sleep(1.5)
         elif user_input == "9":
             txt_file = input("Enter the path to the txt file for templates: ")
-            user_interaction.import_templates_from_txt(connection, txt_file)
+            data_access.import_templates_from_txt(connection, txt_file)
             time.sleep(1.5)
         elif user_input == "10":
             csv_file = input("Enter the path to the CSV file for words and fields: ")
-            user_interaction.import_words_and_fields_from_csv(connection, csv_file)
+            data_access.import_words_and_fields_from_csv(connection, csv_file)
             time.sleep(1.5)
         elif user_input == "11":
-            user_interaction.prompt_see_all_templates(connection)
+            data_access.prompt_see_all_templates(connection)
             time.sleep(1.5)
         elif user_input == "12":
             story_builder.generate_stories(connection)
