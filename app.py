@@ -36,14 +36,6 @@ Please choose one of these options:
 Your selection:
 """
 
-# MODEL_PROMPT = """
-# Please choose a model:
-# 1) Groq - llama3-groq-70b-8192-tool-use-preview
-# 2) Groq - llama-3.1-70b-versatile
-# 3) Hugging Face - meta-llama/Llama-3.1-8B-Instruct
-
-# Your selection:
-# """
 
 def get_model_prompt(connection):
     models = database.get_models_with_providers(connection)
@@ -53,30 +45,6 @@ def get_model_prompt(connection):
         model_prompt += f"{model_id}) {provider_name} - {model_name}\n"
     model_prompt += "\nYour selection:\n"
     return model_prompt
-
-#these should maybe be moved to a different file - either user_interaction, database or 
-
-def import_nouns_from_csv(connection, csv_file):
-    with open(csv_file, newline='') as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            database.add_noun(connection, row[0])
-    print("Nouns imported successfully.")
-
-def import_words_and_fields_from_csv(connection, csv_file):
-    with open(csv_file, newline='') as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            word, field = row
-            database.add_word_with_field(connection, word, field)
-    print("Words and fields imported successfully.")
-
-def import_templates_from_txt(connection, txt_file):
-    with open(txt_file, 'r', encoding='utf-8-sig') as txtfile:
-        for line in txtfile:
-            template = line.strip()  # Remove any leading/trailing whitespace
-            database.add_template(connection, template)
-    print("Story templates imported successfully.")
 
 
 
@@ -114,11 +82,11 @@ def menu():
             time.sleep(1.5)
         elif user_input == "9":
             txt_file = input("Enter the path to the txt file for templates: ")
-            import_templates_from_txt(connection, txt_file)
+            user_interaction.import_templates_from_txt(connection, txt_file)
             time.sleep(1.5)
         elif user_input == "10":
             csv_file = input("Enter the path to the CSV file for words and fields: ")
-            import_words_and_fields_from_csv(connection, csv_file)
+            user_interaction.import_words_and_fields_from_csv(connection, csv_file)
             time.sleep(1.5)
         elif user_input == "11":
             user_interaction.prompt_see_all_templates(connection)
