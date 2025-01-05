@@ -24,7 +24,8 @@ def template_filler(connection, template, template_id):
             if words:
                 fields[field] = words
             else:
-                fields[field] = ["default"]   # Default value if no sample data is available
+                user_input = input(f"No sample data available for field '{field}'. Please enter values separated by commas: ")
+                fields[field] = [value.strip() for value in user_input.split(',')] if user_input else ["default"]  # Use user input or default if input is empty
             print(f"Field: {field}, Words: {fields[field]}")
 
     # Generate all possible permutations
