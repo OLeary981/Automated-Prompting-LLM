@@ -22,8 +22,9 @@ def add_story():
 @app.route('/see_all_stories')
 def see_all_stories():
     connection = database.connect()
-    stories = data_access.get_all_stories(connection)
+    stories = data_access.see_all_stories_for_HTML(connection)
     connection.close()
+    print(stories)
     return render_template('see_all_stories.html', stories=stories)
 
 @app.route('/add_question', methods=['GET', 'POST'])

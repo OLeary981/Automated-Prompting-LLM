@@ -4,8 +4,38 @@ from llm import call_LLM_GROQ
 import llm
 import csv
 import json
+import textwrap
 
+# def display_longtext_html(title, items, id_width=5, total_width=90):
+#     """Return long text items formatted as HTML with a given title."""
+#     content_width = total_width - id_width - 10  # Adjust for ID width and separators
 
+#     html = []
+#     html.append(f"<h2>{title}</h2>")
+#     html.append("<table class='table table-striped table-bordered table-hover table-sm'>")
+#     html.append("<thead><tr><th>ID</th><th>Content</th></tr></thead>")
+#     html.append("<tbody>")
+
+#     for item in items:
+#         item_id = item[0]
+#         content = item[1]
+#         wrapped_content = textwrap.wrap(content, width=content_width)
+
+#         # Print the first line with the ID
+#         html.append(f"<tr><td rowspan='{len(wrapped_content)}'>{item_id}</td><td>{wrapped_content[0]}</td></tr>")
+        
+#         # Print subsequent lines with an empty ID column
+#         for line in wrapped_content[1:]:
+#             html.append(f"<tr><td>{line}</td></tr>")
+
+#     html.append("</tbody>")
+#     html.append("</table>")
+#     return "\n".join(html)
+
+def see_all_stories_for_HTML(connection):
+    """Retrieve and return all stories as list of tuples."""
+    stories = database.get_all_stories(connection)
+    return stories
 
 def import_words_and_fields_from_csv(connection, csv_file):
     with open(csv_file, newline='') as csvfile:
@@ -50,9 +80,9 @@ def display_longtext(title, items, id_width=5, total_width=90):
         print("*" * total_width)  # Separator between items
 
 def prompt_see_all_stories(connection):
-    """Retrieve and display all stories."""
+    """Retrieve and return all stories formatted as HTML."""
     stories = database.get_all_stories(connection)
-    display_longtext("DETAILS OF ALL STORIES", stories)
+    return display_longtext_html("DETAILS OF ALL STORIES", stories)
     
 def prompt_see_all_templates(connection):
     """Retrieve and display all templates."""
