@@ -3,6 +3,7 @@ import database
 from llm import call_LLM_GROQ
 import llm
 import csv
+import json
 
 
 
@@ -160,10 +161,12 @@ def prompt_create_and_send_db_prompt(connection, model_id):
     story = database.get_story_by_id(connection, story_id).lstrip('\ufeff')
     question = database.get_question_by_id(connection, question_id).lstrip('\ufeff')
 
-    temperature = float(input("Enter the temperature: "))
-    max_tokens = int(input("Enter the max tokens: "))
-    top_p = float(input("Enter the top_p: "))
-    
+    parameter_values = get_model_parameters_and_values(connection, model_id)
+
+    temperature = parameter_values["temperature"]
+    max_tokens = parameter_values["max_tokens"]
+    top_p = parameter_values["top_p"]
+
     
     # Get the model and provider names
     model_name = database.get_model_name_by_id(connection, model_id)
@@ -196,3 +199,80 @@ def import_questions_from_csv(connection, csv_file):
             if row:  # Ensure the row is not empty
                 database.add_question(connection, row[0])
     print(f"Questions imported from {csv_file}")
+
+def prompt_add_model(connection):
+    """Prompt the user for model details and add the model to the database."""
+    name = input("Enter model name: ")
+    provider_id = int(input("Enter provider ID: "))
+    endpoint = input("Enter endpoint: ")
+    request_delay = int(input("Enter request delay: "))
+    parameters = input("Enter parameters (comma-separated): ")
+    
+    database.add_model(connection, name, provider_id, endpoint, request_delay, parameters)
+    print(f"Model '{name}' added successfully.")
+
+def save_prompt_and_response(connection, model_id, temperature, max_tokens, top_p, story_id, question_id, payload_json, response_content, full_response_json):
+    """Save the prompt and response to the database."""
+    prompt_test_id = database.add_prompt(connection, model_id, temperature, max_tokens, top_p, story_id, question_id, payload_json)
+    database.add_response(connection, prompt_test_id, response_content, full_response_json)
+    return prompt_test_id
+
+def get_model_prompt(connection):
+    models = database.get_models_with_providers(connection)
+    model_prompt = "Please choose a model:\n"
+    for model in models:
+        model_id, model_name, provider_name = model
+        model_prompt += f"{model_id}) {provider_name} - {model_name}\n"
+    model_prompt += "\nYour selection:\n"
+    return model_prompt
+
+
+def get_model_parameters_and_values(connection, model_id):
+    """Retrieve model parameters and prompt the user for values."""
+    parameters_json = database.get_model_parameters(connection, model_id)
+    parameters = json.loads(parameters_json)["parameters"]
+
+    print("\nModel Parameters:")
+    for param in parameters:
+        print(f"Name: {param['name']}")
+        print(f"Description: {param['description']}")
+        print(f"Type: {param['type']}")
+        print(f"Default: {param['default']}")
+        print(f"Min Value: {param['min_value']}")
+        print(f"Max Value: {param['max_value']}")
+        print()
+
+    use_defaults = input("Do you want to use the default values for the parameters? (yes/no): ").strip().lower()
+
+    if use_defaults == "yes":
+        parameter_values = {param['name']: param['default'] for param in parameters}
+    else:
+        parameter_values = {}
+        for param in parameters:
+            while True:
+                user_input = input(f"Enter value for {param['name']} (default: {param['default']}): ").strip()
+                if user_input == "":
+                    parameter_values[param['name']] = param['default']
+                    break
+                elif param['type'] == "float":
+                    try:
+                        value = float(user_input)
+                        if param['min_value'] <= value <= param['max_value']:
+                            parameter_values[param['name']] = value
+                            break
+                        else:
+                            print(f"Value must be between {param['min_value']} and {param['max_value']}.")
+                    except ValueError:
+                        print("Invalid input. Please enter a float value.")
+                elif param['type'] == "integer":
+                    try:
+                        value = int(user_input)
+                        if param['min_value'] <= value <= param['max_value']:
+                            parameter_values[param['name']] = value
+                            break
+                        else:
+                            print(f"Value must be between {param['min_value']} and {param['max_value']}.")
+                    except ValueError:
+                        print("Invalid input. Please enter an integer value.")
+
+    return parameter_values

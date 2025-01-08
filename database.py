@@ -202,7 +202,8 @@ def delete_database(db_file):
 
 def add_story(connection, content, template_id=None):
     with connection:
-        connection.execute("INSERT INTO story (content, template_id) VALUES (?, ?)", (content, template_id))
+        cursor = connection.execute("INSERT INTO story (content, template_id) VALUES (?, ?)", (content, template_id))
+    return(cursor.lastrowid)
         
 def add_template(connection, content):
     with connection:
@@ -258,6 +259,22 @@ def add_story_with_category(connection, story_content, category_name):
         
         # Insert the story-field relationship if it does not exist
         connection.execute("INSERT OR IGNORE INTO story_field (story_id, category_id) VALUES (?, ?)", (story_id, category_id))
+
+
+def add_model(connection, name, provider_id, endpoint, request_delay, parameters):
+    """Add a new model to the database."""
+    with connection:
+        connection.execute("""
+            INSERT INTO model (name, provider_id, endpoint, request_delay, parameters)
+            VALUES (?, ?, ?, ?, ?)
+        """, (name, provider_id, endpoint, request_delay, parameters))
+
+def get_model_parameters(connection, model_id):
+    """Retrieve the parameters for a given model by its ID."""
+    cursor = connection.cursor()
+    cursor.execute("SELECT parameters FROM model WHERE model_id = ?", (model_id,))
+    result = cursor.fetchone()
+    return result[0] if result else None
 
 def get_all_stories(connection):
     with connection:
@@ -330,6 +347,13 @@ def get_provider_name_by_model_id(connection, model_id):
         JOIN model ON provider.provider_id = model.provider_id
         WHERE model.model_id = ?
     """, (model_id,))
+    result = cursor.fetchone()
+    return result[0] if result else None
+
+def get_request_delay_by_model_id(connection, model_id):
+    """Retrieve the request delay for a given model by its ID."""
+    cursor = connection.cursor()
+    cursor.execute("SELECT request_delay FROM model WHERE model_id = ?", (model_id,))
     result = cursor.fetchone()
     return result[0] if result else None
 
