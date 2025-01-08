@@ -27,20 +27,13 @@ Please choose one of these options:
 10) Import words with fields from CSV
 11) See all templates
 12) Generate stories from templates
-13) Exit
+13) Add a model
+14) Exit
 
 Your selection:
 """
 
 
-def get_model_prompt(connection):
-    models = database.get_models_with_providers(connection)
-    model_prompt = "Please choose a model:\n"
-    for model in models:
-        model_id, model_name, provider_name = model
-        model_prompt += f"{model_id}) {provider_name} - {model_name}\n"
-    model_prompt += "\nYour selection:\n"
-    return model_prompt
 
 
 
@@ -64,7 +57,7 @@ def menu():
             data_access.prompt_create_and_send_manual_prompt(connection)
             time.sleep(1.5)
         elif user_input == "6":
-            model_prompt = get_model_prompt(connection)
+            model_prompt = data_access.get_model_prompt(connection)
             selected_model_id = input(model_prompt)
             data_access.prompt_create_and_send_db_prompt(connection, selected_model_id)           
             time.sleep(1.5)
@@ -91,6 +84,9 @@ def menu():
             story_builder.generate_stories(connection)
             time.sleep(1.5)
         elif user_input == "13":
+            data_access.prompt_add_model(connection)
+            time.sleep(1.5)
+        elif user_input == "14":
             connection.close()
             print("Connection closed. Exiting the application.")
             break

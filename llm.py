@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from config import GROQ_API_KEY
 from huggingface_hub import InferenceClient
 from groq import Groq, APIError
+import data_access
 
 import database  # Assuming you have a Groq client library
 
@@ -81,8 +82,7 @@ def call_LLM_GROQ(connection, story, question, story_id, question_id, model_name
         
 
         # Insert the response into the responses table
-        prompt_test_id = database.add_prompt(connection, model_id, temperature, max_tokens, top_p, story_id, question_id, payload_json)
-        database.add_response(connection, prompt_test_id, response_content, full_response_json)
+        data_access.save_prompt_and_response(connection, model_id, temperature, max_tokens, top_p, story_id, question_id, payload_json, response_content, full_response_json)
 
         return response_content
 
