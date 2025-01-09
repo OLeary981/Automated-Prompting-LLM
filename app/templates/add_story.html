@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <h1>Add Story</h1>
-        <form method="POST">
+        <form action="{{ url_for('main.add_story') }}" method="POST">
             <div class="form-group">
                 <label for="story_content">Story Content</label>
                 <textarea class="form-control" id="story_content" name="story_content" rows="3"></textarea>
