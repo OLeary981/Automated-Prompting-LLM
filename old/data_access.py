@@ -1,7 +1,7 @@
 import textwrap
 import database
 from llm import call_LLM_GROQ
-import llm
+import llm as llm
 import csv
 import json
 import textwrap

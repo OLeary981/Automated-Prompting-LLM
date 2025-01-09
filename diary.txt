@@ -1,0 +1,4 @@
+Notes for picking up tomorrow:
+
+you were in the middle of migrating the logic out of the routes file and into a services folder. 
+Next step, get the "see all stories" logic working, then questions, then story generator. 

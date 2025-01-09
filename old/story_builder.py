@@ -2,7 +2,7 @@ import itertools
 import data_access
 import database
 import re
-import llm
+import llm as llm
 import time
 
 
