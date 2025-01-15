@@ -19,12 +19,13 @@
             <tbody>
                 {% for story in stories %}
                     <tr>
-                        <td>{{ story[0] }}</td>
-                        <td>{{ story[1] }}</td>
+                        <td>{{ story.story_id }}</td>
+                        <td>{{ story.content }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary">Back to Home</a>
     </div>
 </body>
 </html>
