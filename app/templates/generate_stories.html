@@ -17,7 +17,7 @@
                 <p class="card-text">{{ template.content }}</p>
                 <form action="{{ url_for('main.generate_stories') }}" method="POST">
                     <input type="hidden" name="template_id" value="{{ template.template_id }}">
-                    <button type="submit" class="btn btn-success">Generate Stories</button>
+                    <button type="submit" name="generate" class="btn btn-success">Generate Stories</button>
                 </form>
             </div>
         </div>
