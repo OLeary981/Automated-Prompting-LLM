@@ -124,6 +124,7 @@ class Word(db.Model):
 
     word_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     word = db.Column(db.String(255), unique=True, nullable=False)
+    fields = db.relationship('Field', secondary='word_field', backref=db.backref('words', lazy='dynamic'))
 
     def __repr__(self):
         return f'<Word {self.word_id} - {self.word}>'
@@ -147,6 +148,7 @@ class WordField(db.Model):
 
     word = db.relationship('Word', backref=db.backref('word_fields', lazy=True))
     field = db.relationship('Field', backref=db.backref('word_fields', lazy=True))
+    
 
     def __repr__(self):
         return f'<WordField {self.word_id} - {self.field_id}>'

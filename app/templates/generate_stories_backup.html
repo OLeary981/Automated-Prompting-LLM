@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Templates</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/static.css') }}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var rows = document.querySelectorAll(".clickable-row");
+            rows.forEach(function(row) {
+                row.addEventListener("click", function() {
+                    // Remove highlight from all rows
+                    rows.forEach(function(r) {
+                        r.classList.remove("selected-row");
+                    });
+                    // Highlight the selected row
+                    this.classList.add("selected-row");
+
+                    // Get the template content
+                    var templateContent = this.querySelector(".template-content").textContent;
+
+                    // Hide the table
+                    document.querySelector(".template-table").classList.add("hidden");
+
+                    // Display the template content
+                    var templateDisplay = document.querySelector(".template-display");
+                    templateDisplay.textContent = templateContent;
+                    templateDisplay.classList.remove("hidden");
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Story Generator</h1>
+        <table class="table table-striped table-bordered table-hover table-sm template-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Template</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for template in templates %}
+                    <tr class="clickable-row">
+                        <form action="{{ url_for('main.generate_stories') }}" method="POST">
+                            <input type="hidden" name="template_id" value="{{ template.template_id }}">
+                            <td>{{ template.template_id }}</td>
+                            <td class="template-content">{{ template.content }}</td>
+                        </form>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="template-display hidden"></div>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary">Back to Home</a>
+    </div>
+</body>
+</html>
