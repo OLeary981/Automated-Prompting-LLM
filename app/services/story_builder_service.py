@@ -64,9 +64,10 @@ def template_filler(template, template_id):
     # Create a dictionary to map field names to their respective arrays
     fields = {}
     for field in field_names:
-        words = db.session.query(Word).filter_by(field_name=field).all()
-        if words:
-            fields[field] = [word.value for word in words]
+        field_obj = db.session.query(Field).filter_by(field=field).first()
+        if field_obj:
+            words = [word.word for word in field_obj.words]
+            fields[field] = words
         else:
             user_input = input(f"No sample data available for field '{field}'. Please enter values separated by commas: ")
             fields[field] = [value.strip() for value in user_input.split(',')] if user_input else ["default"]  # Use user input or default if input is empty
@@ -88,7 +89,7 @@ def template_filler(template, template_id):
         new_story = Story(content=story_content, template_id=template_id)
         db.session.add(new_story)
         db.session.commit()
-        generated_stories_ids.append(new_story.id)
+        generated_stories_ids.append(new_story.story_id)
     return generated_stories_ids
 
 def send_stories_to_llm(story_ids):
