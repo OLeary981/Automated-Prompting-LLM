@@ -1,4 +1,4 @@
-from . import db
+from app import db
 
 # Question Table
 class Question(db.Model):
@@ -7,9 +7,8 @@ class Question(db.Model):
     question_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     content = db.Column(db.Text, nullable=False)
 
-    # Optionally, add methods or relationships here later if needed
     def __repr__(self):
-        return f'<Question {self.question_id} - {self.content}>'
+        return f'<Question {self.id} - {self.content}>'
 
 # Template Table
 class Template(db.Model):
@@ -19,7 +18,7 @@ class Template(db.Model):
     content = db.Column(db.Text, nullable=False)
 
     def __repr__(self):
-        return f'<Template {self.template_id} - {self.content}>'
+        return f'<Template {self.id} - {self.content}>'
 
 # Story Table
 class Story(db.Model):
@@ -27,12 +26,12 @@ class Story(db.Model):
 
     story_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     content = db.Column(db.Text, nullable=False)
-    template_id = db.Column(db.Integer, db.ForeignKey('template.template_id'), nullable=True)
+    template_id = db.Column(db.Integer, db.ForeignKey('template.template_id'), nullable=False)
 
     template = db.relationship('Template', backref=db.backref('stories', lazy=True))
 
     def __repr__(self):
-        return f'<Story {self.story_id} - {self.content}>'
+        return f'<Story {self.id} - {self.content}>'
 
 # Category Table
 class Category(db.Model):
@@ -72,16 +71,13 @@ class Model(db.Model):
     __tablename__ = 'model'
 
     model_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(255), nullable=False)
+    model_name = db.Column(db.String(255), nullable=False)
     provider_id = db.Column(db.Integer, db.ForeignKey('provider.provider_id'), nullable=False)
-    endpoint = db.Column(db.String(255), nullable=True)
-    request_delay = db.Column(db.Float, nullable=False)
-    parameters = db.Column(db.Text, nullable=False)
 
     provider = db.relationship('Provider', backref=db.backref('models', lazy=True))
 
     def __repr__(self):
-        return f'<Model {self.model_id} - {self.name}>'
+        return f'<Model {self.model_id} - {self.model_name}>'
 
 # Prompt Table
 class Prompt(db.Model):
@@ -146,10 +142,8 @@ class WordField(db.Model):
     word_id = db.Column(db.Integer, db.ForeignKey('word.word_id'), primary_key=True)
     field_id = db.Column(db.Integer, db.ForeignKey('field.field_id'), primary_key=True)
 
-    word = db.relationship('Word', backref=db.backref('word_fields', lazy=True))
-    field = db.relationship('Field', backref=db.backref('word_fields', lazy=True))
-    
+    word = db.relationship('Word', backref=db.backref('word_fields', lazy=True, overlaps="fields,words"))
+    field = db.relationship('Field', backref=db.backref('word_fields', lazy=True, overlaps="fields,words"))
 
     def __repr__(self):
         return f'<WordField {self.word_id} - {self.field_id}>'
-    
