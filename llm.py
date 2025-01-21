@@ -9,6 +9,7 @@ from config import Config
 # import database  # Assuming you have a Groq client library???
 
 GROQ_API_KEY = Config.GROQ_API_KEY
+groq_client = Groq(api_key=GROQ_API_KEY)
 
 # Get the API key from environment variables
 # HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
@@ -17,97 +18,97 @@ GROQ_API_KEY = Config.GROQ_API_KEY
 
 # Initialize clients
 # hf_client = InferenceClient(token=HUGGINGFACE_API_KEY) #not sure this works at the moment - not being used
-groq_client = Groq(api_key=GROQ_API_KEY)
 
-# def query(payload, retries=3, delay=5):
-#     for attempt in range(retries):
-#         try:
-#             response = requests.post(API_URL, headers=headers, json=payload, timeout=10)
-#             response.raise_for_status()  # Raise an exception for HTTP errors
-#             return response.json()
-#         except requests.exceptions.RequestException as e:
-#             print(f"Attempt {attempt + 1} failed: {e}")
-#             if attempt < retries - 1:
-#                 time.sleep(delay)
-#             else:
-#                 raise
 
-# def call_LLM_GROQ(connection, story, question, story_id, question_id, model_name, model_id, temperature=0.5, max_tokens=1024, top_p=0.65):
-#     try:
-#         # Send the prompt to Groq
-#         completion = groq_client.chat.completions.create(
-#             model=model_name,
-#             messages=[
-#                 {
-#                     "role": "user",
-#                     "content": f"Read my story: {story} now respond to these queries about it: {question}"
-#                 }
-#             ],
-#             temperature=temperature,
-#             max_tokens=max_tokens,
-#             top_p=top_p,
-#             stream=False,  # Indicate no streaming
-#             stop=None,
-#         )
+def query(payload, retries=3, delay=5):
+    for attempt in range(retries):
+        try:
+            response = requests.post(API_URL, headers=headers, json=payload, timeout=10)
+            response.raise_for_status()  # Raise an exception for HTTP errors
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Attempt {attempt + 1} failed: {e}")
+            if attempt < retries - 1:
+                time.sleep(delay)
+            else:
+                raise
 
-#         # Extract the response content from the completion object
-#         response_content = completion.choices[0].message.content
+def call_LLM_GROQ(connection, story, question, story_id, question_id, model_name, model_id, temperature=0.5, max_tokens=1024, top_p=0.65):
+    try:
+        # Send the prompt to Groq
+        completion = groq_client.chat.completions.create(
+            model=model_name,
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"Read my story: {story} now respond to these queries about it: {question}"
+                }
+            ],
+            temperature=temperature,
+            max_tokens=max_tokens,
+            top_p=top_p,
+            stream=False,  # Indicate no streaming
+            stop=None,
+        )
 
-#         # Print the response to the console
-#         print("Response from Groq LLM:")
-#         print(response_content)
+        # Extract the response content from the completion object
+        response_content = completion.choices[0].message.content
 
-#         # Serialize the full response to JSON
-#         full_response_json = json.dumps(completion, default=lambda o: o.__dict__)
+        # Print the response to the console
+        print("Response from Groq LLM:")
+        print(response_content)
 
-#         # Insert prompt details into the prompt_tests table
-#         payload_json = json.dumps({
-#             "model": model_name,
-#             "messages": [
-#                 {
-#                     "role": "user",
-#                     "content": f"Read my story: {story} now respond to these queries about it: {question}"
-#                 }
-#             ],
-#             "temperature": temperature,
-#             "max_tokens": max_tokens,
-#             "top_p": top_p,
-#             "stream": False,
-#             "stop": None
-#         })
+        # Serialize the full response to JSON
+        full_response_json = json.dumps(completion, default=lambda o: o.__dict__)
+
+        # Insert prompt details into the prompt_tests table
+        payload_json = json.dumps({
+            "model": model_name,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": f"Read my story: {story} now respond to these queries about it: {question}"
+                }
+            ],
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "top_p": top_p,
+            "stream": False,
+            "stop": None
+        })
         
 
-#         # Insert the response into the responses table
-#         data_access.save_prompt_and_response(connection, model_id, temperature, max_tokens, top_p, story_id, question_id, payload_json, response_content, full_response_json)
+        # Insert the response into the responses table
+        data_access.save_prompt_and_response(connection, model_id, temperature, max_tokens, top_p, story_id, question_id, payload_json, response_content, full_response_json)
 
-#         return response_content
+        return response_content
 
-#     except APIError as e:
-#         # Print an error message to the console
-#         print("Failed to get response from Groq LLM:")
-#         print(e)
-#         return None
+    except APIError as e:
+        # Print an error message to the console
+        print("Failed to get response from Groq LLM:")
+        print(e)
+        return None
 
 
-# def call_LLM_HF(connection, story, question, model_id, story_id, question_id, temperature=0.5, max_tokens=1024, top_p=0.65):
-#     payload = {
-#         "inputs": f"{story}\n\n{question}",
-#         "parameters": {
-#             "temperature": temperature,
-#             "max_tokens": max_tokens,
-#             "top_p": top_p
-#         }
-#     }
-#     payload_json = json.dumps(payload)
+def call_LLM_HF(connection, story, question, model_id, story_id, question_id, temperature=0.5, max_tokens=1024, top_p=0.65):
+    payload = {
+        "inputs": f"{story}\n\n{question}",
+        "parameters": {
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "top_p": top_p
+        }
+    }
+    payload_json = json.dumps(payload)
 
-#     # Insert prompt details into the prompt_tests table
-#     prompt_test_id = database.add_prompt_test(connection, "hf", model_id, temperature, max_tokens, top_p, story_id, question_id, payload_json)
+    # Insert prompt details into the prompt_tests table
+    prompt_test_id = database.add_prompt_test(connection, "hf", model_id, temperature, max_tokens, top_p, story_id, question_id, payload_json)
 
-#     # Send the prompt to Hugging Face
-#     response = query(payload)
-#     response_content = response.get("generated_text", "")
+    # Send the prompt to Hugging Face
+    response = query(payload)
+    response_content = response.get("generated_text", "")
 
-#     # Insert the response into the responses table
-#     database.add_response(connection, prompt_test_id, response_content)
+    # Insert the response into the responses table
+    database.add_response(connection, prompt_test_id, response_content)
 
-#     return response_content
+    return response_content

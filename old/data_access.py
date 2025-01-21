@@ -210,7 +210,7 @@ def prompt_create_and_send_db_prompt(connection, model_id):
     if provider_name == "groq":
         response = llm.call_LLM_GROQ(connection, story, question, story_id, question_id, model_name, model_id, temperature, max_tokens, top_p)
     elif provider_name == "hf":
-        response = llm.call_LLM_HF(story[1], question[1], model, temperature, max_tokens, top_p)
+        response = llm.call_LLM_HF(story[1], question[1], model_name, temperature, max_tokens, top_p)
 
    
 

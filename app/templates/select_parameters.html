@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Parameters</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/static.css') }}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script>
+        function updateValue(sliderId, valueId) {
+            var slider = document.getElementById(sliderId);
+            var value = document.getElementById(valueId);
+            value.innerHTML = slider.value;
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Select Parameters</h1>
+        <form method="POST">
+            {% for param, details in parameters.items() %}
+                <div class="form-group">
+                    <label for="{{ param }}">{{ param | capitalize }}</label>
+                    <input type="range" class="form-control-range" id="{{ param }}" name="{{ param }}"
+                           min="{{ details.min_value }}" max="{{ details.max_value }}" 
+                           step="{% if details.type == 'float' %}0.01{% else %}1{% endif %}" 
+                           value="{{ details.default }}"
+                           oninput="updateValue('{{ param }}', '{{ param }}_value')">
+                    <div class="d-flex justify-content-between">
+                        <small class="form-text text-muted">Min: {{ details.min_value }}</small>
+                        <small class="form-text text-muted">Max: {{ details.max_value }}</small>
+                    </div>
+                    <small class="form-text text-muted">Default: {{ details.default }}</small>
+                    <div>
+                        <small class="form-text text-muted">Current Value: <span id="{{ param }}_value">{{ details.default }}</span></small>
+                    </div>
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Send Prompt</button>
+        </form>
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary mt-3">Home</a>
+    </div>
+</body>
+</html>
