@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, session
 from . import db
-from .services import story_service, question_service, story_builder_service
-from .models import Template, Story, Question
+from .services import story_service, question_service, story_builder_service, llm_service
+from .models import Template, Story, Question, Model, Provider
 
 # Create a blueprint for the routes
 bp = Blueprint('main', __name__)
@@ -83,3 +83,45 @@ def add_word():
     if field_name and new_words:
         story_builder_service.add_words_to_field(field_name, new_words)
     return redirect(url_for('main.generate_stories', template_id=template_id))
+
+@bp.route('/send_prompt_to_llm')
+def send_prompt_to_llm():
+    models = db.session.query(Model).join(Provider).all()
+    return render_template('send_prompt_to_llm.html', models=models)
+
+@bp.route('/select_story/<int:model_id>')
+def select_story(model_id):
+    session['model_id'] = model_id
+    stories = llm_service.get_all_stories()
+    return render_template('select_story.html', stories=stories)
+
+@bp.route('/select_question/<int:story_id>')
+def select_question(story_id):
+    session['story_id'] = story_id
+    questions = llm_service.get_all_questions()
+    return render_template('select_question.html', questions=questions)
+
+@bp.route('/select_parameters/<int:question_id>', methods=['GET', 'POST'])
+def select_parameters(question_id):
+    if request.method == 'POST':
+        temperature = float(request.form.get('temperature'))
+        max_tokens = int(request.form.get('max_tokens'))
+        top_p = float(request.form.get('top_p'))
+        model_id = session.get('model_id')
+        story_id = session.get('story_id')
+        story = llm_service.get_story_by_id(story_id).content
+        question = llm_service.get_question_by_id(question_id).content
+        model_name = llm_service.get_model_name_by_id(model_id)
+        provider_name = llm_service.get_provider_name_by_model_id(model_id)
+        if provider_name == "groq":
+            response = llm_service.call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, temperature, max_tokens, top_p)
+        elif provider_name == "hf":
+            response = llm_service.call_LLM_HF(story, question, story_id, question_id, model_name, model_id, temperature, max_tokens, top_p)
+        return render_template('llm_response.html', response=response)
+    else:
+        model_id = session.get('model_id')
+        model = llm_service.get_model_by_id(model_id)
+        parameters = model.parameters
+        session['question_id'] = question_id
+        return render_template('select_parameters.html', parameters=parameters)
+        

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Prompt to LLM</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/static.css') }}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Send Prompt to LLM</h1>
+        <div class="row">
+            {% for model in models %}
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ model.name }}</h5>
+                            <p class="card-text">Provider: {{ model.provider.provider_name }}</p>
+                            <a href="{{ url_for('main.select_story', model_id=model.model_id) }}" class="btn btn-primary">Select</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary mt-3">Home</a>
+    </div>
+</body>
+</html>
