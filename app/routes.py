@@ -101,22 +101,12 @@ def select_question(story_id):
     questions = llm_service.get_all_questions()
     return render_template('select_question.html', questions=questions)
 
+
 @bp.route('/select_parameters/<int:question_id>', methods=['GET', 'POST'])
 def select_parameters(question_id):
     if request.method == 'POST':
-        temperature = float(request.form.get('temperature'))
-        max_tokens = int(request.form.get('max_tokens'))
-        top_p = float(request.form.get('top_p'))
-        model_id = session.get('model_id')
-        story_id = session.get('story_id')
-        story = llm_service.get_story_by_id(story_id).content
-        question = llm_service.get_question_by_id(question_id).content
-        model_name = llm_service.get_model_name_by_id(model_id)
-        provider_name = llm_service.get_provider_name_by_model_id(model_id)
-        if provider_name == "groq":
-            response = llm_service.call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, temperature, max_tokens, top_p)
-        elif provider_name == "hf":
-            response = llm_service.call_LLM_HF(story, question, story_id, question_id, model_name, model_id, temperature, max_tokens, top_p)
+        session['question_id'] = question_id
+        response = llm_service.prepare_and_call_llm(request, session)
         return render_template('llm_response.html', response=response)
     else:
         model_id = session.get('model_id')
