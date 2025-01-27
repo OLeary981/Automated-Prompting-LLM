@@ -102,16 +102,43 @@ def select_question(story_id):
     return render_template('select_question.html', questions=questions)
 
 
+# @bp.route('/select_parameters/<int:question_id>', methods=['GET', 'POST'])
+# def select_parameters(question_id):
+#     if request.method == 'POST':
+#         session['question_id'] = question_id
+#         response = llm_service.prepare_and_call_llm(request, session)
+#         # Extract the necessary information from the response_data
+#         story = response.get('story')
+#         question = response.get('question')
+#         model = response.get('model')
+#         provider = response.get('provider')
+#         response = response.get('response')
+        
+#         return render_template('llm_response.html', story=story, question=question, model=model, provider=provider, response=response)
+#     else:
+#         model_id = session.get('model_id')
+#         model = llm_service.get_model_by_id(model_id)
+#         parameters = model.parameters
+#         session['question_id'] = question_id
+#         return render_template('select_parameters.html', parameters=parameters)
+        
 @bp.route('/select_parameters/<int:question_id>', methods=['GET', 'POST'])
 def select_parameters(question_id):
     if request.method == 'POST':
-        session['question_id'] = question_id
-        response = llm_service.prepare_and_call_llm(request, session)
-        return render_template('llm_response.html', response=response)
+        response_data = llm_service.prepare_and_call_llm(request, session)
+        
+        # Extract the necessary information from the session
+        story = session.get('story')
+        question = session.get('question')
+        model = session.get('model')
+        provider = session.get('provider')
+        
+        # Extract the response from the response_data
+        response = response_data.get('response')
+        
+        return render_template('llm_response.html', story=story, question=question, model=model, provider=provider, response=response)
     else:
         model_id = session.get('model_id')
         model = llm_service.get_model_by_id(model_id)
         parameters = model.parameters
-        session['question_id'] = question_id
         return render_template('select_parameters.html', parameters=parameters)
-        
