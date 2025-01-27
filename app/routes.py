@@ -125,7 +125,7 @@ def select_question(story_id):
 @bp.route('/select_parameters/<int:question_id>', methods=['GET', 'POST'])
 def select_parameters(question_id):
     if request.method == 'POST':
-        response_data = llm_service.prepare_and_call_llm(request, session)
+        response_content= llm_service.prepare_and_call_llm(request, session)
         
         # Extract the necessary information from the session
         story = session.get('story')
@@ -134,7 +134,7 @@ def select_parameters(question_id):
         provider = session.get('provider')
         
         # Extract the response from the response_data
-        response = response_data.get('response')
+        response = response_content
         
         return render_template('llm_response.html', story=story, question=question, model=model, provider=provider, response=response)
     else:
