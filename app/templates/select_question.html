@@ -10,18 +10,21 @@
 <body>
     <div class="container">
         <h1>Select Question</h1>
-        <div class="row">
-            {% for question in questions %}
-                <div class="col-md-4">
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <p class="card-text">{{ question.content[:100] }}...</p>
-                            <a href="{{ url_for('main.select_parameters', question_id=question.question_id) }}" class="btn btn-primary">Select</a>
+        <form method="POST" action="{{ url_for('main.select_question') }}">
+            <div class="row">
+                {% for question in questions %}
+                    <div class="col-md-4">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Question {{ question.question_id }}</h5>
+                                <p class="card-text">{{ question.content }}</p>
+                                <button type="submit" name="question_id" value="{{ question.question_id }}" class="btn btn-primary">Select</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
-        </div>
+                {% endfor %}
+            </div>
+        </form>
         <a href="{{ url_for('main.index') }}" class="btn btn-secondary mt-3">Home</a>
     </div>
 </body>
