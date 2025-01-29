@@ -2,7 +2,7 @@ import itertools
 import re
 import time
 from app import db
-from app.models import Template, Story, Question, Word, Field, WordField
+from app.models import Template, Story, Question, Word, Field
 import llm as llm
 
 def get_all_templates():

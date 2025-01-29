@@ -1,4 +1,43 @@
-Notes for picking up tomorrow:
-Call to LLM not working as issues with the parameters.
-Trying to move the list of parameters out of routes
-Need to make it flexible so that it processes the parameters that were stored in the JSON, not a hard coded list.
+Notes:
+
+Story id and question id still being passed in URLS (check templates).
+Display of LLM response now working correctly with correct provider and model name. 
+
+
+Add to project diary:
+\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\app\services\llm_service.py:18: SAWarning: relationship 'WordField.field' will copy column field.field_id to column word_field.field_id, which conflicts with relationship(s): 'Field.words' (copies field.field_id to word_field.field_id), 'Word.fields' (copies field.field_id to word_field.field_id). If this is not the intention, consider if these relationships should be linked with back_populates, or if viewonly=True should be applied to one or more if they are read-only. For the less common case that foreign key constraints are partially overlapping, the orm.foreign() annotation can be used to isolate the columns that should be written towards. To silence this warning, add the parameter 'overlaps="fields,words"' to the 'WordField.field' relationship. (Background on this warning at: https://sqlalche.me/e/20/qzyx) (This warning originated from the configure_mappers() process, which was invoked automatically in response to a user-initiated operation.)
+
+GitHub Copilot
+This warning from SQLAlchemy indicates that there is a conflict in the relationships defined in your models. Specifically, the WordField.field relationship is trying to copy the field_id column to the word_field.field_id column, which conflicts with other relationships that also copy field_id to word_field.field_id.
+
+Explanation
+Conflicting Relationships: The warning mentions that the WordField.field relationship will copy field.field_id to word_field.field_id, which conflicts with the Field.words and Word.fields relationships that also copy field.field_id to word_field.field_id.
+
+Possible Solutions:
+
+Use back_populates: Link the relationships with back_populates to explicitly define the bidirectional relationships.
+Use viewonly=True: Apply viewonly=True to one or more relationships if they are read-only.
+Use overlaps: Add the overlaps parameter to the WordField.field relationship to silence the warning.
+
+Using back_populates
+Pros:
+
+Explicit Bidirectional Relationships: back_populates explicitly defines the bidirectional nature of the relationship, making the code more readable and understandable.
+Automatic Synchronization: Changes in one side of the relationship are automatically reflected in the other side, ensuring data consistency.
+Clear Relationship Definition: It provides a clear and explicit way to define how two models are related to each other.
+Cons:
+
+More Verbose: Requires additional lines of code to define the relationships on both sides.
+Potential for Cyclic Imports: If not managed properly, defining relationships in both models can lead to cyclic import issues.
+Using overlaps
+Pros:
+
+Simple Solution: Adding the overlaps parameter is a quick and simple way to silence the warning without changing the existing relationship definitions.
+Minimal Code Changes: Requires minimal changes to the existing code, making it easier to implement.
+Cons:
+
+Less Explicit: The overlaps parameter does not explicitly define the bidirectional nature of the relationship, which can make the code less readable and harder to understand.
+Potential for Hidden Issues: Silencing the warning without addressing the underlying issue might lead to hidden bugs or inconsistencies in the data.
+Summary
+back_populates is a more explicit and robust way to define bidirectional relationships, ensuring data consistency and clarity in the code. However, it requires more code and careful management to avoid cyclic imports.
+overlaps is a simpler and quicker solution to silence the warning, but it is less explicit and might hide underlying issues

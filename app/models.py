@@ -118,13 +118,70 @@ class Response(db.Model):
     def __repr__(self):
         return f'<Response {self.response_id}>'
 
+# # Word Table
+# class Word(db.Model):
+#     __tablename__ = 'word'
+
+#     word_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+#     word = db.Column(db.String(255), unique=True, nullable=False)
+#     fields = db.relationship('Field', secondary='word_field', backref=db.backref('words', lazy='dynamic'))
+
+#     def __repr__(self):
+#         return f'<Word {self.word_id} - {self.word}>'
+
+# # Field Table
+# class Field(db.Model):
+#     __tablename__ = 'field'
+
+#     field_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+#     field = db.Column(db.String(255), unique=True, nullable=False)
+
+#     def __repr__(self):
+#         return f'<Field {self.field_id} - {self.field}>'
+
+# # WordField Table (Many-to-Many Relationship)
+# #THIS VERSION OF THE CODE HAD A PROBLEM WITH OVERLAPPING RELATIONSHIPS
+# #CONSIDERED USING OVERLAPS OR BACKPOPULATES BUT DIDN'T FULLY UNDERSTADN THESE OPTIONS.
+# # class WordField(db.Model):
+# #     __tablename__ = 'word_field'
+
+# #     word_id = db.Column(db.Integer, db.ForeignKey('word.word_id'), primary_key=True)
+# #     field_id = db.Column(db.Integer, db.ForeignKey('field.field_id'), primary_key=True)
+
+# #     word = db.relationship('Word', backref=db.backref('word_fields', lazy=True, overlaps="fields,words"))
+# #     field = db.relationship('Field', backref=db.backref('word_fields', lazy=True, overlaps="fields,words"))
+
+# #     def __repr__(self):
+# #         return f'<WordField {self.word_id} - {self.field_id}>'
+
+# WordField Table (Many-to-Many Relationship)
+# class WordField(db.Model):
+#     __tablename__ = 'word_field'
+
+#     word_id = db.Column(db.Integer, db.ForeignKey('word.word_id'), primary_key=True)
+#     field_id = db.Column(db.Integer, db.ForeignKey('field.field_id'), primary_key=True)
+
+#     def __repr__(self):
+#         return f'<WordField {self.word_id} - {self.field_id}>'
+    
+
+
+# Association Table (No Explicit Model Needed)
+word_field_association = db.Table(
+    'word_field',
+    db.Column('word_id', db.Integer, db.ForeignKey('word.word_id'), primary_key=True),
+    db.Column('field_id', db.Integer, db.ForeignKey('field.field_id'), primary_key=True)
+)
+
 # Word Table
 class Word(db.Model):
     __tablename__ = 'word'
 
     word_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     word = db.Column(db.String(255), unique=True, nullable=False)
-    fields = db.relationship('Field', secondary='word_field', backref=db.backref('words', lazy='dynamic'))
+
+    # Many-to-Many Relationship
+    fields = db.relationship('Field', secondary=word_field_association, back_populates='words')
 
     def __repr__(self):
         return f'<Word {self.word_id} - {self.word}>'
@@ -136,18 +193,8 @@ class Field(db.Model):
     field_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     field = db.Column(db.String(255), unique=True, nullable=False)
 
+    # Many-to-Many Relationship
+    words = db.relationship('Word', secondary=word_field_association, back_populates='fields')
+
     def __repr__(self):
         return f'<Field {self.field_id} - {self.field}>'
-
-# WordField Table (Many-to-Many Relationship)
-class WordField(db.Model):
-    __tablename__ = 'word_field'
-
-    word_id = db.Column(db.Integer, db.ForeignKey('word.word_id'), primary_key=True)
-    field_id = db.Column(db.Integer, db.ForeignKey('field.field_id'), primary_key=True)
-
-    word = db.relationship('Word', backref=db.backref('word_fields', lazy=True, overlaps="fields,words"))
-    field = db.relationship('Field', backref=db.backref('word_fields', lazy=True, overlaps="fields,words"))
-
-    def __repr__(self):
-        return f'<WordField {self.word_id} - {self.field_id}>'
