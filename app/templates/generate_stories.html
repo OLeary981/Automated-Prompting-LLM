@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Stories</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/static.css') }}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Generate Stories</h1>
+        <h2>Selected Template</h2>
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Template ID: {{ template.template_id }}</h5>
+                <p class="card-text">{{ template.content }}</p>
+                <form action="{{ url_for('main.generate_stories') }}" method="POST">
+                    <input type="hidden" name="template_id" value="{{ template.template_id }}">
+                    <button type="submit" name="generate" class="btn btn-success">Generate Stories</button>
+                </form>
+            </div>
+        </div>
+        <h3>Fields and Words</h3>
+        <ul>
+            {% for field, words in fields.items() %}
+                <li>
+                    <strong>{{ field }}:</strong> {{ words | join(', ') }}
+                    <form action="{{ url_for('main.add_word') }}" method="POST" class="form-inline">
+                        <input type="hidden" name="field_name" value="{{ field }}">
+                        <input type="hidden" name="template_id" value="{{ template.template_id }}">
+                        <input type="text" name="new_words" class="form-control ml-2" placeholder="Add words">
+                        <button type="submit" class="btn btn-primary ml-2">Add</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+        {% if missing_fields %}
+            <div class="alert alert-danger mt-3">
+                <strong>Error:</strong> The following fields are missing words in the database. Please add words for these fields.
+                <ul>
+                    {% for field in missing_fields %}
+                        <li>
+                            <strong>{{ field }}:</strong>
+                            <form action="{{ url_for('main.add_word') }}" method="POST" class="form-inline">
+                                <input type="hidden" name="field_name" value="{{ field }}">
+                                <input type="hidden" name="template_id" value="{{ template.template_id }}">
+                                <input type="text" name="new_words" class="form-control ml-2" placeholder="Add words">
+                                <button type="submit" class="btn btn-primary ml-2">Add</button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        <h3>Number of Stories</h3>
+        <p>{{ num_stories }} stories will be generated based on the current fields and words.</p>
+        <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-primary mt-3">Back to Templates</a>
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary mt-3">Home</a>
+    </div>
+</body>
+</html>

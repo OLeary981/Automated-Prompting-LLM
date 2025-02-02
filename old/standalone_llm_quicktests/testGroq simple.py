@@ -11,8 +11,8 @@ GROQ_API_KEY = os.getenv("GRO_API_KEY")
 client = Groq(api_key=GROQ_API_KEY)
 
 completion = client.chat.completions.create(
-    #model="llama3-groq-70b-8192-tool-use-preview",
-    model="llama-3.1-70b-versatile",
+    model="llama3-groq-70b-8192-tool-use-preview",
+    #model="llama-3.1-70b-versatile",
     messages=[
          {
             "role": "system",
