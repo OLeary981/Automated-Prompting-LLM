@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Response</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .container {
+            margin-top: 20px;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+        .card-header {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">LLM Response</h1>
+        <div class="card">
+            <div class="card-header">Story Sent</div>
+            <div class="card-body">
+                <p>{{ story }}</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">Question Asked</div>
+            <div class="card-body">
+                <p>{{ question }}</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">Model and Provider</div>
+            <div class="card-body">
+                <p>Model: {{ model }}</p>
+                <p>Provider: {{ provider }}</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">Response from the Model</div>
+            <div class="card-body">
+                <p>{{ response }}</p>
+            </div>
+        </div>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary">Back to Home</a>
+    </div>
+</body>
+</html>

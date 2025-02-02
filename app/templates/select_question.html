@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Question</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/static.css') }}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Select Question</h1>
+        <form method="POST" action="{{ url_for('main.select_question') }}">
+            <div class="row">
+                {% for question in questions %}
+                    <div class="col-md-4">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Question {{ question.question_id }}</h5>
+                                <p class="card-text">{{ question.content }}</p>
+                                <button type="submit" name="question_id" value="{{ question.question_id }}" class="btn btn-primary">Select</button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </form>
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary mt-3">Home</a>
+    </div>
+</body>
+</html>

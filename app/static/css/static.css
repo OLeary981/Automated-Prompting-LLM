@@ -1,0 +1,11 @@
+.clickable-row {
+    cursor: pointer;
+}
+
+.selected-row {
+    background-color: #d3d3d3;
+}
+
+.hidden {
+    display: none;
+}
