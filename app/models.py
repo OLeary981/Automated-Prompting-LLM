@@ -112,6 +112,8 @@ class Response(db.Model):
     response_content = db.Column(db.Text, nullable=False)
     full_response = db.Column(db.Text, nullable=True)
     timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
+    flagged_for_review = db.Column(db.Boolean, default=False)
+    review_notes = db.Column(db.Text)
 
     prompt = db.relationship('Prompt', backref=db.backref('responses', lazy=True))
 
