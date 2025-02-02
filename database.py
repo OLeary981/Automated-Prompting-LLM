@@ -88,6 +88,8 @@ CREATE TABLE IF NOT EXISTS response (
     response_content TEXT NOT NULL,
     full_response LONGTEXT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    flagged_for_review BOOLEAN DEFAULT FALSE,
+    review_notes TEXT,
     FOREIGN KEY (prompt_id) REFERENCES prompt(prompt_id)
 );
 """
@@ -200,162 +202,162 @@ def delete_database(db_file):
     else:
         print(f"{db_file} does not exist")
 
-def add_story(connection, content, template_id=None):
-    with connection:
-        cursor = connection.execute("INSERT INTO story (content, template_id) VALUES (?, ?)", (content, template_id))
-    return(cursor.lastrowid)
+# def add_story(connection, content, template_id=None):
+#     with connection:
+#         cursor = connection.execute("INSERT INTO story (content, template_id) VALUES (?, ?)", (content, template_id))
+#     return(cursor.lastrowid)
         
-def add_template(connection, content):
-    with connection:
-        connection.execute("INSERT INTO template (content) VALUES (?)", (content,))
+# def add_template(connection, content):
+#     with connection:
+#         connection.execute("INSERT INTO template (content) VALUES (?)", (content,))
         
-def add_category(connection, content):
-    with connection:
-        connection.execute("INSERT INTO category (category) VALUES (?)", (content,))
+# def add_category(connection, content):
+#     with connection:
+#         connection.execute("INSERT INTO category (category) VALUES (?)", (content,))
 
-def add_question(connection, content):
-    with connection:
-        connection.execute("INSERT INTO question (content) VALUES (?)", (content,))
+# def add_question(connection, content):
+#     with connection:
+#         connection.execute("INSERT INTO question (content) VALUES (?)", (content,))
 
-def add_prompt(connection, model_id, temperature, max_tokens, top_p, story_id, question_id, payload):
-    with connection:
-        cursor = connection.execute(
-            "INSERT INTO prompt(model_id, temperature, max_tokens, top_p, story_id, question_id, payload) VALUES ( ?, ?, ?, ?, ?, ?, ?)",
-            (model_id, temperature, max_tokens, top_p, story_id, question_id, payload)
-        )
-        return cursor.lastrowid
+# def add_prompt(connection, model_id, temperature, max_tokens, top_p, story_id, question_id, payload):
+#     with connection:
+#         cursor = connection.execute(
+#             "INSERT INTO prompt(model_id, temperature, max_tokens, top_p, story_id, question_id, payload) VALUES ( ?, ?, ?, ?, ?, ?, ?)",
+#             (model_id, temperature, max_tokens, top_p, story_id, question_id, payload)
+#         )
+#         return cursor.lastrowid
 
-def add_response(connection, prompt_id, response_content, full_response):
-    with connection:
-        connection.execute("INSERT INTO response (prompt_id, response_content, full_response) VALUES (?, ?, ?)", (prompt_id, response_content, full_response))
+# def add_response(connection, prompt_id, response_content, full_response):
+#     with connection:
+#         connection.execute("INSERT INTO response (prompt_id, response_content, full_response) VALUES (?, ?, ?)", (prompt_id, response_content, full_response))
 
         
-def add_word_with_field(connection, word, field):
-    with connection:
-        # Insert the word if it does not exist
-        connection.execute("INSERT OR IGNORE INTO word (word) VALUES (?)", (word,))
+# def add_word_with_field(connection, word, field):
+#     with connection:
+#         # Insert the word if it does not exist
+#         connection.execute("INSERT OR IGNORE INTO word (word) VALUES (?)", (word,))
         
-        # Insert the field if it does not exist
-        connection.execute("INSERT OR IGNORE INTO field (field) VALUES (?)", (field,))
+#         # Insert the field if it does not exist
+#         connection.execute("INSERT OR IGNORE INTO field (field) VALUES (?)", (field,))
         
-        # Get the word_id and field_id
-        word_id = connection.execute("SELECT word_id FROM word WHERE word = ?", (word,)).fetchone()[0]
-        field_id = connection.execute("SELECT field_id FROM field WHERE field = ?", (field,)).fetchone()[0]
+#         # Get the word_id and field_id
+#         word_id = connection.execute("SELECT word_id FROM word WHERE word = ?", (word,)).fetchone()[0]
+#         field_id = connection.execute("SELECT field_id FROM field WHERE field = ?", (field,)).fetchone()[0]
         
-        # Insert the word-field relationship if it does not exist
-        connection.execute("INSERT OR IGNORE INTO word_field (word_id, field_id) VALUES (?, ?)", (word_id, field_id))
+#         # Insert the word-field relationship if it does not exist
+#         connection.execute("INSERT OR IGNORE INTO word_field (word_id, field_id) VALUES (?, ?)", (word_id, field_id))
 
-def add_story_with_category(connection, story_content, category_name):
-    with connection:
-        # Insert the story if it does not exist
-        connection.execute("INSERT OR IGNORE INTO story (content) VALUES (?)", (story_content,))
+# def add_story_with_category(connection, story_content, category_name):
+#     with connection:
+#         # Insert the story if it does not exist
+#         connection.execute("INSERT OR IGNORE INTO story (content) VALUES (?)", (story_content,))
         
-        # Insert the field if it does not exist
-        connection.execute("INSERT OR IGNORE INTO field (category_name) VALUES (?)", (category_name,))
+#         # Insert the field if it does not exist
+#         connection.execute("INSERT OR IGNORE INTO field (category_name) VALUES (?)", (category_name,))
         
-        # Get the story_id and field_id
-        story_id = connection.execute("SELECT story_id FROM story WHERE content = ?", (story_content,)).fetchone()[0]
-        category_id = connection.execute("SELECT category_id FROM category WHERE category = ?", (category_name,)).fetchone()[0]
+#         # Get the story_id and field_id
+#         story_id = connection.execute("SELECT story_id FROM story WHERE content = ?", (story_content,)).fetchone()[0]
+#         category_id = connection.execute("SELECT category_id FROM category WHERE category = ?", (category_name,)).fetchone()[0]
         
-        # Insert the story-field relationship if it does not exist
-        connection.execute("INSERT OR IGNORE INTO story_field (story_id, category_id) VALUES (?, ?)", (story_id, category_id))
+#         # Insert the story-field relationship if it does not exist
+#         connection.execute("INSERT OR IGNORE INTO story_field (story_id, category_id) VALUES (?, ?)", (story_id, category_id))
 
 
-def add_model(connection, name, provider_id, endpoint, request_delay, parameters):
-    """Add a new model to the database."""
-    with connection:
-        connection.execute("""
-            INSERT INTO model (name, provider_id, endpoint, request_delay, parameters)
-            VALUES (?, ?, ?, ?, ?)
-        """, (name, provider_id, endpoint, request_delay, parameters))
+# def add_model(connection, name, provider_id, endpoint, request_delay, parameters):
+#     """Add a new model to the database."""
+#     with connection:
+#         connection.execute("""
+#             INSERT INTO model (name, provider_id, endpoint, request_delay, parameters)
+#             VALUES (?, ?, ?, ?, ?)
+#         """, (name, provider_id, endpoint, request_delay, parameters))
 
-def get_model_parameters(connection, model_id):
-    """Retrieve the parameters for a given model by its ID."""
-    cursor = connection.cursor()
-    cursor.execute("SELECT parameters FROM model WHERE model_id = ?", (model_id,))
-    result = cursor.fetchone()
-    return result[0] if result else None
+# def get_model_parameters(connection, model_id):
+#     """Retrieve the parameters for a given model by its ID."""
+#     cursor = connection.cursor()
+#     cursor.execute("SELECT parameters FROM model WHERE model_id = ?", (model_id,))
+#     result = cursor.fetchone()
+#     return result[0] if result else None
 
-def get_all_stories(connection):
-    with connection:
-        return connection.execute("SELECT * FROM story").fetchall()
+# def get_all_stories(connection):
+#     with connection:
+#         return connection.execute("SELECT * FROM story").fetchall()
 
-def get_all_questions(connection):
-    with connection:
-        return connection.execute("SELECT * FROM question").fetchall()
+# def get_all_questions(connection):
+#     with connection:
+#         return connection.execute("SELECT * FROM question").fetchall()
 
-def get_all_story_templates(connection):
-    with connection:
-        return connection.execute("SELECT * FROM template").fetchall()
+# def get_all_story_templates(connection):
+#     with connection:
+#         return connection.execute("SELECT * FROM template").fetchall()
 
-def get_story_by_id(connection, story_id):
-    """Retrieve a story by its ID."""
-    cursor = connection.cursor()
-    cursor.execute("SELECT content FROM story WHERE story_id = ?", (story_id,))
-    result = cursor.fetchone()
-    return result[0] if result else None
+# def get_story_by_id(connection, story_id):
+#     """Retrieve a story by its ID."""
+#     cursor = connection.cursor()
+#     cursor.execute("SELECT content FROM story WHERE story_id = ?", (story_id,))
+#     result = cursor.fetchone()
+#     return result[0] if result else None
 
-def get_question_by_id(connection, question_id):
-    """Retrieve a question by its ID."""
-    cursor = connection.cursor()
-    cursor.execute("SELECT content FROM question WHERE question_id = ?", (question_id,))
-    result = cursor.fetchone()
-    return result[0] if result else None
+# def get_question_by_id(connection, question_id):
+#     """Retrieve a question by its ID."""
+#     cursor = connection.cursor()
+#     cursor.execute("SELECT content FROM question WHERE question_id = ?", (question_id,))
+#     result = cursor.fetchone()
+#     return result[0] if result else None
 
-def get_words_by_field(connection, field_name):
-    """Retrieve words for a given field from the database."""
-    cursor = connection.cursor()
-    cursor.execute("""
-        SELECT w.word
-        FROM word w
-        JOIN word_field wf ON w.word_id = wf.word_id
-        JOIN field f ON wf.field_id = f.field_id
-        WHERE f.field = ?
-    """, (field_name,))
-    return [row[0] for row in cursor.fetchall()]
+# def get_words_by_field(connection, field_name):
+#     """Retrieve words for a given field from the database."""
+#     cursor = connection.cursor()
+#     cursor.execute("""
+#         SELECT w.word
+#         FROM word w
+#         JOIN word_field wf ON w.word_id = wf.word_id
+#         JOIN field f ON wf.field_id = f.field_id
+#         WHERE f.field = ?
+#     """, (field_name,))
+#     return [row[0] for row in cursor.fetchall()]
 
-def get_template_by_id(connection, template_id):
-    """Retrieve a template by its ID."""
-    cursor = connection.cursor()
-    cursor.execute("SELECT content FROM template WHERE template_id = ?", (template_id,))
-    result = cursor.fetchone()
-    return result[0] if result else None
+# def get_template_by_id(connection, template_id):
+#     """Retrieve a template by its ID."""
+#     cursor = connection.cursor()
+#     cursor.execute("SELECT content FROM template WHERE template_id = ?", (template_id,))
+#     result = cursor.fetchone()
+#     return result[0] if result else None
 
-def get_models_with_providers(connection):
-    """Retrieve the list of models along with their providers."""
-    cursor = connection.cursor()
-    cursor.execute("""
-        SELECT model.model_id, model.name, provider.provider_name
-        FROM model
-        JOIN provider ON model.provider_id = provider.provider_id
-    """)
-    return cursor.fetchall()
+# def get_models_with_providers(connection):
+#     """Retrieve the list of models along with their providers."""
+#     cursor = connection.cursor()
+#     cursor.execute("""
+#         SELECT model.model_id, model.name, provider.provider_name
+#         FROM model
+#         JOIN provider ON model.provider_id = provider.provider_id
+#     """)
+#     return cursor.fetchall()
 
-def get_model_name_by_id(connection, model_id):
-    """Retrieve the model name by its ID."""
-    cursor = connection.cursor()
-    cursor.execute("SELECT name FROM model WHERE model_id = ?", (model_id,))
-    result = cursor.fetchone()
-    return result[0] if result else None
+# def get_model_name_by_id(connection, model_id):
+#     """Retrieve the model name by its ID."""
+#     cursor = connection.cursor()
+#     cursor.execute("SELECT name FROM model WHERE model_id = ?", (model_id,))
+#     result = cursor.fetchone()
+#     return result[0] if result else None
 
-def get_provider_name_by_model_id(connection, model_id):
-    """Retrieve the provider name by the model ID."""
-    cursor = connection.cursor()
-    cursor.execute("""
-        SELECT provider.provider_name
-        FROM provider
-        JOIN model ON provider.provider_id = model.provider_id
-        WHERE model.model_id = ?
-    """, (model_id,))
-    result = cursor.fetchone()
-    return result[0] if result else None
+# def get_provider_name_by_model_id(connection, model_id):
+#     """Retrieve the provider name by the model ID."""
+#     cursor = connection.cursor()
+#     cursor.execute("""
+#         SELECT provider.provider_name
+#         FROM provider
+#         JOIN model ON provider.provider_id = model.provider_id
+#         WHERE model.model_id = ?
+#     """, (model_id,))
+#     result = cursor.fetchone()
+#     return result[0] if result else None
 
-def get_request_delay_by_model_id(connection, model_id):
-    """Retrieve the request delay for a given model by its ID."""
-    cursor = connection.cursor()
-    cursor.execute("SELECT request_delay FROM model WHERE model_id = ?", (model_id,))
-    result = cursor.fetchone()
-    return result[0] if result else None
+# def get_request_delay_by_model_id(connection, model_id):
+#     """Retrieve the request delay for a given model by its ID."""
+#     cursor = connection.cursor()
+#     cursor.execute("SELECT request_delay FROM model WHERE model_id = ?", (model_id,))
+#     result = cursor.fetchone()
+#     return result[0] if result else None
 
 # Main execution
 if __name__ == "__main__":
