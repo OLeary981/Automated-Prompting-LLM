@@ -69,7 +69,7 @@ def save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id,
     db.session.add(response_entry)
     db.session.commit()
 
-    return prompt.prompt_id
+    return response_entry.response_id
 
 # def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, temperature, max_tokens, top_p):
 #     # Example implementation of calling the LLM
@@ -124,8 +124,11 @@ def prepare_and_call_llm(request, session):
             parameters[param] = float(request.form.get(param, 0.5))  # Use default value if not provided
         else:
             parameters[param] = int(request.form.get(param, 1024))  # Use default value if not provided
+    
+    response = call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, **parameters)
+    
 
-    return call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, **parameters)
+    return response
 
 def call_LLM_GROQ(connection, story, question, story_id, question_id, model_name, model_id, **parameters):
     try:
@@ -172,9 +175,9 @@ def call_LLM_GROQ(connection, story, question, story_id, question_id, model_name
         payload_json = json.dumps(payload)
 
         # Insert the response into the responses table
-        save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id, question_id, payload_json, response_content, full_response_json)
+        response_id = save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id, question_id, payload_json, response_content, full_response_json)
 
-        return response_content
+        return {"response_id": response_id, "response": response_content}
 
     except APIError as e:
         # Print an error message to the console

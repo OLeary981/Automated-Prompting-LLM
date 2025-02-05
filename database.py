@@ -1,7 +1,7 @@
 import os
 import sqlite3
 
-def connect(db_file="database.db"):
+def connect(db_file="instance/database.db"):
     """Create a database connection to the SQLite database specified by db_file."""
     connection = sqlite3.connect(db_file)
     return connection
@@ -164,11 +164,23 @@ INSERT INTO provider (provider_id, provider_name) VALUES
 
 INSERT_MODEL = """
 INSERT INTO model (model_id, name, provider_id, endpoint, request_delay, parameters) VALUES
-(1, 'llama3-groq-70b-8192-tool-use-preview', 1, 'placeholder', 5, 'temperature, max_tokens, top_p'),
-(2, 'llama-3.1-70b-versatile', 1, 'placeholder', 5, 'temperature, max_tokens, top_p'),
-(3, 'meta-llama/Llama-3.1-8B-Instruct', 2, 'placeholder', 5, 'temperature, max_tokens, top_p');
+(1, 'distil-whisper-large-v3-en', 1, 'placeholder', 5, '{  "parameters": [    {      "name": "temperature",      "description": "Controls the randomness of the output. Lower values make the output more deterministic, while higher values increase creativity.",      "type": "float",      "default": 0.7,      "min_value": 0.0,      "max_value": 1.0    },    {      "name": "max_tokens",      "description": "The maximum number of tokens to generate in the response.",      "type": "integer",      "default": 1024,      "min_value": 1,      "max_value": 2048    },    {      "name": "top_p",      "description": "Controls nucleus sampling, where the model considers only the most likely tokens with cumulative probability up to `top_p`.",      "type": "float",      "default": 0.8,      "min_value": 0.0,      "max_value": 1.0    }  ]}'),
+(2, 'gemma2-9b-it', 1, 'placeholder', 5, '{  "parameters": [    {      "name": "temperature",      "description": "Controls the randomness of the output. Lower values make the output more deterministic, while higher values increase creativity.",      "type": "float",      "default": 0.7,      "min_value": 0.0,      "max_value": 1.0    },    {      "name": "max_tokens",      "description": "The maximum number of tokens to generate in the response.",      "type": "integer",      "default": 1024,      "min_value": 1,      "max_value": 2048    },    {      "name": "top_p",      "description": "Controls nucleus sampling, where the model considers only the most likely tokens with cumulative probability up to `top_p`.",      "type": "float",      "default": 0.8,      "min_value": 0.0,      "max_value": 1.0    }  ]}'),
+(3, 'llama-3.3-70b-versatile', 1, 'placeholder', 5, '{  "parameters": [    {      "name": "temperature",      "description": "Controls the randomness of the output. Lower values make the output more deterministic, while higher values increase creativity.",      "type": "float",      "default": 0.7,      "min_value": 0.0,      "max_value": 1.0    },    {      "name": "max_tokens",      "description": "The maximum number of tokens to generate in the response.",      "type": "integer",      "default": 1024,      "min_value": 1,      "max_value": 2048    },    {      "name": "top_p",      "description": "Controls nucleus sampling, where the model considers only the most likely tokens with cumulative probability up to `top_p`.",      "type": "float",      "default": 0.8,      "min_value": 0.0,      "max_value": 1.0    }  ]}');
+"""
+INSERT_STORIES = """
+INSERT INTO story (content, template_id) VALUES
+('Lena rushed out of the café, realizing too late that she had left her umbrella behind. Rain poured relentlessly, soaking her in seconds. When she turned back, the café door was locked, and through the window, she saw a stranger picking up her umbrella with a knowing smile.', NULL),
+('David had a cat, Mittens, who had a habit of vanishing for hours, but this time, she was gone for days. Just as he was about to put up missing posters, he heard a soft meow from inside the closet. When he opened it, Mittens sat smugly atop his winter coats—right where he swore he had looked a dozen times.', NULL),
+('Ella stepped into the elevator, pressing the button for the 10th floor. The man beside her pressed 11. When they reached the 10th, she hesitated, suddenly unsure—she lived on the 11th.', NULL);
 """
 
+INSERT_QUESTIONS = """
+INSERT INTO question (content) VALUES
+('What do you think will happen next?'),
+('Interpret this story.'),
+('What are the themes in this story?');
+"""
 
 # Functions to create tables and add data
 def create_tables(connection):
@@ -194,6 +206,8 @@ def insert_initial_data(connection):
         connection.executescript(INSERT_WORD_FIELD)
         connection.executescript(INSERT_PROVIDER)
         connection.executescript(INSERT_MODEL)
+        connection.executescript(INSERT_QUESTIONS)
+        connection.executescript(INSERT_STORIES)
 
 def delete_database(db_file):
     if os.path.exists(db_file):
@@ -361,7 +375,7 @@ def delete_database(db_file):
 
 # Main execution
 if __name__ == "__main__":
-    db_file = "database.db"
+    db_file = "instance/database.db"
     delete_database(db_file)
     connection = sqlite3.connect(db_file)
     create_tables(connection)
