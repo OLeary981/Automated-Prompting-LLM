@@ -1,51 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LLM Response</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
     <style>
-        .container {
-            margin-top: 20px;
-        }
-        .card {
-            margin-bottom: 20px;
-        }
-        .card-header {
-            font-weight: bold;
-        }
+      .container {
+        margin-top: 20px;
+      }
+      .card {
+        margin-bottom: 20px;
+      }
+      .card-header {
+        font-weight: bold;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1 class="text-center">LLM Response</h1>
-        <div class="card">
-            <div class="card-header">Story Sent</div>
-            <div class="card-body">
-                <p>{{ story }}</p>
-            </div>
+      <h1 class="text-center">LLM Response</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <div class="alert alert-success" role="alert">
+        {% for category, message in messages %}
+        <p>{{ message }}</p>
+        {% endfor %}
+      </div>
+      <script>
+        alert("{{ messages[0][1] }}");
+      </script>
+      {% endif %} {% endwith %}
+
+      <div class="card">
+        <div class="card-header">Story Sent</div>
+        <div class="card-body">
+          <p>{{ story }}</p>
         </div>
-        <div class="card">
-            <div class="card-header">Question Asked</div>
-            <div class="card-body">
-                <p>{{ question }}</p>
-            </div>
+      </div>
+      <div class="card">
+        <div class="card-header">Question Asked</div>
+        <div class="card-body">
+          <p>{{ question }}</p>
         </div>
-        <div class="card">
-            <div class="card-header">Model and Provider</div>
-            <div class="card-body">
-                <p>Model: {{ model }}</p>
-                <p>Provider: {{ provider }}</p>
-            </div>
+      </div>
+      <div class="card">
+        <div class="card-header">Model and Provider</div>
+        <div class="card-body">
+          <p>Model: {{ model }}</p>
+          <p>Provider: {{ provider }}</p>
         </div>
-        <div class="card">
-            <div class="card-header">Response from the Model</div>
-            <div class="card-body">
-                <p>{{ response }}</p>
-            </div>
+      </div>
+      <div class="card">
+        <div class="card-header">Response from the Model</div>
+        <div class="card-body">
+          <p>{{ response }}</p>
         </div>
-        <a href="{{ url_for('main.index') }}" class="btn btn-primary">Back to Home</a>
+      </div>
+      {% if flagged_for_review or review_notes %}
+      <div class="card">
+        <div class="card-header">Flag and Review Notes</div>
+        <div class="card-body">
+          <p>Flagged for Review: {{ flagged_for_review }}</p>
+          <p>Review Notes: {{ review_notes }}</p>
+        </div>
+      </div>
+      {% endif %}
+      <form method="POST" action="{{ url_for('main.llm_response') }}">
+        <div class="form-group">
+          <label for="flagged_for_review">Flag for Review</label>
+          <input
+            type="checkbox"
+            id="flagged_for_review"
+            name="flagged_for_review"
+            {%
+            if
+            flagged_for_review
+            %}
+            checked
+            {%
+            endif
+            %}
+          />
+        </div>
+        <div class="form-group">
+          <label for="review_notes">Review Notes</label>
+          <textarea id="review_notes" name="review_notes" class="form-control">
+{{ review_notes }}</textarea
+          >
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+      <a href="{{ url_for('main.index') }}" class="btn btn-secondary"
+        >Back to Home</a
+      >
     </div>
-</body>
+  </body>
 </html>
