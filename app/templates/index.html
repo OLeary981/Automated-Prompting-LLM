@@ -8,13 +8,61 @@
 </head>
 <body>
     <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert-container mt-4">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
         <h1>Welcome to the Story App</h1>
-        <a href="{{ url_for('main.add_story') }}" class="btn btn-primary">Add Story</a>
-        <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-secondary">See All Stories</a>
-        <a href="{{ url_for('main.add_question') }}" class="btn btn-primary">Add Question</a>
-        <a href="{{ url_for('main.see_all_questions') }}" class="btn btn-secondary">See All Questions</a>
-        <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-success">Build Stories from Template</a>
-        <a href="{{ url_for('main.select_model') }}" class="btn btn-info">Send Prompt to LLM</a>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                Work with Stories
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('main.add_story') }}" class="btn btn-primary">Add Story</a>
+                <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-secondary">See All Stories</a>
+                <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-success">Build Stories from Template</a>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                Work with Questions
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('main.add_question') }}" class="btn btn-primary">Add Question</a>
+                <a href="{{ url_for('main.see_all_questions') }}" class="btn btn-secondary">See All Questions</a>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                Send Prompts to LLM
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('main.select_model') }}" class="btn btn-info">Send Prompt to LLM</a>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                Session Management
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('main.clear_session') }}" class="btn btn-danger">Clear Previous Session Data</a>
+            </div>
+        </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
 </body>
 </html>

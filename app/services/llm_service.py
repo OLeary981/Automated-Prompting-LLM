@@ -3,6 +3,7 @@ from config import Config
 from app.models import Story, Question, Model, Response, Prompt
 import requests
 import json
+import time
 from groq import Groq, APIError
 
 GROQ_API_KEY = Config.GROQ_API_KEY
@@ -102,40 +103,65 @@ def save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id,
 
 def call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, **parameters):
     if provider_name == "groq":
-        return call_LLM_GROQ(None, story, question, story_id, question_id, model_name, model_id, **parameters)
+        return call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, **parameters)
     elif provider_name == "hf":
         return call_LLM_HF(story, question, story_id, question_id, model_name, model_id, **parameters)
     else:
         raise ValueError(f"Unknown provider: {provider_name}")
 
 def prepare_and_call_llm(request, session):
+    print("You've reached call LLM let's look at what is in the session")
+    print(session)
     model_id = session.get('model_id')
-    story_id = session.get('story_id')
+    story_ids = session.get('story_ids', [])  # Handle multiple stories
     question_id = session.get('question_id')
-    story = get_story_by_id(story_id).content
+    
+    if not story_ids:
+        return {"error": "No stories selected."}
+    
     question = get_question_by_id(question_id).content
     model_name = get_model_name_by_id(model_id)
     provider_name = get_provider_name_by_model_id(model_id)
+    request_delay = get_request_delay_by_model_id(model_id)  # Delay in seconds
 
     # Extract and convert parameters dynamically
     parameters = {}
     for param, details in get_model_parameters_and_values(model_id).items():
         if details['type'] == 'float':
-            parameters[param] = float(request.form.get(param, 0.5))  # Use default value if not provided
+            parameters[param] = float(request.form.get(param, 0.5))
         else:
-            parameters[param] = int(request.form.get(param, 1024))  # Use default value if not provided
-    
-    response = call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, **parameters)
-    
+            parameters[param] = int(request.form.get(param, 1024))
 
-    return response
+    responses = {}
+    response_ids = []
 
-def call_LLM_GROQ(connection, story, question, story_id, question_id, model_name, model_id, **parameters):
+    for i, story_id in enumerate(story_ids):
+        story = get_story_by_id(story_id).content
+        response = call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, **parameters)
+        print(response)
+
+        if response:
+            responses[story_id] = response
+            response_ids.append(response['response_id'])
+        else:
+            responses[story_id] = {"error": "Failed to get response"}
+
+        # Delay before the next request (if there are multiple)
+        if i < len(story_ids) - 1:
+            time.sleep(request_delay)
+
+    session['response_ids'] = response_ids  # Store all response_ids in the session
+
+    return responses
+
+
+def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, **parameters):
     try:
         # Set default values if parameters are not provided
         temperature = float(parameters.get('temperature', 0.5))
         max_tokens = int(parameters.get('max_tokens', 1024))
         top_p = float(parameters.get('top_p', 0.65))
+        print("About to call LLM_Groq")
 
         # Prepare the payload with all parameters
         payload = {
@@ -176,6 +202,7 @@ def call_LLM_GROQ(connection, story, question, story_id, question_id, model_name
 
         # Insert the response into the responses table
         response_id = save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id, question_id, payload_json, response_content, full_response_json)
+        
 
         return {"response_id": response_id, "response": response_content}
 
@@ -186,6 +213,7 @@ def call_LLM_GROQ(connection, story, question, story_id, question_id, model_name
         return None
 
     except Exception as e:
+        
         # Print an error message to the console
         print("An unexpected error occurred:")
         print(e)
