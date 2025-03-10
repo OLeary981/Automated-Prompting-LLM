@@ -131,14 +131,24 @@ def select_story():
         story_id = request.form.get('story_id')
         story = db.session.query(Story).filter_by(story_id=story_id).first()
         if story:
-            # Replace the entire story_ids list with the clicked story_id
-            session['story_ids'] = [story_id]
+            # Add the selected story_id to the list of story_ids in the session
+            story_ids = session.get('story_ids', [])
+            if story_id not in story_ids:
+                story_ids.append(story_id)
+            session['story_ids'] = story_ids
             print(session)
-        return redirect(url_for('main.select_question'))
+        return redirect(url_for('main.select_story'))
     else:
-        stories = story_service.get_all_stories()
-        print("reaching select stories")
-        return render_template('select_story.html', stories=stories)
+        story_ids = session.get('story_ids', [])
+        if story_ids:
+            # Display the selected stories
+            selected_stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
+            return render_template('selected_stories.html', selected_stories=selected_stories)
+        else:
+            # Display the list of available stories for selection
+            stories = story_service.get_all_stories()
+            print("reaching select stories")
+            return render_template('select_story.html', stories=stories)
 
 # @bp.route('/select_story', methods=['GET', 'POST'])
 # def select_story():

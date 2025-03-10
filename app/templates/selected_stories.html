@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selected Stories</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Selected Stories</h1>
+        
+        <!-- Display the selected stories -->
+        <div class="list-group mt-4">
+            {% for story in selected_stories %}
+                <div class="list-group-item">
+                    <h5>Story ID: {{ story.story_id }}</h5>
+                    <p>{{ story.content }}</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Button to proceed with the selected stories -->
+        <div class="mt-4">
+            <a href="{{ url_for('main.select_question') }}" class="btn btn-primary">Proceed with These Stories</a>
+        </div>
+
+        <!-- Button to go back and select more stories -->
+        <div class="mt-4">
+            <a href="{{ url_for('main.select_story') }}" class="btn btn-secondary">Select More Stories</a>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+</body>
+</html>
