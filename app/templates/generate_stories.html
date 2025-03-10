@@ -15,10 +15,7 @@
             <div class="card-body">
                 <h5 class="card-title">Template ID: {{ template.template_id }}</h5>
                 <p class="card-text">{{ template.content }}</p>
-                <form action="{{ url_for('main.generate_stories') }}" method="POST">
-                    <input type="hidden" name="template_id" value="{{ template.template_id }}">
-                    <button type="submit" name="generate" class="btn btn-success">Generate Stories</button>
-                </form>
+               
             </div>
         </div>
         <h3>Fields and Words</h3>
@@ -55,6 +52,10 @@
         {% endif %}
         <h3>Number of Stories</h3>
         <p>{{ num_stories }} stories will be generated based on the current fields and words.</p>
+        <form action="{{ url_for('main.generate_stories') }}" method="POST">
+            <input type="hidden" name="template_id" value="{{ template.template_id }}">
+            <button type="submit" name="generate" class="btn btn-success">Generate Stories</button>
+        </form>
         <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-primary mt-3">Back to Templates</a>
         <a href="{{ url_for('main.index') }}" class="btn btn-secondary mt-3">Home</a>
     </div>

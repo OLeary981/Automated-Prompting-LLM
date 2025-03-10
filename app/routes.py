@@ -62,6 +62,21 @@ def add_template():
         db.session.commit()
     return redirect(url_for('main.see_all_templates'))
 
+# @bp.route('/generate_stories', methods=['GET', 'POST'])
+# def generate_stories():
+#     template_id = request.args.get('template_id') or request.form.get('template_id')
+#     if template_id:
+#         template = db.session.query(Template).get(template_id)
+#         fields, missing_fields = story_builder_service.get_template_fields(template_id)
+#         permutations = story_builder_service.generate_permutations(fields)
+#         num_stories = len(permutations)
+#         if request.method == 'POST' and 'generate' in request.form:
+#             generated_stories_ids = story_builder_service.generate_stories(template_id)
+#             story_contents = {story_id: db.session.query(Story).get(story_id).content for story_id in generated_stories_ids}
+#             return render_template('generated_stories.html', story_ids=generated_stories_ids, story_contents=story_contents)
+#         return render_template('generate_stories.html', template=template, fields=fields, missing_fields=missing_fields, num_stories=num_stories)
+#     return redirect(url_for('main.see_all_templates'))
+
 @bp.route('/generate_stories', methods=['GET', 'POST'])
 def generate_stories():
     template_id = request.args.get('template_id') or request.form.get('template_id')
@@ -72,10 +87,18 @@ def generate_stories():
         num_stories = len(permutations)
         if request.method == 'POST' and 'generate' in request.form:
             generated_stories_ids = story_builder_service.generate_stories(template_id)
-            story_contents = {story_id: db.session.query(Story).get(story_id).content for story_id in generated_stories_ids}
-            return render_template('generated_stories.html', story_ids=generated_stories_ids, story_contents=story_contents)
+            #stories = [db.session.query(Story).get(story_id) for story_id in generated_stories_ids]
+            session['generated_story_ids'] = generated_stories_ids
+            return redirect(url_for('main.display_generated_stories'))
         return render_template('generate_stories.html', template=template, fields=fields, missing_fields=missing_fields, num_stories=num_stories)
     return redirect(url_for('main.see_all_templates'))
+
+@bp.route('/display_generated_stories', methods=['GET'])
+def display_generated_stories():
+    session['story_ids'] = session.get('generated_story_ids', [])
+    story_ids = session.get('generated_story_ids', [])
+    stories = [db.session.query(Story).get(story_id) for story_id in story_ids]    
+    return render_template('display_generated_stories.html', stories=stories)
 
 @bp.route('/add_word', methods=['POST'])
 def add_word():
@@ -96,23 +119,39 @@ def select_model():
             session['model_id'] = model_id
             session['model'] = model.name
             session['provider'] = model.provider.provider_name
+            print(session)
         return redirect(url_for('main.select_story'))
     else:
         models = db.session.query(Model).join(Provider).all()
         return render_template('select_model.html', models=models)
-
+    
 @bp.route('/select_story', methods=['GET', 'POST'])
 def select_story():
     if request.method == 'POST':
         story_id = request.form.get('story_id')
         story = db.session.query(Story).filter_by(story_id=story_id).first()
         if story:
-            session['story_id'] = story_id
-            session['story'] = story.content
+            # Replace the entire story_ids list with the clicked story_id
+            session['story_ids'] = [story_id]
+            print(session)
         return redirect(url_for('main.select_question'))
     else:
-        stories = llm_service.get_all_stories()
+        stories = story_service.get_all_stories()
+        print("reaching select stories")
         return render_template('select_story.html', stories=stories)
+
+# @bp.route('/select_story', methods=['GET', 'POST'])
+# def select_story():
+#     if request.method == 'POST':
+#         story_id = request.form.get('story_id')
+#         story = db.session.query(Story).filter_by(story_id=story_id).first()
+#         if story:
+#             session['story_id'] = story_id #AOL note to self need to look at singluar and plural variable names here as llm method is for plural now?
+#             session['story'] = story.content
+#         return redirect(url_for('main.select_question'))
+#     else:
+#         stories = llm_service.get_all_stories()
+#         return render_template('select_story.html', stories=stories)
 
 @bp.route('/select_question', methods=['GET', 'POST'])
 def select_question():
@@ -122,58 +161,75 @@ def select_question():
         if question:
             session['question_id'] = question_id
             session['question'] = question.content
+            print(session)
         return redirect(url_for('main.select_parameters'))
     else:
         questions = llm_service.get_all_questions()
+        print("Choosing a question")
         return render_template('select_question.html', questions=questions)
 
 
 @bp.route('/select_parameters', methods=['GET', 'POST'])
 def select_parameters():
-    if request.method == 'POST':
-        response_content = llm_service.prepare_and_call_llm(request, session)
+    if request.method == 'POST':        
+        print("About to send prompt to llm")
+        response_data = llm_service.prepare_and_call_llm(request, session)
+        print(response_data)
+
+        session['responses'] = response_data  # Store responses for later access
         
-        # Extract the necessary information from the session
-        story = session.get('story')
-        question = session.get('question')
-        model = session.get('model')
-        provider = session.get('provider')
-        
-        # Store the response_id and other relevant data in the session
-        response_id = response_content.get('response_id')  # Assuming response_content contains response_id
-        session['response_id'] = response_id
-        session['response_content'] = response_content.get('response')
-        
+
         return redirect(url_for('main.llm_response'))
+    
     else:
         model_id = session.get('model_id')
         model = llm_service.get_model_by_id(model_id)
         parameters = model.parameters
+        print("Time to select parameters")
         return render_template('select_parameters.html', parameters=parameters)
     
-
 @bp.route('/llm_response', methods=['GET', 'POST'])
 def llm_response():
     if request.method == 'POST':
-        response_id = session.get('response_id')
+        response_ids = session.get('response_ids', [])
         flagged_for_review = 'flagged_for_review' in request.form
         review_notes = request.form.get('review_notes')
-        if flag_response(response_id, flagged_for_review, review_notes):
-            flash('Response flagged for review successfully!', 'success')
-        else:
-            flash('Error flagging response for review.', 'danger')
+        for response_id in response_ids:
+            if flag_response(response_id, flagged_for_review, review_notes):
+                flash(f'Response {response_id} flagged for review successfully!', 'success')
+            else:
+                flash(f'Error flagging response {response_id} for review.', 'danger')
         return redirect(url_for('main.llm_response'))
     
-    response_id = session.get('response_id')
-    story = session.get('story')
-    question = session.get('question')
-    model = session.get('model')
-    provider = session.get('provider')
-    response_content = session.get('response_content')
+    print("Looking for the response details - printing response ids")
+    response_ids = session.get('response_ids', [])
+    print(response_ids)
+    story_ids = session.get('story_ids', [])
+    stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
+    responses = [db.session.query(Response).get(response_id) for response_id in response_ids]
     
-    # Retrieve flag status and review notes from session
-    response = Response.query.get(response_id)
-    flagged_for_review = response.flagged_for_review
-    review_notes = response.review_notes    
+    response_details = []
+    for response in responses:
+        if response is None:
+            flash('One or more responses not found.', 'danger')
+            return redirect(url_for('main.index'))
+        response_details.append({
+            'response_id': response.response_id,
+            'response_content': response.response_content,
+            'flagged_for_review': response.flagged_for_review,
+            'review_notes': response.review_notes
+        })
     
-    return render_template('llm_response.html', response_id=response_id, story=story, question=question, model=model, provider=provider, response=response_content, flagged_for_review=flagged_for_review, review_notes=review_notes)
+    combined_data = list(zip(stories, response_details))
+    
+    return render_template('llm_response.html', combined_data=combined_data, model=session.get('model'), provider=session.get('provider'), question=session.get('question'))
+
+@bp.route('/clear_session', methods=['GET'])
+def clear_session():
+    print("Session before printing:")
+    print(session)
+    print("Clearing session")
+    session.clear()
+    flash('Session data cleared!', 'success')
+    print(session)
+    return redirect(url_for('main.index'))

@@ -1,4 +1,8 @@
 Notes:
+** 26/02/25 - stories working up to generating stories from template, then breaking as it is mixed up in the sending stories to LLM route. 
+Generated stories are being added to the database its, when it then tries to re-route to "do you want to send them to the LLM" stuff it breaks. 
+
+
 
 Story id and question id still being passed in URLS (check templates).
 Display of LLM response now working correctly with correct provider and model name. 
