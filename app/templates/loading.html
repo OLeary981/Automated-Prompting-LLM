@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading...</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+</head>
+<body>
+    <div class="container text-center">
+        <h1>Processing Stories...</h1>
+        <p>Please wait while we process your stories.</p>
+        <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function() {
+            // Poll the backend every 5 seconds to check if the process is complete
+            setInterval(function() {
+                $.get("{{ url_for('main.check_status') }}", function(data) {
+                    if (data.status === "complete") {
+                        window.location.href = "{{ url_for('main.llm_response') }}";
+                    }
+                });
+            }, 5000); // Poll every 5 seconds
+        });
+    </script>
+</body>
+</html>
