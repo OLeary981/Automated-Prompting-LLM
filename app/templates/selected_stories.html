@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Selected Stories</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -16,6 +17,9 @@
                 <div class="list-group-item">
                     <h5>Story ID: {{ story.story_id }}</h5>
                     <p>{{ story.content }}</p>
+                    <form method="POST" action="{{ url_for('main.select_story') }}">
+                        <button type="submit" name="deselect_story_id" value="{{ story.story_id }}" class="btn btn-danger">Deselect</button>
+                    </form>
                 </div>
             {% endfor %}
         </div>
@@ -23,6 +27,26 @@
         <!-- Button to proceed with the selected stories -->
         <div class="mt-4">
             <a href="{{ url_for('main.select_question') }}" class="btn btn-primary">Proceed with These Stories</a>
+        </div>
+
+        <!-- Expandable section to display all available stories -->
+        <div class="mt-4">
+            <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#allStories" aria-expanded="false" aria-controls="allStories">
+                Show All Available Stories
+            </button>
+            <div class="collapse mt-3" id="allStories">
+                <div class="list-group">
+                    {% for story in all_stories %}
+                        <div class="list-group-item">
+                            <h5>Story ID: {{ story.story_id }}</h5>
+                            <p>{{ story.content }}</p>
+                            <form method="POST" action="{{ url_for('main.select_story') }}">
+                                <button type="submit" name="story_id" value="{{ story.story_id }}" class="btn btn-primary">Select</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
 
         <!-- Button to go back and select more stories -->

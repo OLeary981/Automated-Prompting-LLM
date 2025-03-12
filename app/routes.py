@@ -120,62 +120,83 @@ def select_model():
             session['model'] = model.name
             session['provider'] = model.provider.provider_name
             print(session)
-        return redirect(url_for('main.select_story'))
+        return redirect(url_for('main.select_parameters'))
     else:
         models = db.session.query(Model).join(Provider).all()
         return render_template('select_model.html', models=models)
-    
+
 @bp.route('/select_story', methods=['GET', 'POST'])
 def select_story():
     if request.method == 'POST':
-        story_id = request.form.get('story_id')
-        story = db.session.query(Story).filter_by(story_id=story_id).first()
-        if story:
-            # Add the selected story_id to the list of story_ids in the session
+        if 'deselect_story_id' in request.form:
+            # Deselect the story
+            story_id = request.form.get('deselect_story_id')
             story_ids = session.get('story_ids', [])
-            if story_id not in story_ids:
-                story_ids.append(story_id)
+            if story_id in story_ids:
+                story_ids.remove(story_id)
             session['story_ids'] = story_ids
             print(session)
+        else:
+            # Select the story
+            story_id = request.form.get('story_id')
+            story = db.session.query(Story).filter_by(story_id=story_id).first()
+            if story:
+                story_ids = session.get('story_ids', [])
+                if story_id not in story_ids:
+                    story_ids.append(story_id)
+                session['story_ids'] = story_ids
+                print(session)
         return redirect(url_for('main.select_story'))
     else:
-        story_ids = session.get('story_ids', [])
-        if story_ids:
-            # Display the selected stories
-            selected_stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
-            return render_template('selected_stories.html', selected_stories=selected_stories)
-        else:
-            # Display the list of available stories for selection
-            stories = story_service.get_all_stories()
-            print("reaching select stories")
-            return render_template('select_story.html', stories=stories)
+            story_ids = session.get('story_ids', [])
+            if story_ids:
+                # Display the selected stories
+                selected_stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
+                all_stories = story_service.get_all_stories()
+                return render_template('selected_stories.html', selected_stories=selected_stories, all_stories=all_stories)
+            else:
+                # Display the list of available stories for selection
+                stories = story_service.get_all_stories()
+                print("reaching select stories")
+                return render_template('select_story.html', stories=stories)
 
+#route that worked fairly well before trying to add deselection of story
 # @bp.route('/select_story', methods=['GET', 'POST'])
 # def select_story():
 #     if request.method == 'POST':
 #         story_id = request.form.get('story_id')
 #         story = db.session.query(Story).filter_by(story_id=story_id).first()
 #         if story:
-#             session['story_id'] = story_id #AOL note to self need to look at singluar and plural variable names here as llm method is for plural now?
-#             session['story'] = story.content
-#         return redirect(url_for('main.select_question'))
+#             # Add the selected story_id to the list of story_ids in the session
+#             story_ids = session.get('story_ids', [])
+#             if story_id not in story_ids:
+#                 story_ids.append(story_id)
+#             session['story_ids'] = story_ids
+#             print(session)
+#         return redirect(url_for('main.select_story'))
 #     else:
-#         stories = llm_service.get_all_stories()
-#         return render_template('select_story.html', stories=stories)
+#         story_ids = session.get('story_ids', [])
+#         if story_ids:
+#             # Display the selected stories
+#             selected_stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
+#             return render_template('selected_stories.html', selected_stories=selected_stories)
+#         else:
+#             # Display the list of available stories for selection
+#             stories = story_service.get_all_stories()
+#             print("reaching select stories")
+#             return render_template('select_story.html', stories=stories)
+
 
 @bp.route('/select_question', methods=['GET', 'POST'])
 def select_question():
     if request.method == 'POST':
         question_id = request.form.get('question_id')
-        question = db.session.query(Question).filter_by(question_id=question_id).first()
-        if question:
+        if question_id:
             session['question_id'] = question_id
-            session['question'] = question.content
-            print(session)
-        return redirect(url_for('main.select_parameters'))
+            print("Stored question_id in session:", session['question_id'])
+        return redirect(url_for('main.select_model'))  # Next step
     else:
         questions = llm_service.get_all_questions()
-        print("Choosing a question")
         return render_template('select_question.html', questions=questions)
 
 
@@ -189,7 +210,7 @@ def select_parameters():
         session['responses'] = response_data  # Store responses for later access
         
 
-        return redirect(url_for('main.llm_response'))
+        return redirect(url_for('main.loading'))
     
     else:
         model_id = session.get('model_id')
@@ -197,7 +218,20 @@ def select_parameters():
         parameters = model.parameters
         print("Time to select parameters")
         return render_template('select_parameters.html', parameters=parameters)
-    
+
+@bp.route('/loading')
+def loading():
+    return render_template('loading.html')
+
+@bp.route('/check_status')
+def check_status():
+    # Check if the processing is complete
+    response_ids = session.get('response_ids', [])
+    if response_ids:
+        return {"status": "complete"}
+    else:
+        return {"status": "incomplete"}
+
 @bp.route('/llm_response', methods=['GET', 'POST'])
 def llm_response():
     if request.method == 'POST':
@@ -231,8 +265,11 @@ def llm_response():
         })
     
     combined_data = list(zip(stories, response_details))
+    # Retrieve the question from the database using the question_id stored in the session
+    question_id = session.get('question_id')
+    question = db.session.query(Question).get(question_id).content if question_id else None
     
-    return render_template('llm_response.html', combined_data=combined_data, model=session.get('model'), provider=session.get('provider'), question=session.get('question'))
+    return render_template('llm_response.html', combined_data=combined_data, model=session.get('model'), provider=session.get('provider'), question=question)
 
 @bp.route('/clear_session', methods=['GET'])
 def clear_session():
