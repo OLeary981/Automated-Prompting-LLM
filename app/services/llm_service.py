@@ -137,7 +137,9 @@ def prepare_and_call_llm(request, session):
 
     for i, story_id in enumerate(story_ids):
         story = get_story_by_id(story_id).content
+        #put time stamp in here  with notabout what it is about  
         response = call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, **parameters)
+        #print statement here with timestamp, so
         print(response)
 
         if response:

@@ -204,13 +204,13 @@ def select_question():
 def select_parameters():
     if request.method == 'POST':        
         print("About to send prompt to llm")
-        response_data = llm_service.prepare_and_call_llm(request, session)
+        response_data = llm_service.prepare_and_call_llm(request, session) #will do all the stories and hany everything up until finished
         print(response_data)
 
         session['responses'] = response_data  # Store responses for later access
         
 
-        return redirect(url_for('main.loading'))
+        return redirect(url_for('main.loading')) # in wrong place
     
     else:
         model_id = session.get('model_id')
@@ -235,23 +235,28 @@ def check_status():
 @bp.route('/llm_response', methods=['GET', 'POST'])
 def llm_response():
     if request.method == 'POST':
-        response_ids = session.get('response_ids', [])
-        flagged_for_review = 'flagged_for_review' in request.form
-        review_notes = request.form.get('review_notes')
-        for response_id in response_ids:
-            if flag_response(response_id, flagged_for_review, review_notes):
-                flash(f'Response {response_id} flagged for review successfully!', 'success')
+        response_id = request.form.get('response_id')
+        if response_id:
+            flagged_for_review = f'flagged_for_review_{response_id}' in request.form
+            review_notes = request.form.get(f'review_notes_{response_id}', '')
+
+            response = db.session.query(Response).get(response_id)
+            if response:
+                response.flagged_for_review = flagged_for_review
+                response.review_notes = review_notes
+                db.session.commit()
+                flash(f'Response {response_id} updated successfully!', 'success')
             else:
-                flash(f'Error flagging response {response_id} for review.', 'danger')
+                flash(f'Error: Response {response_id} not found.', 'danger')
+
         return redirect(url_for('main.llm_response'))
-    
-    print("Looking for the response details - printing response ids")
+
+    # Fetch response details
     response_ids = session.get('response_ids', [])
-    print(response_ids)
     story_ids = session.get('story_ids', [])
     stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
     responses = [db.session.query(Response).get(response_id) for response_id in response_ids]
-    
+
     response_details = []
     for response in responses:
         if response is None:
@@ -263,13 +268,96 @@ def llm_response():
             'flagged_for_review': response.flagged_for_review,
             'review_notes': response.review_notes
         })
-    
-    combined_data = list(zip(stories, response_details))
-    # Retrieve the question from the database using the question_id stored in the session
+
+    # Retrieve model, provider, and question
     question_id = session.get('question_id')
     question = db.session.query(Question).get(question_id).content if question_id else None
+
+    return render_template('llm_response.html', 
+                           combined_data=zip(stories, response_details),
+                           model=session.get('model'), 
+                           provider=session.get('provider'), 
+                           question=question)
+
+
+# @bp.route('/llm_response', methods=['GET', 'POST'])
+# def llm_response():
+#     if request.method == 'POST':
+#         response_id = request.form.get('response_id')
+#         if response_id:
+#             flagged_for_review = f'flagged_for_review_{response_id}' in request.form  # Check if specific box is checked
+#             review_notes = request.form.get('review_notes', '')
+
+#             # Update the database for this specific response
+#             response = db.session.query(Response).get(response_id)
+#             if response:
+#                 response.flagged_for_review = flagged_for_review
+#                 response.review_notes = review_notes
+#                 db.session.commit()
+#                 flash(f'Response {response_id} updated successfully!', 'success')
+#             else:
+#                 flash(f'Error: Response {response_id} not found.', 'danger')
+
+#         return redirect(url_for('main.llm_response'))
+
+#     # Fetch response details as before
+#     response_ids = session.get('response_ids', [])
+#     story_ids = session.get('story_ids', [])
+#     stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
+#     responses = [db.session.query(Response).get(response_id) for response_id in response_ids]
+
+#     response_details = []
+#     for response in responses:
+#         if response is None:
+#             flash('One or more responses not found.', 'danger')
+#             return redirect(url_for('main.index'))
+#         response_details.append({
+#             'response_id': response.response_id,
+#             'response_content': response.response_content,
+#             'flagged_for_review': response.flagged_for_review,
+#             'review_notes': response.review_notes
+#         })
+
+#     return render_template('llm_response.html', combined_data=zip(stories, response_details))
+
+# @bp.route('/llm_response', methods=['GET', 'POST'])
+# def llm_response():
+#     if request.method == 'POST':
+#         response_ids = session.get('response_ids', [])
+#         flagged_for_review = 'flagged_for_review' in request.form
+#         review_notes = request.form.get('review_notes')
+#         for response_id in response_ids:
+#             if flag_response(response_id, flagged_for_review, review_notes):
+#                 flash(f'Response {response_id} flagged for review successfully!', 'success')
+#             else:
+#                 flash(f'Error flagging response {response_id} for review.', 'danger')
+#         return redirect(url_for('main.llm_response'))
     
-    return render_template('llm_response.html', combined_data=combined_data, model=session.get('model'), provider=session.get('provider'), question=question)
+#     print("Looking for the response details - printing response ids")
+#     response_ids = session.get('response_ids', [])
+#     print(response_ids)
+#     story_ids = session.get('story_ids', [])
+#     stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
+#     responses = [db.session.query(Response).get(response_id) for response_id in response_ids]
+    
+#     response_details = []
+#     for response in responses:
+#         if response is None:
+#             flash('One or more responses not found.', 'danger')
+#             return redirect(url_for('main.index'))
+#         response_details.append({
+#             'response_id': response.response_id,
+#             'response_content': response.response_content,
+#             'flagged_for_review': response.flagged_for_review,
+#             'review_notes': response.review_notes
+#         })
+    
+#     combined_data = list(zip(stories, response_details))
+#     # Retrieve the question from the database using the question_id stored in the session
+#     question_id = session.get('question_id')
+#     question = db.session.query(Question).get(question_id).content if question_id else None
+    
+#     return render_template('llm_response.html', combined_data=combined_data, model=session.get('model'), provider=session.get('provider'), question=question)
 
 @bp.route('/clear_session', methods=['GET'])
 def clear_session():
