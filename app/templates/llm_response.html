@@ -61,11 +61,12 @@
                     <td>
                         <form action="{{ url_for('main.llm_response') }}" method="POST">
                             <div class="form-check">
-                                <input type="checkbox" name="flagged_for_review" class="form-check-input" {% if response_detail.flagged_for_review %}checked{% endif %}>
+                                <input type="checkbox" name="flagged_for_review_{{ response_detail.response_id }}" class="form-check-input"
+       {% if response_detail.flagged_for_review %}checked{% endif %}>
                             </div>
                     </td>
                     <td>
-                            <textarea name="review_notes" class="form-control" rows="3">{{ response_detail.review_notes }}</textarea>
+                            <textarea name="review_notes_{{ response_detail.response_id }}"class="form-control" rows="3">{{ response_detail.review_notes }}</textarea>
                             <input type="hidden" name="response_id" value="{{ response_detail.response_id }}">
                             <button type="submit" class="btn btn-primary mt-2">Submit Review</button>
                         </form>
