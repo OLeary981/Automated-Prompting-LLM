@@ -140,7 +140,7 @@ def prepare_and_call_llm(request, session):
         #put time stamp in here  with notabout what it is about  
         response = call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, **parameters)
         #print statement here with timestamp, so
-        print(response)
+        # print(response)
 
         if response:
             responses[story_id] = response
@@ -163,7 +163,7 @@ def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, 
         temperature = float(parameters.get('temperature', 0.5))
         max_tokens = int(parameters.get('max_tokens', 1024))
         top_p = float(parameters.get('top_p', 0.65))
-        print("About to call LLM_Groq")
+        # print("About to call LLM_Groq")
 
         # Prepare the payload with all parameters
         payload = {
@@ -193,8 +193,8 @@ def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, 
         response_content = completion.choices[0].message.content
 
         # Print the response to the console
-        print("Response from Groq LLM:")
-        print(response_content)
+        # print("Response from Groq LLM:")
+        # print(response_content)
 
         # Serialize the full response to JSON
         full_response_json = json.dumps(completion, default=lambda o: o.__dict__)

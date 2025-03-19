@@ -202,11 +202,12 @@ def select_question():
 def select_parameters():
     if request.method == 'POST':        
         print("About to send prompt to llm")
-        response_data = llm_service.prepare_and_call_llm(request, session) #will do all the stories and hany everything up until finished
+        response_data = llm_service.prepare_and_call_llm(request, session) #will do all the stories and hang everything up until finished
+        print("About to print response_data")
         print(response_data)
-
-        session['responses'] = response_data  # Store responses for later access
-        
+        # Extract response IDs from response_data and store them in the session
+        response_ids = [response['response_id'] for response in response_data.values()]
+        session['response_ids'] = response_ids
 
         return redirect(url_for('main.loading')) # in wrong place
     
