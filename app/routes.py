@@ -3,7 +3,7 @@ from . import db
 from .services import story_service, question_service, story_builder_service, llm_service
 from .models import Template, Story, Question, Model, Provider, Response
 
-#FLAG MESSAGE TO CONFIRM I AM ON THE LATEST VERSION OF CODE.
+#FLAG MESSAGE TO CONFIRM I HAVE CREATED AND PUSHED A NEW LOADING PAGE BRANCH.
 # Create a blueprint for the routes
 bp = Blueprint('main', __name__)
 
