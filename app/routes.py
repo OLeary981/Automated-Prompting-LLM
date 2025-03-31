@@ -1,11 +1,16 @@
-from flask import Blueprint, flash, render_template, request, redirect, url_for, session
-from . import db
+from flask import Blueprint, flash, render_template, request, redirect, url_for, session, Response as FlaskResponse
+#from flask_sse import sse
+from . import db, create_app
 from .services import story_service, question_service, story_builder_service, llm_service
 from .models import Template, Story, Question, Model, Provider, Response
+import time
+import json
+from threading import Thread
 
-#FLAG MESSAGE TO CONFIRM I HAVE CREATED AND PUSHED A NEW LOADING PAGE BRANCH.
+
 # Create a blueprint for the routes
 bp = Blueprint('main', __name__)
+progress_tracker = {'progress': 0}
 
 @bp.route('/')
 def index():
@@ -76,21 +81,88 @@ def add_template():
 #         return render_template('generate_stories.html', template=template, fields=fields, missing_fields=missing_fields, num_stories=num_stories)
 #     return redirect(url_for('main.see_all_templates'))
 
+# @bp.route('/generate_stories', methods=['GET', 'POST'])
+# def generate_stories():
+#     template_id = request.args.get('template_id') or request.form.get('template_id')
+#     if template_id:
+#         template = db.session.query(Template).get(template_id)
+#         fields, missing_fields = story_builder_service.get_template_fields(template_id)
+#         permutations = story_builder_service.generate_permutations(fields)
+#         num_stories = len(permutations)
+#         if request.method == 'POST' and 'generate' in request.form:
+#             generated_stories_ids = story_builder_service.generate_stories(template_id)
+#             #stories = [db.session.query(Story).get(story_id) for story_id in generated_stories_ids]
+#             session['generated_story_ids'] = generated_stories_ids
+#             return redirect(url_for('main.display_generated_stories'))
+#         return render_template('generate_stories.html', template=template, fields=fields, missing_fields=missing_fields, num_stories=num_stories)
+#     return redirect(url_for('main.see_all_templates'))
 @bp.route('/generate_stories', methods=['GET', 'POST'])
 def generate_stories():
+    if request.method == 'POST':
+        # For form submissions (field updates, generation)
+        template_id = request.form.get('template_id')
+        print("Form data received:")
+        print("generate button:", "generate" in request.form)
+        print("update_fields button:", "update_fields" in request.form)
+        print("template_id:", request.form.get('template_id'))
+        print("field_data:", request.form.get('field_data'))
+        
+        # Check if we're updating the fields or generating stories
+        if 'update_fields' in request.form:
+            # Process field updates
+            field_data = json.loads(request.form.get('field_data', '{}'))
+            story_builder_service.update_field_words(field_data)
+            flash('Fields updated successfully!', 'success')
+            return redirect(url_for('main.generate_stories', template_id=template_id))
+            
+        elif 'generate' in request.form:
+            # Generate stories with current fields
+            try:
+                # Parse the field data from the form
+                field_data = json.loads(request.form.get('field_data', '{}'))
+                story_builder_service.update_field_words(field_data) #I think if stories are being generated the user would expect the words and fields to be saved also.
+                
+                
+                # Pass the field data to the generate_stories function
+                generated_story_ids = story_builder_service.generate_stories(template_id, field_data)
+                session['generated_story_ids'] = generated_story_ids
+                return redirect(url_for('main.display_generated_stories'))
+            except Exception as e:
+                import traceback
+                traceback.print_exc()  # Print the full error stack
+                flash(f'Error generating stories: {str(e)}', 'danger')
+                return redirect(url_for('main.generate_stories', template_id=template_id))
+    
+    # GET request - display the form
+    templates = story_builder_service.get_all_templates()
+    
+    # Get template_id either from query params (GET) or form data (POST)
     template_id = request.args.get('template_id') or request.form.get('template_id')
+    
+    fields = {}
+    missing_fields = []
+    template = None
+    
     if template_id:
         template = db.session.query(Template).get(template_id)
         fields, missing_fields = story_builder_service.get_template_fields(template_id)
-        permutations = story_builder_service.generate_permutations(fields)
-        num_stories = len(permutations)
-        if request.method == 'POST' and 'generate' in request.form:
-            generated_stories_ids = story_builder_service.generate_stories(template_id)
-            #stories = [db.session.query(Story).get(story_id) for story_id in generated_stories_ids]
-            session['generated_story_ids'] = generated_stories_ids
-            return redirect(url_for('main.display_generated_stories'))
-        return render_template('generate_stories.html', template=template, fields=fields, missing_fields=missing_fields, num_stories=num_stories)
-    return redirect(url_for('main.see_all_templates'))
+
+        print("===== DEBUG INFO =====")
+        print("Template ID:", template_id)
+        print("Fields from database:", fields)
+        for field_name, words in fields.items():
+            print(f"Field '{field_name}' has {len(words)} words: {words[:5]}...")
+        print("Missing fields:", missing_fields)
+        print("======================")
+    
+    return render_template(
+        'generate_stories_drag_and_drop.html', 
+        templates=templates, 
+        selected_template_id=template_id,
+        template=template, 
+        fields=fields,
+        missing_fields=missing_fields
+    )
 
 @bp.route('/display_generated_stories', methods=['GET'])
 def display_generated_stories():
@@ -201,16 +273,13 @@ def select_question():
 
 @bp.route('/select_parameters', methods=['GET', 'POST'])
 def select_parameters():
-    if request.method == 'POST':        
-        print("About to send prompt to llm")
-        response_data = llm_service.prepare_and_call_llm(request, session) #will do all the stories and hang everything up until finished
-        print("About to print response_data")
-        print(response_data)
-        # Extract response IDs from response_data and store them in the session
-        response_ids = [response['response_id'] for response in response_data.values()]
-        session['response_ids'] = response_ids
+    if request.method == 'POST':
+        # Store the selected parameters in the session
+        parameters = {param: request.form.get(param) for param in request.form}
+        session['parameters'] = parameters
 
-        return redirect(url_for('main.loading')) # in wrong place
+        # Redirect to the loading page
+        return redirect(url_for('main.loading'))
     
     else:
         model_id = session.get('model_id')
@@ -219,18 +288,101 @@ def select_parameters():
         print("Time to select parameters")
         return render_template('select_parameters.html', parameters=parameters)
 
+@bp.route('/progress')
+def progress():
+    def generate():
+        while True:
+            # Use only the global progress_tracker, not the session
+            progress = progress_tracker.get('progress', 0)
+            response_ids = progress_tracker.get('response_ids', [])
+            
+            if response_ids or progress >= 100:
+                yield f"data: {json.dumps({'status': 'complete', 'progress': 100})}\n\n"
+                break
+            else:
+                yield f"data: {json.dumps({'status': 'incomplete', 'progress': progress})}\n\n"
+                time.sleep(1)
+                
+    return FlaskResponse(generate(), mimetype='text/event-stream')
+
 @bp.route('/loading')
 def loading():
+    # Extract necessary session data
+    model_id = session.get('model_id')
+    story_ids = session.get('story_ids', [])
+    question_id = session.get('question_id')
+    parameters = session.get('parameters', {})
+
+    # Store these in the session for the background process
+    session['processing_data'] = {
+        'model_id': model_id,
+        'story_ids': story_ids,
+        'question_id': question_id,
+        'parameters': parameters
+    }
+    
+    # Initialize progress tracker with empty response_ids
+    progress_tracker['progress'] = 0
+    progress_tracker['response_ids'] = []
+    progress_tracker['processing'] = False
+    
     return render_template('loading.html')
+
+@bp.route('/start_processing')
+def start_processing():
+    # Get the data stored in the session
+    processing_data = session.get('processing_data', {})
+    model_id = processing_data.get('model_id')
+    story_ids = processing_data.get('story_ids', [])
+    question_id = processing_data.get('question_id')
+    parameters = processing_data.get('parameters', {})
+    
+    # Mark as processing
+    progress_tracker['processing'] = True
+    
+    # Start the LLM call
+    response_data = llm_service.prepare_and_call_llm(
+        model_id, story_ids, question_id, parameters, 
+        progress_callback=lambda p: progress_tracker.__setitem__('progress', p)
+    )
+    
+    # Extract response IDs
+    response_ids = [response['response_id'] for response in response_data.values()]
+    
+    # Store in both progress_tracker and session
+    progress_tracker['response_ids'] = response_ids
+    session['response_ids'] = response_ids
+    
+    # Set progress to 100% and mark as done
+    progress_tracker['progress'] = 100
+    progress_tracker['processing'] = False
+    
+    return {"status": "complete"}
+
+def update_progress():
+    """Background thread that just sleeps until processing is done."""
+    while progress_tracker['progress'] < 100:
+        time.sleep(0.5)  # Wait for half a second
+
+# def process_stories(model_id, story_ids, question_id, parameters):
+#     app = create_app()
+#     with app.app_context():
+#         response_data, progress, response_ids = llm_service.prepare_and_call_llm(model_id, story_ids, question_id, parameters)
+#         print("About to print response_data")
+#         print(response_data)
+#         # Store progress and response IDs in the session
+#         session['progress'] = progress
+#         session['response_ids'] = response_ids
 
 @bp.route('/check_status')
 def check_status():
-    # Check if the processing is complete
+    # Check the progress of processing
+    progress = session.get('progress', 0)
     response_ids = session.get('response_ids', [])
     if response_ids:
-        return {"status": "complete"}
+        return {"status": "complete", "progress": 100}
     else:
-        return {"status": "incomplete"}
+        return {"status": "incomplete", "progress": progress}
 
 @bp.route('/llm_response', methods=['GET', 'POST'])
 def llm_response():

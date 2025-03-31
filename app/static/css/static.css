@@ -9,3 +9,139 @@
 .hidden {
     display: none;
 }
+
+/* Word container for drag and drop */
+.word-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 50px;
+    padding: 10px;
+    border: 1px dashed #ccc;
+    border-radius: 4px;
+    background-color: #fcfcfc;
+    margin-bottom: 15px;
+}
+
+
+
+/* Field words container */
+.field-group {
+    margin-bottom: 20px;
+}
+
+.field-words {
+    margin-top: 8px;
+}
+
+/* Available words section */
+#available-words {
+    background-color: #f8f9fa;
+    border: 1px dashed #6c757d;
+}
+
+/* Add this to your CSS */
+.word-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 16px;
+    cursor: pointer;
+    margin-bottom: 5px;
+    transition: all 0.2s ease;
+}
+
+.word-badge:hover {
+    background-color: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.field-words .word-badge {
+    background-color: #cfe2ff;
+    border-color: #9ec5fe;
+}
+
+.field-words .word-badge:hover {
+    background-color: #9ec5fe;
+}
+
+#available-words .word-badge {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+#available-words .word-badge:hover {
+    background-color: #e9ecef;
+}
+
+/* Word badge styling */
+.word-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 16px;
+    cursor: pointer;
+    margin-bottom: 5px;
+    transition: all 0.2s ease;
+}
+
+.word-badge:hover {
+    background-color: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.field-words .word-badge {
+    background-color: #cfe2ff;
+    border-color: #9ec5fe;
+}
+
+.field-words .word-badge:hover {
+    background-color: #9ec5fe;
+}
+
+#available-words .word-badge {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+#available-words .word-badge:hover {
+    background-color: #e9ecef;
+}
+
+/* Drag and drop styling */
+.word-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 50px;
+    padding: 10px;
+    border: 1px dashed #ccc;
+    border-radius: 4px;
+    background-color: #fcfcfc;
+    margin-bottom: 15px;
+}
+
+.word-container.drag-over {
+    background-color: #e9f5ff;
+    border-color: #4dabf7;
+}
+
+.word-badge.dragging {
+    opacity: 0.5;
+}
+
+.action-buttons {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.action-buttons button {
+    width: 45%;
+}
