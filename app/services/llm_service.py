@@ -5,6 +5,7 @@ import requests
 import json
 import time
 from groq import Groq, APIError
+from flask_sse import sse
 
 GROQ_API_KEY = Config.GROQ_API_KEY
 groq_client = Groq(api_key=GROQ_API_KEY)
@@ -109,12 +110,9 @@ def call_llm(provider_name, story, question, story_id, question_id, model_name, 
     else:
         raise ValueError(f"Unknown provider: {provider_name}")
 
-def prepare_and_call_llm(request, session):
+def prepare_and_call_llm(model_id, story_ids, question_id, parameters, progress_callback=None):
     print("You've reached call LLM let's look at what is in the session")
-    print(session)
-    model_id = session.get('model_id')
-    story_ids = session.get('story_ids', [])  # Handle multiple stories
-    question_id = session.get('question_id')
+    print(model_id, story_ids, question_id, parameters)
     
     if not story_ids:
         return {"error": "No stories selected."}
@@ -124,23 +122,15 @@ def prepare_and_call_llm(request, session):
     provider_name = get_provider_name_by_model_id(model_id)
     request_delay = get_request_delay_by_model_id(model_id)  # Delay in seconds
 
-    # Extract and convert parameters dynamically
-    parameters = {}
-    for param, details in get_model_parameters_and_values(model_id).items():
-        if details['type'] == 'float':
-            parameters[param] = float(request.form.get(param, 0.5))
-        else:
-            parameters[param] = int(request.form.get(param, 1024))
-
     responses = {}
     response_ids = []
+    progress = 0
+    total_stories = len(story_ids)
 
     for i, story_id in enumerate(story_ids):
         story = get_story_by_id(story_id).content
-        #put time stamp in here  with notabout what it is about  
         response = call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, **parameters)
-        #print statement here with timestamp, so
-        # print(response)
+        print(response)
 
         if response:
             responses[story_id] = response
@@ -148,14 +138,16 @@ def prepare_and_call_llm(request, session):
         else:
             responses[story_id] = {"error": "Failed to get response"}
 
+        # Update progress
+        progress = int(((i + 1) / total_stories) * 100)
+        if progress_callback:
+            progress_callback(progress)
+
         # Delay before the next request (if there are multiple)
         if i < len(story_ids) - 1:
             time.sleep(request_delay)
 
-    session['response_ids'] = response_ids  # Store all response_ids in the session
-
     return responses
-
 
 def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, **parameters):
     try:
