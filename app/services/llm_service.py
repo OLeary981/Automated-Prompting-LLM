@@ -213,43 +213,60 @@ def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, 
         print(e)
         return None
 
+
 def call_LLM_HF(story, question, story_id, question_id, model_name, model_id, **parameters):
-    # Set default values if parameters are not provided
-    temperature = float(parameters.get('temperature', 0.5))
-    max_tokens = int(parameters.get('max_tokens', 1024))
-    top_p = float(parameters.get('top_p', 0.65))
+    try:
+        # Set default values if parameters are not provided
+        temperature = float(parameters.get('temperature', 0.5))
+        max_tokens = int(parameters.get('max_tokens', 1024))
+        top_p = float(parameters.get('top_p', 0.65))
 
-    # Prepare the payload with all parameters
-    payload = {
-        "story": story,
-        "question": question,
-        "temperature": temperature,
-        "max_tokens": max_tokens,
-        "top_p": top_p
-    }
+        # Prepare the payload with all parameters
+        payload = {
+            "inputs": f"Read my story: {story} now respond to these queries about it: {question}",
+            "parameters": {
+                "temperature": temperature,
+                "max_new_tokens": max_tokens,
+                "top_p": top_p
+            }
+        }
 
-    # Add any additional parameters to the payload
-    for key, value in parameters.items():
-        if key not in payload:
-            payload[key] = value
+        # Add any additional parameters to the payload
+        for key, value in parameters.items():
+            if key not in ['temperature', 'max_tokens', 'top_p']:
+                payload["parameters"][key] = value
 
-    # Example implementation of calling the LLM
-    url = f"https://api.huggingface.co/models/{model_name}/generate"
-    response = requests.post(url, json=payload)
-    response_content = response.json().get("generated_text", "")
-    full_response_json = response.json()
+        # Example implementation of calling the LLM
+        url = f"https://api.huggingface.co/models/{model_name}/generate"
+        headers = {"Authorization": f"Bearer {Config.HF_API_KEY}"}
+        response = requests.post(url, headers=headers, json=payload)
+        
+        if response.status_code != 200:
+            print(f"HF API error: {response.status_code} - {response.text}")
+            return None
+            
+        response_json = response.json()
+        response_content = response_json.get("generated_text", "")
+        full_response_json = json.dumps(response_json)
 
-    # Save the prompt and response to the database
-    save_prompt_and_response(
-        model_id=model_id,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        top_p=top_p,
-        story_id=story_id,
-        question_id=question_id,
-        payload_json=json.dumps(payload),
-        response_content=response_content,
-        full_response_json=json.dumps(full_response_json)
-    )
+        # Save the prompt and response to the database
+        response_id = save_prompt_and_response(
+            model_id=model_id,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            top_p=top_p,
+            story_id=story_id,
+            question_id=question_id,
+            payload_json=json.dumps(payload),
+            response_content=response_content,
+            full_response_json=full_response_json
+        )
 
-    return response_content
+        # Return both the response and its ID consistently - SAME FORMAT as Groq
+        return {"response_id": response_id, "response": response_content}
+        
+    except Exception as e:
+        print(f"Unexpected error calling HF: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
