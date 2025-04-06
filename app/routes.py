@@ -224,17 +224,19 @@ def select_story():
                 print(session)
         return redirect(url_for('main.select_story'))
     else:
-            story_ids = session.get('story_ids', [])
-            if story_ids:
-                # Display the selected stories
-                selected_stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
-                all_stories = story_service.get_all_stories()
-                return render_template('selected_stories.html', selected_stories=selected_stories, all_stories=all_stories)
-            else:
-                # Display the list of available stories for selection
-                stories = story_service.get_all_stories()
-                print("reaching select stories")
-                return render_template('select_story.html', stories=stories)
+        # GET request - check for mode parameter
+        mode = request.args.get('mode')
+        story_ids = session.get('story_ids', [])
+        
+        # If mode=add or no stories selected, show the selection page
+        if mode == 'add' or not story_ids:
+            stories = story_service.get_all_stories()
+            return render_template('select_story.html', stories=stories)
+        else:
+            # Otherwise show the selected stories
+            selected_stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
+            all_stories = story_service.get_all_stories()
+            return render_template('selected_stories.html', selected_stories=selected_stories, all_stories=all_stories)
 
 #route that worked fairly well before trying to add deselection of story
 # @bp.route('/select_story', methods=['GET', 'POST'])
@@ -529,6 +531,7 @@ def start_processing(job_id):
             processing_jobs[job_id]["error"] = f"Failed to start processing: {str(e)}"
         
         return jsonify({"status": "error", "message": str(e)}), 500
+    
 @bp.route('/progress_stream/<job_id>')
 def progress_stream(job_id):
     print(f"SSE connection requested for job: {job_id}")
@@ -574,30 +577,31 @@ def progress_stream(job_id):
                         
                         # Store response IDs in the job data instead of the session
                         job["response_ids"] = response_ids
-                    try:
-                        with app.app_context():
+                        
+                        # Try to store in session but it will fail outside request context
+                        try:
+                            # This will fail with "name 'app' is not defined" - that's ok
+                            # We'll use job["response_ids"] in the llm_response route
                             session['response_ids'] = response_ids
-                    except Exception as e:
-                    # If we can't write to session here, that's ok 
-                    # We'll handle it in the llm_response route
-                        print(f"Note: Couldn't store response_ids in session: {str(e)}")
-
+                        except Exception as e:
+                            # If we can't write to session here, that's ok 
+                            print(f"Note: Couldn't store response_ids in session: {str(e)}")
 
                     # Add error info if failed
-                elif status == "error":
+                    elif status == "error":
                         response_data["error"] = job.get("error", "Unknown error")
                     
                     # Serialize to JSON and send
-                json_data = json.dumps(response_data)
-                print(f"Sending SSE update: {json_data}")
-                yield f"data: {json_data}\n\n"
+                    json_data = json.dumps(response_data)
+                    print(f"Sending SSE update: {json_data}")
+                    yield f"data: {json_data}\n\n"
                     
                     # Break the loop after completion, error, or cancellation
-                if status in ["completed", "error", "cancelled"]:
+                    if status in ["completed", "error", "cancelled"]:
                         break
                 else:
                     # Send a keep-alive comment
-                    yield f": keepalive {time.time()}\n\n"
+                    yield f": keepalive\n\n"  # Changed to just keepalive without timestamp
                 
                 # Check for timeout
                 if time.time() > timeout:
@@ -656,20 +660,41 @@ def progress_legacy():
 @bp.route('/llm_response', methods=['GET', 'POST'])
 def llm_response():
     if request.method == 'POST':
-        # Your existing POST handling code remains unchanged
+        print("POST request received on llm_response")
+        # Process form data
         response_id = request.form.get('response_id')
+        print(f"Response ID from form: {response_id}")
+        
         if response_id:
             flagged_for_review = f'flagged_for_review_{response_id}' in request.form
             review_notes = request.form.get(f'review_notes_{response_id}', '')
+            
+            print(f"Flagged for review: {flagged_for_review}")
+            print(f"Review notes: {review_notes}")
 
-            response = db.session.query(Response).get(response_id)
-            if response:
-                response.flagged_for_review = flagged_for_review
-                response.review_notes = review_notes
-                db.session.commit()
-                flash(f'Response {response_id} updated successfully!', 'success')
-            else:
-                flash(f'Error: Response {response_id} not found.', 'danger')
+            try:
+                # Get the response
+                response = db.session.query(Response).get(response_id)
+                if response:
+                    print(f"Found response {response_id} in database")
+                    # Update the fields
+                    response.flagged_for_review = flagged_for_review
+                    response.review_notes = review_notes
+                    
+                    # Simpler transaction handling - just commit the change
+                    db.session.commit()
+                    
+                    print(f"Successfully updated response {response_id}")
+                    flash(f'Response {response_id} updated successfully!', 'success')
+                else:
+                    print(f"Response {response_id} not found in database")
+                    flash(f'Error: Response {response_id} not found.', 'danger')
+            except Exception as e:
+                print(f"Error updating response: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                db.session.rollback()
+                flash(f'Error updating response: {str(e)}', 'danger')
 
         return redirect(url_for('main.llm_response'))
 

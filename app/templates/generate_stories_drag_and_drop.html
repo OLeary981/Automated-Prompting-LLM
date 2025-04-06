@@ -112,6 +112,29 @@
                     </div>
                 </div>
             </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h4>Story Generation Preview</h4>
+                            <div id="permutation-stats" class="d-flex align-items-center justify-content-center">
+                                <div class="mr-3">
+                                    <span id="permutation-count" class="display-4 font-weight-bold text-primary">0</span>
+                                    <p class="mb-0">stories will be generated</p>
+                                </div>
+                                <div id="permutation-warning" class="ml-3 text-warning" style="display: none;">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <p class="mb-0">Generating a large number of stories may take some time</p>
+                                </div>
+                            </div>
+                            <div id="empty-fields-warning" class="alert alert-warning mt-2" style="display: none;">
+                                <i class="fas fa-exclamation-circle"></i>
+                                Some fields don't have any words selected. No stories will be generated.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <div class="mt-4 d-flex justify-content-between">
                 <button type="submit" name="update_fields" class="btn btn-primary">Update Fields</button>
@@ -121,7 +144,6 @@
     </div>
     {% endif %}
 </div>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         console.log("Document loaded - initializing word management");
@@ -202,7 +224,7 @@
                     wordEl.remove();
                     updateAvailableWords();
                     updateFieldDataJson();
-                });
+                }); 
             }
         }
         
@@ -396,14 +418,55 @@
             });
         });
         
-        // Update hidden field with current field data
-        function updateFieldDataJson() {
-            document.getElementById('field-data-json').value = JSON.stringify(fieldData);
+        // Function to calculate permutations
+        function calculatePermutations(fieldData) {
+            console.log("Calculating permutations based on current fields:", fieldData);
+            
+            // Check if any required field has no words
+            const emptyFieldsExist = Object.values(fieldData).some(words => words.length === 0);
+            const emptyWarning = document.getElementById('empty-fields-warning');
+            
+            if (emptyFieldsExist) {
+                // If any field has no words, we can't generate any stories
+                document.getElementById('permutation-count').textContent = '0';
+                emptyWarning.style.display = 'block';
+                return 0;
+            } else {
+                emptyWarning.style.display = 'none';
+            }
+            
+            // Calculate the number of permutations by multiplying the number of words in each field
+            let totalPermutations = 1;
+            Object.values(fieldData).forEach(words => {
+                totalPermutations *= words.length;
+            });
+            
+            // Update the UI
+            const countElement = document.getElementById('permutation-count');
+            countElement.textContent = totalPermutations.toLocaleString();
+            
+            // Show warning if there are too many permutations
+            const warningElement = document.getElementById('permutation-warning');
+            if (totalPermutations > 100) {
+                warningElement.style.display = 'block';
+            } else {
+                warningElement.style.display = 'none';
+            }
+            
+            return totalPermutations;
         }
         
-        // Initialize field data JSON
+        // Update hidden field with current field data and calculate permutations
+        function updateFieldDataJson() {
+            document.getElementById('field-data-json').value = JSON.stringify(fieldData);
+            
+            // Calculate and update the permutation count
+            calculatePermutations(fieldData);
+        }
+        
+        // Initialize field data JSON and calculate initial permutations
         updateFieldDataJson();
         updateAvailableWords();
     });
-    </script>
+</script>
 {% endblock %}
