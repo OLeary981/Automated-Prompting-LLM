@@ -1,11 +1,20 @@
 from app import db
-from app.models import Story
+from app.models import Story, StoryCategory
 
-def add_story(content):
-    new_story = Story(content=content)
-    db.session.add(new_story)
+def add_story(content, category_ids=None):
+    """Add a new story to the database with optional categories"""
+    story = Story(content=content)
+    db.session.add(story)
+    db.session.flush()  # Get the story_id before committing
+    
+    # Add categories if provided
+    if category_ids:
+        for category_id in category_ids:
+            story_category = StoryCategory(story_id=story.story_id, category_id=category_id)
+            db.session.add(story_category)
+    
     db.session.commit()
-    return new_story.story_id
+    return story.story_id
 
 def get_all_stories():
     return Story.query.all()

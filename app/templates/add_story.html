@@ -1,22 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Story</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-</head>
-<body>
-    <div class="container">
-        <h1>Add Story</h1>
-        <form action="{{ url_for('main.add_story') }}" method="POST">
-            <div class="form-group">
-                <label for="story_content">Story Content</label>
-                <textarea class="form-control" id="story_content" name="story_content" rows="3"></textarea>
+{% extends "base.html" %}
+
+{% block title %}Add Story{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Add a New Story</h1>
+    
+    <form method="POST" action="{{ url_for('main.add_story') }}">
+        <div class="form-group">
+            <label for="story_content">Story Content</label>
+            <textarea class="form-control" id="story_content" name="story_content" rows="6" required></textarea>
+        </div>
+        
+        <div class="card mt-4 mb-4">
+            <div class="card-header">Categories</div>
+            <div class="card-body">
+                <!-- Existing categories as checkboxes -->
+                {% if categories %}
+                <div class="mb-3">
+                    <label class="form-label">Select Categories</label>
+                    <div class="row">
+                        {% for category in categories %}
+                        <div class="col-md-4 col-sm-6">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="categories" id="category{{ category.category_id }}" value="{{ category.category_id }}">
+                                <label class="form-check-label" for="category{{ category.category_id }}">
+                                    {{ category.category }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <hr>
+                {% endif %}
+                
+                <!-- Add a new category -->
+                <div class="mb-3">
+                    <label for="new_category" class="form-label">Add New Category</label>
+                    <input type="text" class="form-control" id="new_category" name="new_category" placeholder="Enter a new category name">
+                    <div class="form-text">If you need a category that doesn't exist yet, enter it here.</div>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-        <a href="{{ url_for('main.index') }}" class="btn btn-secondary mt-3">Home</a>
-    </div>
-</body>
-</html>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Save Story</button>
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

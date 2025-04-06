@@ -10,6 +10,7 @@
             <tr>
                 <th>ID</th>
                 <th>Content</th>
+                <th>Categories</th>
             </tr>
         </thead>
         <tbody>
@@ -17,6 +18,11 @@
                 <tr>
                     <td>{{ story.story_id }}</td>
                     <td>{{ story.content }}</td>
+                    <td>
+                        {% for story_category in story.story_categories %}
+                            <span class="badge bg-secondary">{{ story_category.category.category }}</span>
+                        {% endfor %}
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>

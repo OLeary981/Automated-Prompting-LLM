@@ -1,8 +1,7 @@
 from flask import Blueprint, flash, render_template, request, redirect, url_for, session, jsonify, Response as FlaskResponse
-#from flask_sse import sse
 from . import db, create_app
-from .services import story_service, question_service, story_builder_service, llm_service
-from .models import Template, Story, Question, Model, Provider, Response
+from .services import story_service, question_service, story_builder_service, llm_service, category_service
+from .models import Template, Story, Question, Model, Provider, Response, Category, StoryCategory
 import time
 import json
 import threading
@@ -25,18 +24,60 @@ def index():
 def add_story():
     if request.method == 'POST':
         content = request.form.get('story_content')
+        new_category = request.form.get('new_category')
+        selected_categories = request.form.getlist('categories')
+        
+        # Convert selected categories to integers
+        category_ids = [int(cat_id) for cat_id in selected_categories if cat_id]
+        
         if content:
             try:
-                story_id = story_service.add_story(content)
+                # Process new category if provided
+                if new_category and new_category.strip():
+                    new_category_id = category_service.add_category(new_category.strip())
+                    if new_category_id not in category_ids:
+                        category_ids.append(new_category_id)
+                
+                # Add story with categories
+                story_id = story_service.add_story(content, category_ids)
+                flash('Story added successfully!', 'success')
                 print(f"Story ID: {story_id}")
             except Exception as e:
+                flash(f'Error adding story: {str(e)}', 'danger')
                 print(f"An error occurred: {e}")
         return redirect(url_for('main.index'))
-    return render_template('add_story.html')
+    
+    # Get all existing categories for the form
+    categories = category_service.get_all_categories()
+    return render_template('add_story.html', categories=categories)
+
+@bp.route('/manage_categories', methods=['GET', 'POST'])
+def manage_categories():
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'add':
+            category_name = request.form.get('category_name')
+            if category_name and category_name.strip():
+                try:
+                    category_service.add_category(category_name.strip())
+                    flash(f'Category "{category_name}" added successfully!', 'success')
+                except Exception as e:
+                    flash(f'Error adding category: {str(e)}', 'danger')
+        
+        # Could add edit/delete functionality here
+        
+        return redirect(url_for('main.manage_categories'))
+    
+    categories = category_service.get_all_categories()
+    return render_template('manage_categories.html', categories=categories)
 
 @bp.route('/see_all_stories')
 def see_all_stories():
-    stories = story_service.get_all_stories()
+    # Use a query that eagerly loads the categories
+    stories = db.session.query(Story)\
+        .options(db.joinedload(Story.story_categories).joinedload(StoryCategory.category))\
+        .all()
     return render_template('see_all_stories.html', stories=stories)
 
 @bp.route('/see_all_questions')
@@ -71,36 +112,6 @@ def add_template():
         db.session.commit()
     return redirect(url_for('main.see_all_templates'))
 
-# @bp.route('/generate_stories', methods=['GET', 'POST'])
-# def generate_stories():
-#     template_id = request.args.get('template_id') or request.form.get('template_id')
-#     if template_id:
-#         template = db.session.query(Template).get(template_id)
-#         fields, missing_fields = story_builder_service.get_template_fields(template_id)
-#         permutations = story_builder_service.generate_permutations(fields)
-#         num_stories = len(permutations)
-#         if request.method == 'POST' and 'generate' in request.form:
-#             generated_stories_ids = story_builder_service.generate_stories(template_id)
-#             story_contents = {story_id: db.session.query(Story).get(story_id).content for story_id in generated_stories_ids}
-#             return render_template('generated_stories.html', story_ids=generated_stories_ids, story_contents=story_contents)
-#         return render_template('generate_stories.html', template=template, fields=fields, missing_fields=missing_fields, num_stories=num_stories)
-#     return redirect(url_for('main.see_all_templates'))
-
-# @bp.route('/generate_stories', methods=['GET', 'POST'])
-# def generate_stories():
-#     template_id = request.args.get('template_id') or request.form.get('template_id')
-#     if template_id:
-#         template = db.session.query(Template).get(template_id)
-#         fields, missing_fields = story_builder_service.get_template_fields(template_id)
-#         permutations = story_builder_service.generate_permutations(fields)
-#         num_stories = len(permutations)
-#         if request.method == 'POST' and 'generate' in request.form:
-#             generated_stories_ids = story_builder_service.generate_stories(template_id)
-#             #stories = [db.session.query(Story).get(story_id) for story_id in generated_stories_ids]
-#             session['generated_story_ids'] = generated_stories_ids
-#             return redirect(url_for('main.display_generated_stories'))
-#         return render_template('generate_stories.html', template=template, fields=fields, missing_fields=missing_fields, num_stories=num_stories)
-#     return redirect(url_for('main.see_all_templates'))
 @bp.route('/generate_stories', methods=['GET', 'POST'])
 def generate_stories():
     if request.method == 'POST':
