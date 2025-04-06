@@ -1,31 +1,256 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loading...</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-</head>
-<body>
-    <div class="container text-center">
-        <h1>Processing Stories...</h1>
-        <p>Please wait while we process your stories.</p>
-        <div class="spinner-border" role="status">
-            <span class="sr-only">Loading...</span>
-        </div>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Processing Your Request</h2>
+    
+    <div class="progress mt-4 mb-4">
+        <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+             role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
     </div>
-    <script>
-        $(document).ready(function() {
-            // Poll the backend every 5 seconds to check if the process is complete
-            setInterval(function() {
-                $.get("{{ url_for('main.check_status') }}", function(data) {
-                    if (data.status === "complete") {
-                        window.location.href = "{{ url_for('main.llm_response') }}";
-                    }
-                });
-            }, 5000); // Poll every 5 seconds
+    
+    <div id="status-message" class="alert alert-info">
+        Starting processing...
+    </div>
+    
+    <div id="error-message" class="alert alert-danger" style="display: none;">
+    </div>
+    
+    <div class="text-center mt-4">
+        <button id="cancel-button" class="btn btn-warning">Cancel Processing</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const jobId = "{{ job_id }}";
+    let eventSource = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 3;
+    
+    // Start processing when page loads
+    startProcessing();
+    
+    // Set up cancel button
+    document.getElementById('cancel-button').addEventListener('click', function() {
+        cancelProcessing();
+    });
+    
+    function startProcessing() {
+        fetch(`/start_processing/${jobId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server returned error: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'error') {
+                    showError(data.message || 'An error occurred');
+                } else {
+                    // Connect to event stream to monitor progress
+                    connectEventSource();
+                }
+            })
+            .catch(error => {
+                showError(`Failed to start processing: ${error.message}`);
+            });
+    }
+    
+    function connectEventSource() {
+        // Close existing connection if any
+        if (eventSource) {
+            eventSource.close();
+        }
+        
+        eventSource = new EventSource(`/progress_stream/${jobId}`);
+        
+        // Set up specific event listeners
+        eventSource.addEventListener('connected', function(event) {
+            console.log('SSE connection established:', JSON.parse(event.data));
+            document.getElementById('status-message').textContent = 'Connected to server, processing started...';
         });
-    </script>
-</body>
-</html>
+        
+        eventSource.addEventListener('progress', function(event) {
+            const data = JSON.parse(event.data);
+            updateProgressBar(data.progress || 0);
+            document.getElementById('status-message').textContent = 
+                `Processing: ${data.progress || 0}% complete`;
+        });
+        
+        eventSource.addEventListener('complete', function(event) {
+            const data = JSON.parse(event.data);
+            updateProgressBar(100);
+            eventSource.close();
+            document.getElementById('status-message').textContent = 'Processing complete! Redirecting...';
+            document.getElementById('cancel-button').style.display = 'none';
+            // Redirect to results page after a short delay
+            setTimeout(() => {
+                window.location.href = '/llm_response';
+            }, 1500);
+        });
+        
+        eventSource.addEventListener('error', function(event) {
+            const data = JSON.parse(event.data);
+            eventSource.close();
+            showError(`Error: ${data.error || 'Unknown error occurred'}`);
+        });
+        
+        eventSource.addEventListener('timeout', function(event) {
+            eventSource.close();
+            showError('Processing timed out. Please try again or check for results.');
+        });
+        
+        eventSource.addEventListener('cancelled', function(event) {
+            eventSource.close();
+            document.getElementById('status-message').textContent = 'Processing was cancelled.';
+            document.getElementById('status-message').className = 'alert alert-warning';
+            document.getElementById('cancel-button').style.display = 'none';
+            // Show a retry button
+            const retryBtn = document.createElement('button');
+            retryBtn.textContent = 'Return to Home';
+            retryBtn.className = 'btn btn-primary mt-3';
+            retryBtn.onclick = () => window.location.href = '/';
+            document.querySelector('.container').appendChild(retryBtn);
+        });
+        
+        // Keep the default onmessage handler for backward compatibility
+        eventSource.onmessage = function(event) {
+    // Check if event.data exists and is not empty
+    if (!event.data) {
+        console.log("Received empty SSE message, ignoring");
+        return;
+    }
+
+    // Check if it's a comment/keepalive message
+    if (event.data.trim().startsWith(':')) {
+        console.log("Received keepalive message, ignoring");
+        return;
+    }
+
+    try {
+        const data = JSON.parse(event.data);
+        
+        // Update progress bar
+        updateProgressBar(data.progress || 0);
+        
+        // Handle different status values
+        switch (data.status) {
+            case "completed":
+                eventSource.close();
+                document.getElementById('status-message').textContent = 'Processing complete! Redirecting...';
+                document.getElementById('cancel-button').style.display = 'none';
+                // Redirect to results page after a short delay
+                setTimeout(() => {
+                    window.location.href = '/llm_response';
+                }, 1500);
+                break;
+            
+            case "error":
+                eventSource.close();
+                showError(`Error: ${data.error || 'Unknown error occurred'}`);
+                break;
+            
+            case "timeout":
+                eventSource.close();
+                showError('Processing timed out. Please try again or check for results.');
+                break;
+            
+            case "cancelled":
+                eventSource.close();
+                document.getElementById('status-message').textContent = 'Processing was cancelled.';
+                document.getElementById('status-message').className = 'alert alert-warning';
+                document.getElementById('cancel-button').style.display = 'none';
+                // Show a retry button
+                const retryBtn = document.createElement('button');
+                retryBtn.textContent = 'Return to Home';
+                retryBtn.className = 'btn btn-primary mt-3';
+                retryBtn.onclick = () => window.location.href = '/';
+                document.querySelector('.container').appendChild(retryBtn);
+                break;
+            
+            default:
+                // Normal processing updates
+                document.getElementById('status-message').textContent = 
+                    `Processing: ${data.progress || 0}% complete`;
+        }
+    } catch (e) {
+        console.error("Error parsing SSE message:", e, "Raw data:", event.data);
+        // Don't treat parsing errors as connection errors, just log them
+        // This prevents the uncaught JSON parsing error
+    }
+};
+        
+        // Improved error handling
+        eventSource.onerror = function(error) {
+            console.error('SSE connection error:', error);
+            
+            // Try to reconnect a few times before giving up
+            if (reconnectAttempts < maxReconnectAttempts) {
+                reconnectAttempts++;
+                document.getElementById('status-message').textContent = 
+                    `Connection lost. Reconnecting (attempt ${reconnectAttempts}/${maxReconnectAttempts})...`;
+                
+                // Wait 2 seconds before reconnecting
+                setTimeout(connectEventSource, 2000);
+            } else {
+                eventSource.close();
+                showError('Connection to server lost. Please refresh the page to try again.');
+            }
+        };
+    }
+    
+    function cancelProcessing() {
+        if (eventSource) {
+            eventSource.close();
+        }
+        
+        fetch(`/cancel_processing/${jobId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'cancelled') {
+                    document.getElementById('status-message').textContent = 'Processing cancelled.';
+                    document.getElementById('status-message').className = 'alert alert-warning';
+                    document.getElementById('cancel-button').style.display = 'none';
+                    
+                    // Add a button to return to home
+                    const homeButton = document.createElement('button');
+                    homeButton.textContent = 'Return to Home';
+                    homeButton.className = 'btn btn-primary';
+                    homeButton.onclick = () => window.location.href = '/';
+                    document.querySelector('.container').appendChild(homeButton);
+                } else {
+                    showError('Failed to cancel processing. Please try again.');
+                }
+            })
+            .catch(error => {
+                showError(`Error: ${error.message}`);
+            });
+    }
+    
+    function updateProgressBar(progress) {
+        const progressBar = document.getElementById('progress-bar');
+        progressBar.style.width = `${progress}%`;
+        progressBar.setAttribute('aria-valuenow', progress);
+        progressBar.textContent = `${progress}%`;
+    }
+    
+    function showError(message) {
+        const errorElement = document.getElementById('error-message');
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+        document.getElementById('status-message').style.display = 'none';
+        document.getElementById('cancel-button').style.display = 'none';
+        
+        // Add a home button
+        const homeButton = document.createElement('button');
+        homeButton.textContent = 'Return to Home';
+        homeButton.className = 'btn btn-primary mt-3';
+        homeButton.onclick = () => window.location.href = '/';
+        document.querySelector('.container').appendChild(homeButton);
+    }
+});
+</script>
+{% endblock %}
