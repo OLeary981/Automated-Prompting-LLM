@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LLM Response</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/static.css') }}">
 </head>
 <body>
     <div class="container">
@@ -42,7 +43,7 @@
         </div>
 
         <!-- Display responses in a table format -->
-        <table class="table table-striped mt-4">
+        <table class="table table-striped mt-4 llm-response-table">
             <thead>
                 <tr>
                     <th scope="col">Story ID</th>
@@ -65,11 +66,13 @@
        {% if response_detail.flagged_for_review %}checked{% endif %}>
                             </div>
                     </td>
-                    <td>
-                            <textarea name="review_notes_{{ response_detail.response_id }}"class="form-control" rows="3">{{ response_detail.review_notes }}</textarea>
-                            <input type="hidden" name="response_id" value="{{ response_detail.response_id }}">
-                            <button type="submit" class="btn btn-primary mt-2">Submit Review</button>
-                        </form>
+                    <td class="review-notes-cell">
+                        <textarea name="review_notes_{{ response_detail.response_id }}" 
+                                  class="form-control review-notes-area" 
+                                  rows="6">{{ response_detail.review_notes or'' }}</textarea>
+                        <input type="hidden" name="response_id" value="{{ response_detail.response_id }}">
+                        <button type="submit" class="btn btn-primary mt-2 w-100">Submit Review</button>
+                    </form>
                     </td>
                 </tr>
                 {% endfor %}

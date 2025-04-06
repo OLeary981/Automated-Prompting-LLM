@@ -145,3 +145,47 @@
 .action-buttons button {
     width: 45%;
 }
+
+/* LLM Response Page - Review Notes Styling */
+.review-notes-cell {
+    width: 30%;
+    max-width: none;
+}
+
+.review-notes-area {
+    min-height: 150px;
+    width: 100%;
+    resize: both;
+}
+
+/* Table column widths for LLM response page */
+.llm-response-table th:first-child, 
+.llm-response-table td:first-child {
+    width: 5%;  /* Story ID - narrower */
+}
+
+.llm-response-table th:nth-child(2), 
+.llm-response-table td:nth-child(2) {
+    width: 25%; /* Story content */
+}
+
+.llm-response-table th:nth-child(3), 
+.llm-response-table td:nth-child(3) {
+    width: 30%; /* Response content */
+}
+
+.llm-response-table th:nth-child(4), 
+.llm-response-table td:nth-child(4) {
+    width: 10%; /* Flag checkbox - narrower */
+}
+
+.llm-response-table th:nth-child(5), 
+.llm-response-table td:nth-child(5) {
+    width: 30%; /* Review notes - wider */
+}
+
+/* Optional: Improve whitespace and readability */
+.llm-response-table td {
+    vertical-align: top;
+    padding: 1rem;
+}
