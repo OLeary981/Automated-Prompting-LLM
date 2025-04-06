@@ -5,6 +5,7 @@ import requests
 import json
 import time
 from groq import Groq, APIError
+from flask_sse import sse
 
 GROQ_API_KEY = Config.GROQ_API_KEY
 groq_client = Groq(api_key=GROQ_API_KEY)
@@ -109,12 +110,9 @@ def call_llm(provider_name, story, question, story_id, question_id, model_name, 
     else:
         raise ValueError(f"Unknown provider: {provider_name}")
 
-def prepare_and_call_llm(request, session):
+def prepare_and_call_llm(model_id, story_ids, question_id, parameters, progress_callback=None):
     print("You've reached call LLM let's look at what is in the session")
-    print(session)
-    model_id = session.get('model_id')
-    story_ids = session.get('story_ids', [])  # Handle multiple stories
-    question_id = session.get('question_id')
+    print(model_id, story_ids, question_id, parameters)
     
     if not story_ids:
         return {"error": "No stories selected."}
@@ -124,23 +122,15 @@ def prepare_and_call_llm(request, session):
     provider_name = get_provider_name_by_model_id(model_id)
     request_delay = get_request_delay_by_model_id(model_id)  # Delay in seconds
 
-    # Extract and convert parameters dynamically
-    parameters = {}
-    for param, details in get_model_parameters_and_values(model_id).items():
-        if details['type'] == 'float':
-            parameters[param] = float(request.form.get(param, 0.5))
-        else:
-            parameters[param] = int(request.form.get(param, 1024))
-
     responses = {}
     response_ids = []
+    progress = 0
+    total_stories = len(story_ids)
 
     for i, story_id in enumerate(story_ids):
         story = get_story_by_id(story_id).content
-        #put time stamp in here  with notabout what it is about  
         response = call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, **parameters)
-        #print statement here with timestamp, so
-        # print(response)
+        print(response)
 
         if response:
             responses[story_id] = response
@@ -148,14 +138,16 @@ def prepare_and_call_llm(request, session):
         else:
             responses[story_id] = {"error": "Failed to get response"}
 
+        # Update progress
+        progress = int(((i + 1) / total_stories) * 100)
+        if progress_callback:
+            progress_callback(progress)
+
         # Delay before the next request (if there are multiple)
         if i < len(story_ids) - 1:
             time.sleep(request_delay)
 
-    session['response_ids'] = response_ids  # Store all response_ids in the session
-
     return responses
-
 
 def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, **parameters):
     try:
@@ -221,43 +213,60 @@ def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, 
         print(e)
         return None
 
+
 def call_LLM_HF(story, question, story_id, question_id, model_name, model_id, **parameters):
-    # Set default values if parameters are not provided
-    temperature = float(parameters.get('temperature', 0.5))
-    max_tokens = int(parameters.get('max_tokens', 1024))
-    top_p = float(parameters.get('top_p', 0.65))
+    try:
+        # Set default values if parameters are not provided
+        temperature = float(parameters.get('temperature', 0.5))
+        max_tokens = int(parameters.get('max_tokens', 1024))
+        top_p = float(parameters.get('top_p', 0.65))
 
-    # Prepare the payload with all parameters
-    payload = {
-        "story": story,
-        "question": question,
-        "temperature": temperature,
-        "max_tokens": max_tokens,
-        "top_p": top_p
-    }
+        # Prepare the payload with all parameters
+        payload = {
+            "inputs": f"Read my story: {story} now respond to these queries about it: {question}",
+            "parameters": {
+                "temperature": temperature,
+                "max_new_tokens": max_tokens,
+                "top_p": top_p
+            }
+        }
 
-    # Add any additional parameters to the payload
-    for key, value in parameters.items():
-        if key not in payload:
-            payload[key] = value
+        # Add any additional parameters to the payload
+        for key, value in parameters.items():
+            if key not in ['temperature', 'max_tokens', 'top_p']:
+                payload["parameters"][key] = value
 
-    # Example implementation of calling the LLM
-    url = f"https://api.huggingface.co/models/{model_name}/generate"
-    response = requests.post(url, json=payload)
-    response_content = response.json().get("generated_text", "")
-    full_response_json = response.json()
+        # Example implementation of calling the LLM
+        url = f"https://api.huggingface.co/models/{model_name}/generate"
+        headers = {"Authorization": f"Bearer {Config.HF_API_KEY}"}
+        response = requests.post(url, headers=headers, json=payload)
+        
+        if response.status_code != 200:
+            print(f"HF API error: {response.status_code} - {response.text}")
+            return None
+            
+        response_json = response.json()
+        response_content = response_json.get("generated_text", "")
+        full_response_json = json.dumps(response_json)
 
-    # Save the prompt and response to the database
-    save_prompt_and_response(
-        model_id=model_id,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        top_p=top_p,
-        story_id=story_id,
-        question_id=question_id,
-        payload_json=json.dumps(payload),
-        response_content=response_content,
-        full_response_json=json.dumps(full_response_json)
-    )
+        # Save the prompt and response to the database
+        response_id = save_prompt_and_response(
+            model_id=model_id,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            top_p=top_p,
+            story_id=story_id,
+            question_id=question_id,
+            payload_json=json.dumps(payload),
+            response_content=response_content,
+            full_response_json=full_response_json
+        )
 
-    return response_content
+        # Return both the response and its ID consistently - SAME FORMAT as Groq
+        return {"response_id": response_id, "response": response_content}
+        
+    except Exception as e:
+        print(f"Unexpected error calling HF: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None

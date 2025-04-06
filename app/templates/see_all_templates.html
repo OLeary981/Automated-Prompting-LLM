@@ -35,13 +35,13 @@
             </thead>
             <tbody>
                 {% for template in templates %}
-                    <tr class="clickable-row">
-                        <form action="{{ url_for('main.generate_stories') }}" method="POST">
-                            <input type="hidden" name="template_id" value="{{ template.template_id }}">
-                            <td>{{ template.template_id }}</td>
-                            <td>{{ template.content }}</td>
-                        </form>
-                    </tr>
+                <tr class="clickable-row">
+                    <form action="{{ url_for('main.generate_stories') }}" method="GET">
+                        <input type="hidden" name="template_id" value="{{ template.template_id }}">
+                        <td>{{ template.template_id }}</td>
+                        <td>{{ template.content }}</td>
+                    </form>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
