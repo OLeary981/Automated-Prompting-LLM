@@ -136,13 +136,38 @@ def generate_stories():
             try:
                 # Parse the field data from the form
                 field_data = json.loads(request.form.get('field_data', '{}'))
-                story_builder_service.update_field_words(field_data) #I think if stories are being generated the user would expect the words and fields to be saved also.
+                story_builder_service.update_field_words(field_data)  # Save fields
                 
+                # Process categories - both existing and new ones
+                category_ids = []
                 
-                # Pass the field data to the generate_stories function
-                generated_story_ids = story_builder_service.generate_stories(template_id, field_data)
+                # Process existing categories
+                selected_categories = request.form.getlist('story_categories')
+                category_ids.extend([int(cat_id) for cat_id in selected_categories if cat_id])
+                
+                # Process new categories
+                new_categories = request.form.getlist('new_categories')
+                for new_cat in new_categories:
+                    if new_cat.strip():
+                        try:
+                            cat_id = category_service.add_category(new_cat.strip())
+                            category_ids.append(cat_id)
+                        except Exception as e:
+                            print(f"Warning: Failed to add category '{new_cat}': {str(e)}")
+                
+                print(f"Applying categories {category_ids} to generated stories")
+                
+                # Pass the field data and category_ids to the generate_stories function
+                generated_story_ids = story_builder_service.generate_stories(template_id, field_data, category_ids)
                 session['generated_story_ids'] = generated_story_ids
+                
+                if category_ids:
+                    flash(f'Stories generated successfully with {len(category_ids)} categories!', 'success')
+                else:
+                    flash('Stories generated successfully!', 'success')
+                    
                 return redirect(url_for('main.display_generated_stories'))
+            
             except Exception as e:
                 import traceback
                 traceback.print_exc()  # Print the full error stack
@@ -171,13 +196,17 @@ def generate_stories():
         print("Missing fields:", missing_fields)
         print("======================")
     
+    # Get all categories for the category selection
+    categories = category_service.get_all_categories()
+    
     return render_template(
         'generate_stories_drag_and_drop.html', 
         templates=templates, 
         selected_template_id=template_id,
         template=template, 
         fields=fields,
-        missing_fields=missing_fields
+        missing_fields=missing_fields,
+        categories=categories  # Pass categories to the template
     )
 
 @bp.route('/display_generated_stories', methods=['GET'])
