@@ -94,8 +94,12 @@ def see_all_stories():
     
     # Apply category filter if provided
     if category_filter:
-        category_id = int(category_filter)
-        query = query.join(StoryCategory).filter(StoryCategory.category_id == category_id)
+        try:
+            category_id = int(category_filter)
+            query = query.join(StoryCategory).filter(StoryCategory.category_id == category_id)
+        except (ValueError, TypeError):
+            # Handle invalid category_filter value
+            flash('Invalid category filter', 'warning')
     
     # Apply sorting based on the `id`
     if sort_by == 'asc':
@@ -109,6 +113,9 @@ def see_all_stories():
 
     # Get all categories for the dropdown
     categories = category_service.get_all_categories()
+    
+    # Get currently selected story IDs from session
+    selected_story_ids = session.get('story_ids', [])
 
     # Render the template with stories and pagination data
     return render_template(
@@ -116,8 +123,47 @@ def see_all_stories():
         stories=stories,
         categories=categories,
         pagination=pagination,
-        sort_by=sort_by  # Pass the current sorting method to the template
+        sort_by=sort_by,
+        selected_story_ids=selected_story_ids
     )
+
+@bp.route('/update_story_selection', methods=['POST'])
+def update_story_selection():
+    # Check if the request is AJAX
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    # Get the data from the request
+    data = request.get_json()
+    story_id = data.get('story_id')
+    selected = data.get('selected', False)
+    
+    # Validate story_id
+    if not story_id:
+        return jsonify({'error': 'No story ID provided'}), 400
+    
+    # Get current selection from session
+    story_ids = session.get('story_ids', [])
+    
+    # Convert to list if it's not already
+    if not isinstance(story_ids, list):
+        story_ids = []
+    
+    # Update the selection
+    if selected and story_id not in story_ids:
+        story_ids.append(story_id)
+    elif not selected and story_id in story_ids:
+        story_ids.remove(story_id)
+    
+    # Update the session
+    session['story_ids'] = story_ids
+    
+    # Return the updated selection count
+    return jsonify({
+        'success': True,
+        'selected_count': len(story_ids),
+        'selected_ids': story_ids
+    })
 
 @bp.route('/see_all_questions')
 def see_all_questions():
