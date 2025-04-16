@@ -74,41 +74,49 @@ def manage_categories():
 
 @bp.route('/see_all_stories')
 def see_all_stories():
-    # Get search parameters
+    # Get the search and filter parameters
     search_text = request.args.get('search_text', '')
     category_filter = request.args.get('category_filter', '')
+    sort_by = request.args.get('sort_by', 'desc')  # Default to descending (newest first)
+    
+    # Get the current page from the request, default to page 1
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # Number of stories per page
 
-    print(f"Search text: '{search_text}'")
-    print(f"Category filter (raw): '{category_filter}'")
-
-    # Debug categories to compare IDs
-    categories = category_service.get_all_categories()
-    for c in categories:
-        print(f"Category: id={c.category_id} ({type(c.category_id)}), name='{c.category}'")
-
-    # Start query
+    # Start building the query
     query = db.session.query(Story).options(
         db.joinedload(Story.story_categories).joinedload(StoryCategory.category)
     )
 
+    # Apply search filter if provided
     if search_text:
         query = query.filter(Story.content.ilike(f'%{search_text}%'))
+    
+    # Apply category filter if provided
+    if category_filter:
+        category_id = int(category_filter)
+        query = query.join(StoryCategory).filter(StoryCategory.category_id == category_id)
+    
+    # Apply sorting based on the `id`
+    if sort_by == 'asc':
+        query = query.order_by(Story.story_id.asc())  # Oldest to most recent (lower ID first)
+    else:
+        query = query.order_by(Story.story_id.desc())  # Most recent to oldest (higher ID first)
 
-    try:
-        if category_filter:
-            category_id = int(category_filter)
-            print(f"Filtering by category ID: {category_id}")
-            query = query.join(StoryCategory).filter(StoryCategory.category_id == category_id)
-    except ValueError:
-        print("Invalid category_filter (not an int) — skipping category filter")
+    # Apply pagination
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    stories = pagination.items
 
-    stories = query.all()
-    print(f"Total stories returned: {len(stories)}")
+    # Get all categories for the dropdown
+    categories = category_service.get_all_categories()
 
+    # Render the template with stories and pagination data
     return render_template(
         'see_all_stories.html',
         stories=stories,
-        categories=categories
+        categories=categories,
+        pagination=pagination,
+        sort_by=sort_by  # Pass the current sorting method to the template
     )
 
 @bp.route('/see_all_questions')
