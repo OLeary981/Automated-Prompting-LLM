@@ -42,6 +42,21 @@
         </div>
     </div>
     
+    <!-- Selection Summary & Action Button -->
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <div id="selection-summary" class="alert alert-info {% if not selected_story_ids %}d-none{% endif %}">
+                <span id="selected-count">{{ selected_story_ids|length }}</span> stories selected
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <button id="process-selected" class="btn btn-success {% if not selected_story_ids %}d-none{% endif %}" 
+                    onclick="proceedWithSelected()">
+                Process Selected Stories
+            </button>
+        </div>
+    </div>
+    
     <!-- Results count -->
     <p>Showing {{ pagination.page * pagination.per_page - pagination.per_page + 1 }} –
         {% if pagination.page * pagination.per_page < pagination.total %}
@@ -55,24 +70,25 @@
     <table class="table table-striped table-bordered table-hover table-sm">
         <thead>
             <tr>
+                <th style="width: 50px;">Select</th>
                 <th>ID</th>
                 <th>Content</th>
                 <th>Categories</th>
-                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for story in stories %}
                 <tr>
+                    <td class="text-center">
+                        <input type="checkbox" class="story-checkbox" data-id="{{ story.story_id }}"
+                               {% if story.story_id|string in selected_story_ids %}checked{% endif %}>
+                    </td>
                     <td>{{ story.story_id }}</td>
                     <td>{{ story.content }}</td>
                     <td>
                         {% for story_category in story.story_categories %}
                             <span class="badge bg-secondary">{{ story_category.category.category }}</span>
                         {% endfor %}
-                    </td>
-                    <td>
-                        <a href="{{ url_for('main.select_story') }}?story_id={{ story.story_id }}" class="btn btn-sm btn-outline-primary">Select</a>
                     </td>
                 </tr>
             {% else %}
@@ -85,58 +101,85 @@
 
     <!-- Pagination -->
     <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
+        <ul class="pagination">
             {% if pagination.has_prev %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('main.see_all_stories', 
-                                                            search_text=request.args.get('search_text'),
-                                                            category_filter=request.args.get('category_filter'),
-                                                            sort_by=request.args.get('sort_by'),
-                                                            page=pagination.prev_num) }}">
-                        Previous
-                    </a>
+                    <a class="page-link" href="{{ url_for('main.see_all_stories', page=pagination.prev_num, search_text=request.args.get('search_text', ''), category_filter=request.args.get('category_filter', ''), sort_by=sort_by) }}">Previous</a>
                 </li>
             {% else %}
                 <li class="page-item disabled"><span class="page-link">Previous</span></li>
             {% endif %}
-
-            {% for page_num in pagination.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+            
+            {% for page_num in pagination.iter_pages() %}
                 {% if page_num %}
-                    {% if page_num == pagination.page %}
-                        <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
-                    {% else %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('main.see_all_stories', 
-                                                                    search_text=request.args.get('search_text'),
-                                                                    category_filter=request.args.get('category_filter'),
-                                                                    sort_by=request.args.get('sort_by'),
-                                                                    page=page_num) }}">
-                                {{ page_num }}
-                            </a>
-                        </li>
-                    {% endif %}
+                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('main.see_all_stories', page=page_num, search_text=request.args.get('search_text', ''), category_filter=request.args.get('category_filter', ''), sort_by=sort_by) }}">{{ page_num }}</a>
+                    </li>
                 {% else %}
-                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
                 {% endif %}
             {% endfor %}
-
+            
             {% if pagination.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('main.see_all_stories', 
-                                                            search_text=request.args.get('search_text'),
-                                                            category_filter=request.args.get('category_filter'),
-                                                            sort_by=request.args.get('sort_by'),
-                                                            page=pagination.next_num) }}">
-                        Next
-                    </a>
+                    <a class="page-link" href="{{ url_for('main.see_all_stories', page=pagination.next_num, search_text=request.args.get('search_text', ''), category_filter=request.args.get('category_filter', ''), sort_by=sort_by) }}">Next</a>
                 </li>
             {% else %}
                 <li class="page-item disabled"><span class="page-link">Next</span></li>
             {% endif %}
         </ul>
     </nav>
-
-    <!-- Back to Home Button -->
-    <a href="{{ url_for('main.index') }}" class="btn btn-primary">Back to Home</a>
 </div>
+
+<!-- JavaScript for Story Selection -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Track selected stories
+    const checkboxes = document.querySelectorAll('.story-checkbox');
+    const selectionSummary = document.getElementById('selection-summary');
+    const selectedCount = document.getElementById('selected-count');
+    const processButton = document.getElementById('process-selected');
+    
+    // Add event listeners to all checkboxes
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const storyId = this.getAttribute('data-id');
+            const isChecked = this.checked;
+            
+            // Send AJAX request to update session
+            fetch('{{ url_for("main.update_story_selection") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    story_id: storyId,
+                    selected: isChecked
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update the selection summary
+                if (data.selected_count > 0) {
+                    selectedCount.textContent = data.selected_count;
+                    selectionSummary.classList.remove('d-none');
+                    processButton.classList.remove('d-none');
+                } else {
+                    selectionSummary.classList.add('d-none');
+                    processButton.classList.add('d-none');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating selection:', error);
+            });
+        });
+    });
+});
+
+// Function to proceed with selected stories
+function proceedWithSelected() {
+    window.location.href = '{{ url_for("main.select_question") }}';
+}
+</script>
 {% endblock %}
