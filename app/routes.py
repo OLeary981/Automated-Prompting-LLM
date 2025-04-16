@@ -1,7 +1,7 @@
 from flask import Blueprint, flash, render_template, request, redirect, url_for, session, jsonify, Response as FlaskResponse
 from . import db, create_app
 from .services import story_service, question_service, story_builder_service, llm_service, category_service
-from .models import Template, Story, Question, Model, Provider, Response, Category, StoryCategory
+from .models import Template, Story, Question, Model, Provider, Response, StoryCategory
 import time
 import json
 import threading
@@ -74,11 +74,42 @@ def manage_categories():
 
 @bp.route('/see_all_stories')
 def see_all_stories():
-    # Use a query that eagerly loads the categories
-    stories = db.session.query(Story)\
-        .options(db.joinedload(Story.story_categories).joinedload(StoryCategory.category))\
-        .all()
-    return render_template('see_all_stories.html', stories=stories)
+    # Get search parameters
+    search_text = request.args.get('search_text', '')
+    category_filter = request.args.get('category_filter', '')
+
+    print(f"Search text: '{search_text}'")
+    print(f"Category filter (raw): '{category_filter}'")
+
+    # Debug categories to compare IDs
+    categories = category_service.get_all_categories()
+    for c in categories:
+        print(f"Category: id={c.category_id} ({type(c.category_id)}), name='{c.category}'")
+
+    # Start query
+    query = db.session.query(Story).options(
+        db.joinedload(Story.story_categories).joinedload(StoryCategory.category)
+    )
+
+    if search_text:
+        query = query.filter(Story.content.ilike(f'%{search_text}%'))
+
+    try:
+        if category_filter:
+            category_id = int(category_filter)
+            print(f"Filtering by category ID: {category_id}")
+            query = query.join(StoryCategory).filter(StoryCategory.category_id == category_id)
+    except ValueError:
+        print("Invalid category_filter (not an int) — skipping category filter")
+
+    stories = query.all()
+    print(f"Total stories returned: {len(stories)}")
+
+    return render_template(
+        'see_all_stories.html',
+        stories=stories,
+        categories=categories
+    )
 
 @bp.route('/see_all_questions')
 def see_all_questions():

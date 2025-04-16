@@ -5,12 +5,47 @@
 {% block content %}
 <div class="container">
     <h1>All Stories</h1>
+    
+    <!-- Search Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('main.see_all_stories') }}" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search_text" class="form-label">Search by content:</label>
+                    <input type="text" class="form-control" id="search_text" name="search_text" 
+                           value="{{ request.args.get('search_text', '') }}" placeholder="Enter keywords">
+                </div>
+                <div class="col-md-4">
+                    <label for="category_filter" class="form-label">Filter by category:</label>
+                    <select class="form-select" id="category_filter" name="category_filter">
+                        <option value="" {% if not request.args.get('category_filter') %}selected{% endif %}>All Categories</option>
+                        {% for category in categories %}
+                            <option value="{{ category.category_id }}"
+                                {% if request.args.get('category_filter') == category.category_id|string %}selected{% endif %}>
+                                {{ category.category }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Search</button>
+                    <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Results count -->
+    <p>Showing {{ stories|length }} stories</p>
+    
+    <!-- Stories Table -->
     <table class="table table-striped table-bordered table-hover table-sm">
         <thead>
             <tr>
                 <th>ID</th>
                 <th>Content</th>
                 <th>Categories</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -23,6 +58,13 @@
                             <span class="badge bg-secondary">{{ story_category.category.category }}</span>
                         {% endfor %}
                     </td>
+                    <td>
+                        <a href="{{ url_for('main.select_story') }}?story_id={{ story.story_id }}" class="btn btn-sm btn-outline-primary">Select</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4" class="text-center">No stories found matching your criteria</td>
                 </tr>
             {% endfor %}
         </tbody>
