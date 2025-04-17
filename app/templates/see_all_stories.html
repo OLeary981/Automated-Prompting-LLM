@@ -50,13 +50,16 @@
     <!-- Batch Selection Actions -->
     <div class="card mb-3">
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Story Selection to Send to LLM</h5>
-            <span class="badge bg-primary" id="visible-count">{{ stories|length }} stories visible</span>
+            <h5 class="mb-0">Story Selection</h5>
+            <div>
+                <span class="badge bg-primary me-2">{{ stories|length }} stories visible</span>
+                <span class="badge bg-success" id="selected-count-badge">{{ selected_story_ids|length }} stories selected</span>
+            </div>
         </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-8">
-                    <div class="btn-group mb-2" role="group">
+                    <div class="btn-group mb-3" role="group">
                         <button type="button" class="btn btn-outline-secondary" onclick="selectAllVisible()">
                             Select Visible ({{ stories|length }})
                         </button>
@@ -66,27 +69,23 @@
                         <button type="button" class="btn btn-outline-secondary" onclick="invertVisibleSelection()">
                             Invert Visible Selection
                         </button>
-                        <button id="process-selected" class="btn btn-success {% if not selected_story_ids %}d-none{% endif %}" 
-        onclick="proceedToLLM()">
-    Process Selected with LLM
-</button>
-
-<!-- Add a separate clear button if needed -->
-<button id="clear-selected" class="btn btn-outline-danger ms-2 {% if not selected_story_ids %}d-none{% endif %}" 
-        onclick="clearSelection()">
-    Clear Selection
-</button>
-                    </div>
-                    <div id="selection-summary" class="mt-2 alert alert-info {% if not selected_story_ids %}d-none{% endif %}">
-                        <span id="selected-count">{{ selected_story_ids|length }}</span> stories selected
+                        <button type="button" class="btn btn-outline-secondary" onclick="selectAllFiltered()">
+                            Select All Filtered
+                        </button>
                     </div>
                 </div>
-                <div class="col-md-4 text-end">
-                    <button id="process-selected" class="btn btn-success {% if not selected_story_ids %}d-none{% endif %}" 
-                            onclick="proceedToLLM()">
-                        Process Selected with LLM
+                <div class="col-md-4 text-end mb-3">
+                    <button id="clear-all-btn" class="btn btn-outline-danger" onclick="clearSelection()">
+                        Clear Selection
                     </button>
                 </div>
+            </div>
+            
+            <div class="d-grid">
+                <button id="process-selected-btn" class="btn btn-success btn-lg {% if not selected_story_ids %}disabled{% endif %}" 
+                        onclick="proceedToLLM()">
+                    Process <span id="selected-count">{{ selected_story_ids|length }}</span> Selected Stories with LLM
+                </button>
             </div>
         </div>
     </div>
@@ -170,9 +169,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Track selected stories
     const checkboxes = document.querySelectorAll('.story-checkbox');
-    const selectionSummary = document.getElementById('selection-summary');
     const selectedCount = document.getElementById('selected-count');
-    const processButton = document.getElementById('process-selected');
+    const selectedCountBadge = document.getElementById('selected-count-badge');
+    const processButton = document.getElementById('process-selected-btn');
     
     // Add event listeners to all checkboxes
     checkboxes.forEach(checkbox => {
@@ -194,14 +193,15 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
-                // Update the selection summary
+                // Always update the count displays
+                selectedCount.textContent = data.selected_count;
+                selectedCountBadge.textContent = data.selected_count + " stories selected";
+                
+                // Enable/disable the process button based on selection
                 if (data.selected_count > 0) {
-                    selectedCount.textContent = data.selected_count;
-                    selectionSummary.classList.remove('d-none');
-                    processButton.classList.remove('d-none');
+                    processButton.classList.remove('disabled');
                 } else {
-                    selectionSummary.classList.add('d-none');
-                    processButton.classList.add('d-none');
+                    processButton.classList.add('disabled');
                 }
             })
             .catch(error => {
@@ -271,18 +271,15 @@ function selectAllFiltered() {
             checkbox.checked = data.selected_ids.includes(storyId);
         });
         
-        // Update the selection summary
-        const selectionSummary = document.getElementById('selection-summary');
-        const selectedCount = document.getElementById('selected-count');
-        const processButton = document.getElementById('process-selected');
+        // Always update the count displays
+        document.getElementById('selected-count').textContent = data.selected_count;
+        document.getElementById('selected-count-badge').textContent = data.selected_count + " stories selected";
         
+        // Enable/disable the process button based on selection
         if (data.selected_count > 0) {
-            selectedCount.textContent = data.selected_count;
-            selectionSummary.classList.remove('d-none');
-            processButton.classList.remove('d-none');
+            document.getElementById('process-selected-btn').classList.remove('disabled');
         } else {
-            selectionSummary.classList.add('d-none');
-            processButton.classList.add('d-none');
+            document.getElementById('process-selected-btn').classList.add('disabled');
         }
         
         // Reset cursor
@@ -294,6 +291,7 @@ function selectAllFiltered() {
     });
 }
 
+// Clear all selected stories
 function clearSelection() {
     // Send request to clear all selected stories
     fetch('{{ url_for("main.update_story_selection") }}', {
@@ -303,8 +301,7 @@ function clearSelection() {
             'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
-            story_ids: [],
-            action: 'select'  // This effectively replaces the current selection with empty list
+            action: 'clear_all'  // Special action to completely clear the session
         })
     })
     .then(response => response.json())
@@ -314,9 +311,15 @@ function clearSelection() {
             checkbox.checked = false;
         });
         
-        // Hide the selection summary and process button
-        document.getElementById('selection-summary').classList.add('d-none');
-        document.getElementById('process-selected').classList.add('d-none');
+        // Update count displays to zero
+        document.getElementById('selected-count').textContent = "0";
+        document.getElementById('selected-count-badge').textContent = "0 stories selected";
+        
+        // Disable the process button
+        document.getElementById('process-selected-btn').classList.add('disabled');
+        
+        // Provide user feedback
+        alert('All story selections have been cleared from all pages.');
     })
     .catch(error => {
         console.error('Error clearing selection:', error);
@@ -325,8 +328,7 @@ function clearSelection() {
 
 // Function to proceed to LLM processing
 function proceedToLLM() {
-    window.location.href = '{{ url_for("main.select_question") }}';
+    window.location.href = '{{ url_for("main.select_story") }}';
 }
-
 </script>
 {% endblock %}

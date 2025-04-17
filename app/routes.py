@@ -129,6 +129,18 @@ def see_all_stories():
 
 @bp.route('/update_story_selection', methods=['POST'])
 def update_story_selection():
+    data = request.get_json()
+    
+    # Check for clear_all action
+    if data.get('action') == 'clear_all':
+        # Completely remove story_ids from session
+        session.pop('story_ids', None)
+        return jsonify({
+            'success': True,
+            'selected_count': 0,
+            'selected_ids': [],
+            'message': 'All story selections cleared'
+        })
     # Check if the request is AJAX
     if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({'error': 'Invalid request'}), 400
@@ -185,8 +197,35 @@ def add_question():
 
 @bp.route('/see_all_templates')
 def see_all_templates():
-    templates = story_builder_service.get_all_templates()
-    return render_template('see_all_templates.html', templates=templates)
+    # Get search and filter parameters
+    search_text = request.args.get('search_text', '')
+    sort_by = request.args.get('sort_by', 'desc')  # Default to newest first
+    
+    # Get page parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = 10  # Number of templates per page
+    
+    # Build the query
+    query = db.session.query(Template)
+    
+    # Apply search filter if provided
+    if search_text:
+        query = query.filter(Template.content.ilike(f'%{search_text}%'))
+    
+    # Apply sorting
+    if sort_by == 'asc':
+        query = query.order_by(Template.template_id.asc())
+    else:
+        query = query.order_by(Template.template_id.desc())
+    
+    # Apply pagination
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    templates = pagination.items
+    
+    return render_template('see_all_templates.html', 
+                          templates=templates, 
+                          pagination=pagination, 
+                          sort_by=sort_by)
 
 @bp.route('/add_template', methods=['POST'])
 def add_template():
@@ -355,8 +394,7 @@ def select_story():
         
         # If mode=add or no stories selected, show the selection page
         if mode == 'add' or not story_ids:
-            stories = story_service.get_all_stories()
-            return render_template('select_story.html', stories=stories)
+            return redirect(url_for('main.see_all_stories'))
         else:
             # Otherwise show the selected stories
             selected_stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
