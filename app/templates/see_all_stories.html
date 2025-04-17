@@ -4,7 +4,12 @@
 
 {% block content %}
 <div class="container">
-    <h1>All Stories</h1>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>All Stories</h1>
+        <a href="{{ url_for('main.add_story') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add New Story
+        </a>
+    </div>
     
     <!-- Search Form -->
     <div class="card mb-4">
