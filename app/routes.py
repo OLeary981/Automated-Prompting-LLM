@@ -1,7 +1,7 @@
 from flask import Blueprint, flash, render_template, request, redirect, url_for, session, jsonify, Response as FlaskResponse
 from . import db, create_app
 from .services import story_service, question_service, story_builder_service, llm_service, category_service
-from .models import Template, Story, Question, Model, Provider, Response, Category, StoryCategory
+from .models import Template, Story, Question, Model, Provider, Response, StoryCategory
 import time
 import json
 import threading
@@ -74,11 +74,108 @@ def manage_categories():
 
 @bp.route('/see_all_stories')
 def see_all_stories():
-    # Use a query that eagerly loads the categories
-    stories = db.session.query(Story)\
-        .options(db.joinedload(Story.story_categories).joinedload(StoryCategory.category))\
-        .all()
-    return render_template('see_all_stories.html', stories=stories)
+    # Get the search and filter parameters
+    search_text = request.args.get('search_text', '')
+    category_filter = request.args.get('category_filter', '')
+    sort_by = request.args.get('sort_by', 'desc')  # Default to descending (newest first)
+    
+    # Get the current page from the request, default to page 1
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # Number of stories per page
+
+    # Start building the query
+    query = db.session.query(Story).options(
+        db.joinedload(Story.story_categories).joinedload(StoryCategory.category)
+    )
+
+    # Apply search filter if provided
+    if search_text:
+        query = query.filter(Story.content.ilike(f'%{search_text}%'))
+    
+    # Apply category filter if provided
+    if category_filter:
+        try:
+            category_id = int(category_filter)
+            query = query.join(StoryCategory).filter(StoryCategory.category_id == category_id)
+        except (ValueError, TypeError):
+            # Handle invalid category_filter value
+            flash('Invalid category filter', 'warning')
+    
+    # Apply sorting based on the `id`
+    if sort_by == 'asc':
+        query = query.order_by(Story.story_id.asc())  # Oldest to most recent (lower ID first)
+    else:
+        query = query.order_by(Story.story_id.desc())  # Most recent to oldest (higher ID first)
+
+    # Apply pagination
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    stories = pagination.items
+
+    # Get all categories for the dropdown
+    categories = category_service.get_all_categories()
+    
+    # Get currently selected story IDs from session
+    selected_story_ids = session.get('story_ids', [])
+
+    # Render the template with stories and pagination data
+    return render_template(
+        'see_all_stories.html',
+        stories=stories,
+        categories=categories,
+        pagination=pagination,
+        sort_by=sort_by,
+        selected_story_ids=selected_story_ids
+    )
+
+@bp.route('/update_story_selection', methods=['POST'])
+def update_story_selection():
+    data = request.get_json()
+    
+    # Check for clear_all action
+    if data.get('action') == 'clear_all':
+        # Completely remove story_ids from session
+        session.pop('story_ids', None)
+        return jsonify({
+            'success': True,
+            'selected_count': 0,
+            'selected_ids': [],
+            'message': 'All story selections cleared'
+        })
+    # Check if the request is AJAX
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    # Get the data from the request
+    data = request.get_json()
+    story_id = data.get('story_id')
+    selected = data.get('selected', False)
+    
+    # Validate story_id
+    if not story_id:
+        return jsonify({'error': 'No story ID provided'}), 400
+    
+    # Get current selection from session
+    story_ids = session.get('story_ids', [])
+    
+    # Convert to list if it's not already
+    if not isinstance(story_ids, list):
+        story_ids = []
+    
+    # Update the selection
+    if selected and story_id not in story_ids:
+        story_ids.append(story_id)
+    elif not selected and story_id in story_ids:
+        story_ids.remove(story_id)
+    
+    # Update the session
+    session['story_ids'] = story_ids
+    
+    # Return the updated selection count
+    return jsonify({
+        'success': True,
+        'selected_count': len(story_ids),
+        'selected_ids': story_ids
+    })
 
 @bp.route('/see_all_questions')
 def see_all_questions():
@@ -100,8 +197,35 @@ def add_question():
 
 @bp.route('/see_all_templates')
 def see_all_templates():
-    templates = story_builder_service.get_all_templates()
-    return render_template('see_all_templates.html', templates=templates)
+    # Get search and filter parameters
+    search_text = request.args.get('search_text', '')
+    sort_by = request.args.get('sort_by', 'desc')  # Default to newest first
+    
+    # Get page parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = 10  # Number of templates per page
+    
+    # Build the query
+    query = db.session.query(Template)
+    
+    # Apply search filter if provided
+    if search_text:
+        query = query.filter(Template.content.ilike(f'%{search_text}%'))
+    
+    # Apply sorting
+    if sort_by == 'asc':
+        query = query.order_by(Template.template_id.asc())
+    else:
+        query = query.order_by(Template.template_id.desc())
+    
+    # Apply pagination
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    templates = pagination.items
+    
+    return render_template('see_all_templates.html', 
+                          templates=templates, 
+                          pagination=pagination, 
+                          sort_by=sort_by)
 
 @bp.route('/add_template', methods=['POST'])
 def add_template():
@@ -136,13 +260,38 @@ def generate_stories():
             try:
                 # Parse the field data from the form
                 field_data = json.loads(request.form.get('field_data', '{}'))
-                story_builder_service.update_field_words(field_data) #I think if stories are being generated the user would expect the words and fields to be saved also.
+                story_builder_service.update_field_words(field_data)  # Save fields
                 
+                # Process categories - both existing and new ones
+                category_ids = []
                 
-                # Pass the field data to the generate_stories function
-                generated_story_ids = story_builder_service.generate_stories(template_id, field_data)
+                # Process existing categories
+                selected_categories = request.form.getlist('story_categories')
+                category_ids.extend([int(cat_id) for cat_id in selected_categories if cat_id])
+                
+                # Process new categories
+                new_categories = request.form.getlist('new_categories')
+                for new_cat in new_categories:
+                    if new_cat.strip():
+                        try:
+                            cat_id = category_service.add_category(new_cat.strip())
+                            category_ids.append(cat_id)
+                        except Exception as e:
+                            print(f"Warning: Failed to add category '{new_cat}': {str(e)}")
+                
+                print(f"Applying categories {category_ids} to generated stories")
+                
+                # Pass the field data and category_ids to the generate_stories function
+                generated_story_ids = story_builder_service.generate_stories(template_id, field_data, category_ids)
                 session['generated_story_ids'] = generated_story_ids
+                
+                if category_ids:
+                    flash(f'Stories generated successfully with {len(category_ids)} categories!', 'success')
+                else:
+                    flash('Stories generated successfully!', 'success')
+                    
                 return redirect(url_for('main.display_generated_stories'))
+            
             except Exception as e:
                 import traceback
                 traceback.print_exc()  # Print the full error stack
@@ -171,13 +320,17 @@ def generate_stories():
         print("Missing fields:", missing_fields)
         print("======================")
     
+    # Get all categories for the category selection
+    categories = category_service.get_all_categories()
+    
     return render_template(
         'generate_stories_drag_and_drop.html', 
         templates=templates, 
         selected_template_id=template_id,
         template=template, 
         fields=fields,
-        missing_fields=missing_fields
+        missing_fields=missing_fields,
+        categories=categories  # Pass categories to the template
     )
 
 @bp.route('/display_generated_stories', methods=['GET'])
@@ -241,40 +394,52 @@ def select_story():
         
         # If mode=add or no stories selected, show the selection page
         if mode == 'add' or not story_ids:
-            stories = story_service.get_all_stories()
-            return render_template('select_story.html', stories=stories)
+            return redirect(url_for('main.see_all_stories'))
         else:
             # Otherwise show the selected stories
             selected_stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
             all_stories = story_service.get_all_stories()
             return render_template('selected_stories.html', selected_stories=selected_stories, all_stories=all_stories)
 
-#route that worked fairly well before trying to add deselection of story
-# @bp.route('/select_story', methods=['GET', 'POST'])
-# def select_story():
-#     if request.method == 'POST':
-#         story_id = request.form.get('story_id')
-#         story = db.session.query(Story).filter_by(story_id=story_id).first()
-#         if story:
-#             # Add the selected story_id to the list of story_ids in the session
-#             story_ids = session.get('story_ids', [])
-#             if story_id not in story_ids:
-#                 story_ids.append(story_id)
-#             session['story_ids'] = story_ids
-#             print(session)
-#         return redirect(url_for('main.select_story'))
-#     else:
-#         story_ids = session.get('story_ids', [])
-#         if story_ids:
-#             # Display the selected stories
-#             selected_stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
-#             return render_template('selected_stories.html', selected_stories=selected_stories)
-#         else:
-#             # Display the list of available stories for selection
-#             stories = story_service.get_all_stories()
-#             print("reaching select stories")
-#             return render_template('select_story.html', stories=stories)
-
+@bp.route('/select_all_filtered', methods=['POST'])
+def select_all_filtered():
+    # Check if the request is AJAX
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    # Get filter parameters from the request
+    data = request.get_json()
+    search_text = data.get('search_text', '')
+    category_filter = data.get('category_filter', '')
+    
+    # Build the query (similar to see_all_stories but get only IDs)
+    query = db.session.query(Story.story_id)
+    
+    # Apply search filter if provided
+    if search_text:
+        query = query.filter(Story.content.ilike(f'%{search_text}%'))
+    
+    # Apply category filter if provided
+    if category_filter and category_filter.strip():
+        try:
+            category_id = int(category_filter)
+            query = query.join(StoryCategory).filter(StoryCategory.category_id == category_id)
+        except (ValueError, TypeError):
+            # Invalid category_filter, ignore it
+            pass
+    
+    # Get all story IDs that match the filters
+    story_ids = [str(row.story_id) for row in query.all()]
+    
+    # Update session with these IDs
+    session['story_ids'] = story_ids
+    
+    # Return the number of stories selected
+    return jsonify({
+        'success': True,
+        'selected_count': len(story_ids),
+        'selected_ids': story_ids
+    })
 
 @bp.route('/select_question', methods=['GET', 'POST'])
 def select_question():
@@ -495,9 +660,11 @@ def loading():
     }
     
     # Clean up old jobs
-    cleanup_old_jobs()
-    
+    cleanup_old_jobs()    
     return render_template('loading.html', job_id=job_id)
+
+
+
 # Update start_processing to include rate limiting
 @bp.route('/start_processing/<job_id>')
 def start_processing(job_id):

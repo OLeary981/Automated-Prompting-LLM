@@ -21,3 +21,12 @@ def get_all_stories():
 
 def get_story_by_id(story_id):
     return Story.query.get_or_404(story_id)
+
+def delete_story(story_id):
+    """Delete a story by ID"""
+    story = db.session.query(Story).filter(Story.story_id == story_id).first()
+    if story:
+        db.session.delete(story)
+        db.session.commit()
+        return True
+    return False
