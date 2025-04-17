@@ -958,16 +958,23 @@ def view_responses():
                 flash('Error: Response not found.', 'danger')
                 
         # Redirect back to the same page (with filters preserved)
-        return redirect(url_for('main.see_all_responses', **request.args))
+        return redirect(url_for('main.view_responses', **request.args))
     
     # GET request - handle filtering
     provider = request.args.get('provider', '')
     model = request.args.get('model', '')
-    flagged_only = request.args.get('flagged_only') == 'true'
+    
+    # Fix the flagged_only filter - check for the existence of the parameter
+    flagged_only = 'flagged_only' in request.args
+    
     question_id = request.args.get('question_id', '')
     story_id = request.args.get('story_id', '')
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
+    
+    # Print debug information
+    print(f"Debug - flagged_only parameter: {request.args.get('flagged_only')}")
+    print(f"Debug - flagged_only value: {flagged_only}")
     
     # Build query - note the different join structure based on your schema
     query = db.session.query(Response).\
@@ -983,7 +990,8 @@ def view_responses():
     if model:
         query = query.filter(Model.name.ilike(f'%{model}%'))
     if flagged_only:
-        query = query.filter(Response.flagged_for_review is True)
+        print("Applying flagged filter")
+        query = query.filter(Response.flagged_for_review == True)
     if question_id:
         query = query.filter(Prompt.question_id == question_id)
     if story_id:
@@ -995,6 +1003,8 @@ def view_responses():
     # Paginate results
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     responses = pagination.items
+    
+    print(f"Debug - Query returned {len(responses)} responses")
     
     # Get data for filter dropdowns
     providers = db.session.query(Provider).all()
