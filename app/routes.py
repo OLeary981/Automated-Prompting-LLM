@@ -363,6 +363,46 @@ def select_story():
             all_stories = story_service.get_all_stories()
             return render_template('selected_stories.html', selected_stories=selected_stories, all_stories=all_stories)
 
+@bp.route('/select_all_filtered', methods=['POST'])
+def select_all_filtered():
+    # Check if the request is AJAX
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    # Get filter parameters from the request
+    data = request.get_json()
+    search_text = data.get('search_text', '')
+    category_filter = data.get('category_filter', '')
+    
+    # Build the query (similar to see_all_stories but get only IDs)
+    query = db.session.query(Story.story_id)
+    
+    # Apply search filter if provided
+    if search_text:
+        query = query.filter(Story.content.ilike(f'%{search_text}%'))
+    
+    # Apply category filter if provided
+    if category_filter and category_filter.strip():
+        try:
+            category_id = int(category_filter)
+            query = query.join(StoryCategory).filter(StoryCategory.category_id == category_id)
+        except (ValueError, TypeError):
+            # Invalid category_filter, ignore it
+            pass
+    
+    # Get all story IDs that match the filters
+    story_ids = [str(row.story_id) for row in query.all()]
+    
+    # Update session with these IDs
+    session['story_ids'] = story_ids
+    
+    # Return the number of stories selected
+    return jsonify({
+        'success': True,
+        'selected_count': len(story_ids),
+        'selected_ids': story_ids
+    })
+
 @bp.route('/select_question', methods=['GET', 'POST'])
 def select_question():
     if request.method == 'POST':
