@@ -135,6 +135,48 @@
                     </div>
                 </div>
             </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">Assign Categories to Generated Stories</div>
+                        <div class="card-body">
+                            <p class="text-muted">Selected categories will be applied to all generated stories</p>
+                            
+                            <div class="row">
+                                <!-- Existing categories checkboxes -->
+                                {% for category in categories %}
+                                <div class="col-md-3 col-sm-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="story_categories" id="cat{{ category.category_id }}" 
+                                               value="{{ category.category_id }}">
+                                        <label class="form-check-label" for="cat{{ category.category_id }}">
+                                            {{ category.category }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Add new category option -->
+                            <div class="mt-3">
+                                <label for="new_category" class="form-label">Add New Category:</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="new_category" 
+                                           name="new_category" placeholder="Enter a new category name">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" 
+                                                id="add-new-category-btn">Add</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="added-categories" class="mt-2">
+                                <!-- New categories will appear here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
             
             <div class="mt-4 d-flex justify-content-between">
                 <button type="submit" name="update_fields" class="btn btn-primary">Update Fields</button>
@@ -468,5 +510,42 @@
         updateFieldDataJson();
         updateAvailableWords();
     });
+    document.getElementById('add-new-category-btn').addEventListener('click', function() {
+    const input = document.getElementById('new_category');
+    const categoryName = input.value.trim();
+    
+    if (categoryName) {
+        // Create a hidden input for the new category
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'new_categories';
+        hiddenInput.value = categoryName;
+        
+        // Create a visual representation of the category
+        const badge = document.createElement('span');
+        badge.className = 'badge bg-info me-2 mb-1';
+        badge.innerHTML = `${categoryName} <i class="fas fa-times-circle"></i>`;
+        
+        // Add a remove button
+        const removeBtn = document.createElement('i');
+        removeBtn.className = 'ms-1 fas fa-times-circle';
+        removeBtn.style.cursor = 'pointer';
+        badge.appendChild(removeBtn);
+        
+        // Add remove functionality
+        removeBtn.addEventListener('click', function() {
+            badge.remove();
+            hiddenInput.remove();
+        });
+        
+        // Add to the DOM
+        document.getElementById('added-categories').appendChild(badge);
+        document.getElementById('fields-form').appendChild(hiddenInput);
+        
+        // Clear the input
+        input.value = '';
+    }
+});
+
 </script>
 {% endblock %}
