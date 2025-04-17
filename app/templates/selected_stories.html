@@ -4,36 +4,119 @@
 
 {% block content %}
 <div class="container">
-    <h1>Selected Stories</h1>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Selected Stories</h1>
+    </div>
     
-    <!-- Display the selected stories -->
-    <div class="list-group mt-4">
-        {% if selected_stories %}
-            {% for story in selected_stories %}
-                <div class="list-group-item">
-                    <h5>Story ID: {{ story.story_id }}</h5>
-                    <p>{{ story.content }}</p>
-                    <form method="POST" action="{{ url_for('main.select_story') }}">
-                        <button type="submit" name="deselect_story_id" value="{{ story.story_id }}" class="btn btn-danger">Deselect</button>
-                    </form>
-                </div>
-            {% endfor %}
-        {% else %}
-            <div class="alert alert-info">
-                No stories have been selected yet.
+    <!-- Summary Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Stories to Send to LLM</h5>
+            <span class="badge bg-primary">{{ selected_stories|length }} stories selected</span>
+        </div>
+        <div class="card-body">
+            <p class="lead">These stories will be processed by the LLM with your selected question.</p>
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-plus-circle"></i> Select More Stories
+                </a>
+                
+                {% if selected_stories %}
+                    <a href="{{ url_for('main.select_question') }}" class="btn btn-success">
+                        <i class="bi bi-arrow-right-circle"></i> Proceed to Select Question
+                    </a>
+                {% else %}
+                    <button class="btn btn-success disabled">
+                        <i class="bi bi-arrow-right-circle"></i> Proceed to Select Question
+                    </button>
+                {% endif %}
             </div>
-        {% endif %}
+        </div>
     </div>
-
-    <!-- Buttons for navigation -->
-    <div class="mt-4 d-flex justify-content-between">
-        <a href="{{ url_for('main.select_story', mode='add') }}" class="btn btn-secondary">Select More Stories</a>
-        
-        {% if selected_stories %}
-            <a href="{{ url_for('main.select_question') }}" class="btn btn-primary">Proceed with These Stories</a>
-        {% else %}
-            <button class="btn btn-primary" disabled>Proceed with These Stories</button>
-        {% endif %}
+    
+    <!-- Stories Table -->
+    {% if selected_stories %}
+    <div class="card mb-4">
+        <div class="card-body p-0">
+            <table class="table table-striped table-bordered table-hover table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th>Content</th>
+                        <th style="width: 120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for story in selected_stories %}
+                    <tr>
+                        <td>{{ story.story_id }}</td>
+                        <td>{{ story.content }}</td>
+                        <td class="text-center">
+                            <form method="POST" action="{{ url_for('main.select_story') }}" class="d-inline">
+                                <button type="submit" name="deselect_story_id" value="{{ story.story_id }}" 
+                                        class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-x-circle"></i> Deselect
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i> No stories have been selected yet. 
+        <a href="{{ url_for('main.see_all_stories') }}" class="alert-link">Go to All Stories</a> to select some.
+    </div>
+    {% endif %}
+    
+    <!-- Batch Actions -->
+    {% if selected_stories %}
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Batch Actions</h5>
+        </div>
+        <div class="card-body">
+            <button onclick="return clearAllAndRedirect()" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Deselect All Stories
+            </button>
+        </div>
+    </div>
+    {% endif %}
 </div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    function clearAllAndRedirect() {
+    // Send request to clear all selected stories
+    fetch('{{ url_for("main.update_story_selection") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            action: 'clear_all'  // Use the existing action
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // After successfully clearing, redirect to the stories page
+            window.location.href = '{{ url_for("main.see_all_stories") }}';
+        }
+    })
+    .catch(error => {
+        console.error('Error clearing selection:', error);
+        alert('There was an error clearing your selections. Please try again.');
+    });
+    
+    // Prevent default form submission
+    return false;
+}
+</script>
 {% endblock %}
