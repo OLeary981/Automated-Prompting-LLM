@@ -1,7 +1,7 @@
 from flask import Blueprint, flash, render_template, request, redirect, url_for, session, jsonify, Response as FlaskResponse
 from . import db, create_app
 from .services import story_service, question_service, story_builder_service, llm_service, category_service
-from .models import Template, Story, Question, Model, Provider, Response, StoryCategory
+from .models import Template, Story, Question, Model, Provider, Response, StoryCategory, Prompt
 import time
 import json
 import threading
@@ -933,6 +933,114 @@ def llm_response():
                           model=session.get('model'), 
                           provider=session.get('provider'), 
                           question=question)
+
+@bp.route('/view_responses', methods=['GET', 'POST'])
+def view_responses():
+    if request.method == 'POST':
+        # Process form data for response updates
+        response_id = request.form.get('response_id')
+        
+        if response_id:
+            # Check if the response exists
+            response = db.session.query(Response).get(response_id)
+            if response:
+                # Update flag status - checked boxes return 'on', unchecked return None
+                flagged_for_review = f'flagged_for_review_{response_id}' in request.form
+                review_notes = request.form.get(f'review_notes_{response_id}', '')
+                
+                # Apply changes
+                response.flagged_for_review = flagged_for_review
+                response.review_notes = review_notes
+                db.session.commit()
+                
+                flash('Response updated successfully!', 'success')
+            else:
+                flash('Error: Response not found.', 'danger')
+                
+        # Redirect back to the same page (with filters preserved)
+        return redirect(url_for('main.see_all_responses', **request.args))
+    
+    # GET request - handle filtering
+    provider = request.args.get('provider', '')
+    model = request.args.get('model', '')
+    flagged_only = request.args.get('flagged_only') == 'true'
+    question_id = request.args.get('question_id', '')
+    story_id = request.args.get('story_id', '')
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    
+    # Build query - note the different join structure based on your schema
+    query = db.session.query(Response).\
+        join(Prompt, Response.prompt_id == Prompt.prompt_id).\
+        join(Model, Prompt.model_id == Model.model_id).\
+        join(Provider, Model.provider_id == Provider.provider_id).\
+        join(Story, Prompt.story_id == Story.story_id).\
+        join(Question, Prompt.question_id == Question.question_id)
+    
+    # Apply filters
+    if provider:
+        query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
+    if model:
+        query = query.filter(Model.name.ilike(f'%{model}%'))
+    if flagged_only:
+        query = query.filter(Response.flagged_for_review is True)
+    if question_id:
+        query = query.filter(Prompt.question_id == question_id)
+    if story_id:
+        query = query.filter(Prompt.story_id == story_id)
+    
+    # Order by newest first
+    query = query.order_by(Response.timestamp.desc())
+    
+    # Paginate results
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    responses = pagination.items
+    
+    # Get data for filter dropdowns
+    providers = db.session.query(Provider).all()
+    models = db.session.query(Model).all()
+    questions = db.session.query(Question).all()
+    
+    return render_template('see_all_responses.html', 
+                          responses=responses,
+                          pagination=pagination,
+                          providers=providers,
+                          models=models,
+                          questions=questions,
+                          current_filters={
+                              'provider': provider,
+                              'model': model,
+                              'flagged_only': flagged_only,
+                              'question_id': question_id,
+                              'story_id': story_id
+                          })
+
+@bp.route('/update_response_flag', methods=['POST'])
+def update_response_flag():
+    """AJAX endpoint to quickly toggle a response's flag status"""
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': False, 'message': 'Invalid request'}), 400
+    
+    data = request.get_json()
+    response_id = data.get('response_id')
+    flagged = data.get('flagged', False)
+    
+    try:
+        response = db.session.query(Response).get(response_id)
+        if not response:
+            return jsonify({'success': False, 'message': 'Response not found'}), 404
+        
+        response.flagged_for_review = flagged
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'response_id': response_id,
+            'flagged': response.flagged_for_review
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @bp.route('/clear_session', methods=['GET'])
 def clear_session():
