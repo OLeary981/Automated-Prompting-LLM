@@ -1,3 +1,4 @@
+import datetime
 from flask import Blueprint, flash, render_template, request, redirect, url_for, session, jsonify, Response as FlaskResponse
 from . import db, create_app
 from .services import story_service, question_service, story_builder_service, llm_service, category_service
@@ -960,23 +961,24 @@ def view_responses():
         # Redirect back to the same page (with filters preserved)
         return redirect(url_for('main.view_responses', **request.args))
     
-    # GET request - handle filtering
+ # GET request - handle filtering
     provider = request.args.get('provider', '')
     model = request.args.get('model', '')
-    
-    # Fix the flagged_only filter - check for the existence of the parameter
     flagged_only = 'flagged_only' in request.args
-    
     question_id = request.args.get('question_id', '')
     story_id = request.args.get('story_id', '')
+    
+    # Date range filtering
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
+    
+    # Sorting option
+    sort = request.args.get('sort', 'date_desc')
+    
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
     
-    # Print debug information
-    print(f"Debug - flagged_only parameter: {request.args.get('flagged_only')}")
-    print(f"Debug - flagged_only value: {flagged_only}")
-    
-    # Build query - note the different join structure based on your schema
+    # Build query with the existing joins
     query = db.session.query(Response).\
         join(Prompt, Response.prompt_id == Prompt.prompt_id).\
         join(Model, Prompt.model_id == Model.model_id).\
@@ -984,27 +986,43 @@ def view_responses():
         join(Story, Prompt.story_id == Story.story_id).\
         join(Question, Prompt.question_id == Question.question_id)
     
-    # Apply filters
+    # Apply regular filters
     if provider:
         query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
     if model:
         query = query.filter(Model.name.ilike(f'%{model}%'))
     if flagged_only:
-        print("Applying flagged filter")
         query = query.filter(Response.flagged_for_review == True)
     if question_id:
         query = query.filter(Prompt.question_id == question_id)
     if story_id:
         query = query.filter(Prompt.story_id == story_id)
     
-    # Order by newest first
-    query = query.order_by(Response.timestamp.desc())
+    # Apply date range filters
+    if start_date:
+        try:
+            start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(Response.timestamp >= start_date_obj)
+        except ValueError:
+            flash(f"Invalid start date format: {start_date}", "warning")
+    
+    if end_date:
+        try:
+            # Add one day to include the end date fully
+            end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            query = query.filter(Response.timestamp < end_date_obj)
+        except ValueError:
+            flash(f"Invalid end date format: {end_date}", "warning")
+    
+    # Apply sorting
+    if sort == 'date_asc':
+        query = query.order_by(Response.timestamp.asc())
+    else:  # Default to date_desc
+        query = query.order_by(Response.timestamp.desc())
     
     # Paginate results
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     responses = pagination.items
-    
-    print(f"Debug - Query returned {len(responses)} responses")
     
     # Get data for filter dropdowns
     providers = db.session.query(Provider).all()
@@ -1022,7 +1040,10 @@ def view_responses():
                               'model': model,
                               'flagged_only': flagged_only,
                               'question_id': question_id,
-                              'story_id': story_id
+                              'story_id': story_id,
+                              'start_date': start_date,
+                              'end_date': end_date,
+                              'sort': sort
                           })
 
 @bp.route('/update_response_flag', methods=['POST'])
