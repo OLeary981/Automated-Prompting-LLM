@@ -62,6 +62,24 @@
                         <input type="text" class="form-control" id="story_id" name="story_id"
                                value="{{ current_filters.story_id }}">
                     </div>
+                    <!-- Date range filters -->
+                    <div class="col-md-3">
+                        <label for="start_date" class="form-label">From Date:</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date"
+                               value="{{ current_filters.start_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="end_date" class="form-label">To Date:</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date"
+                               value="{{ current_filters.end_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="sort" class="form-label">Sort Order:</label>
+                        <select class="form-select" id="sort" name="sort">
+                            <option value="date_desc" {% if current_filters.sort == 'date_desc' %}selected{% endif %}>Newest First</option>
+                            <option value="date_asc" {% if current_filters.sort == 'date_asc' %}selected{% endif %}>Oldest First</option>
+                        </select>
+                    </div>
                     <div class="col-md-3">
                         <div class="form-check mt-4">
                             <input class="form-check-input" type="checkbox" id="flagged_only" name="flagged_only" 
@@ -104,6 +122,7 @@
                     <thead>
                         <tr>
                             <th style="width: 60px;">ID</th>
+                            <th style="width: 120px;">Date</th>
                             <th style="width: 100px;">Provider</th>
                             <th style="width: 120px;">Model</th>
                             <th>Parameters</th>
@@ -112,13 +131,16 @@
                             <th>Response</th>
                             <th style="width: 80px;">Flagged</th>
                             <th>Review Notes</th>
-                            <th style="width: 120px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for response in responses %}
                         <tr>
                             <td>{{ response.response_id }}</td>
+                            <td>
+                                {{ response.timestamp.strftime('%d/%m/%y') }}<br>
+                                <small class="text-muted">{{ response.timestamp.strftime('%H:%M') }}</small>
+                            </td>
                             <td>{{ response.prompt.model.provider.provider_name }}</td>
                             <td>{{ response.prompt.model.name }}</td>
                             <td style="max-width: 200px; overflow-wrap: break-word;">
@@ -202,7 +224,7 @@
         <ul class="pagination">
             {% if pagination.has_prev %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('main.view_responses', page=pagination.prev_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id) }}">Previous</a>
+                    <a class="page-link" href="{{ url_for('main.view_responses', page=pagination.prev_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Previous</a>
                 </li>
             {% else %}
                 <li class="page-item disabled"><span class="page-link">Previous</span></li>
@@ -211,7 +233,7 @@
             {% for page_num in pagination.iter_pages() %}
                 {% if page_num %}
                     <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
-                        <a class="page-link" href="{{ url_for('main.view_responses', page=page_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id) }}">{{ page_num }}</a>
+                        <a class="page-link" href="{{ url_for('main.view_responses', page=page_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">{{ page_num }}</a>
                     </li>
                 {% else %}
                     <li class="page-item disabled"><span class="page-link">...</span></li>
@@ -220,7 +242,7 @@
             
             {% if pagination.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('main.view_responses', page=pagination.next_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id) }}">Next</a>
+                    <a class="page-link" href="{{ url_for('main.view_responses', page=pagination.next_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Next</a>
                 </li>
             {% else %}
                 <li class="page-item disabled"><span class="page-link">Next</span></li>
@@ -241,7 +263,10 @@
             <div class="modal-body">
                 <form id="editForm{{ response.response_id }}" method="POST" action="{{ url_for('main.view_responses', **request.args) }}">
                     <input type="hidden" name="response_id" value="{{ response.response_id }}">
-                    
+                    <div class="mb-3">
+                        <label class="form-label">Date & Time:</label>
+                        <input type="text" class="form-control" value="{{ response.timestamp.strftime('%d/%m/%Y at %H:%M') }}" disabled>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Provider:</label>
                         <input type="text" class="form-control" value="{{ response.prompt.model.provider.provider_name }}" disabled>
@@ -250,10 +275,7 @@
                         <label class="form-label">Model:</label>
                         <input type="text" class="form-control" value="{{ response.prompt.model.name }}" disabled>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Timestamp:</label>
-                        <input type="text" class="form-control" value="{{ response.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}" disabled>
-                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Story:</label>
                         <textarea class="form-control" rows="3" disabled>{{ response.prompt.story.content }}</textarea>
