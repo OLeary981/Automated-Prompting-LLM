@@ -363,33 +363,6 @@ def select_story():
             all_stories = story_service.get_all_stories()
             return render_template('selected_stories.html', selected_stories=selected_stories, all_stories=all_stories)
 
-#route that worked fairly well before trying to add deselection of story
-# @bp.route('/select_story', methods=['GET', 'POST'])
-# def select_story():
-#     if request.method == 'POST':
-#         story_id = request.form.get('story_id')
-#         story = db.session.query(Story).filter_by(story_id=story_id).first()
-#         if story:
-#             # Add the selected story_id to the list of story_ids in the session
-#             story_ids = session.get('story_ids', [])
-#             if story_id not in story_ids:
-#                 story_ids.append(story_id)
-#             session['story_ids'] = story_ids
-#             print(session)
-#         return redirect(url_for('main.select_story'))
-#     else:
-#         story_ids = session.get('story_ids', [])
-#         if story_ids:
-#             # Display the selected stories
-#             selected_stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
-#             return render_template('selected_stories.html', selected_stories=selected_stories)
-#         else:
-#             # Display the list of available stories for selection
-#             stories = story_service.get_all_stories()
-#             print("reaching select stories")
-#             return render_template('select_story.html', stories=stories)
-
-
 @bp.route('/select_question', methods=['GET', 'POST'])
 def select_question():
     if request.method == 'POST':
@@ -609,9 +582,11 @@ def loading():
     }
     
     # Clean up old jobs
-    cleanup_old_jobs()
-    
+    cleanup_old_jobs()    
     return render_template('loading.html', job_id=job_id)
+
+
+
 # Update start_processing to include rate limiting
 @bp.route('/start_processing/<job_id>')
 def start_processing(job_id):
