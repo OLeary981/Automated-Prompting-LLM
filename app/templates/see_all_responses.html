@@ -6,7 +6,6 @@
 <div class="container-fluid" style="padding-left: 1rem; padding-right: 1rem;">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1>Response Database</h1>
-
     </div>
 
     <!-- Filters Card -->
@@ -79,8 +78,8 @@
                     </div>
                     <!-- Buttons -->
                     <div class="col-md-12 d-flex justify-content-start mt-3">
-                        <button type="submit" class="btn btn-sm btn-primary me-2">Apply Filters</button>
-                        <a href="{{ url_for('main.view_responses') }}" class="btn btn-sm btn-secondary me-2">Reset</a>
+                        <button type="submit" class="btn btn-sm btn-primary me-3">Apply Filters</button>
+                        <a href="{{ url_for('main.view_responses') }}" class="btn btn-sm btn-secondary me-3">Reset</a>
                         <a href="{{ url_for('main.export_responses') }}" class="btn btn-sm btn-success" onclick="this.href = this.href + window.location.search;">Export CSV</a>
                     </div>
                 </form>
@@ -90,86 +89,118 @@
 
     <p>Showing {{ pagination.page * pagination.per_page - pagination.per_page + 1 }}–{{ pagination.page * pagination.per_page if pagination.page * pagination.per_page < pagination.total else pagination.total }} of {{ pagination.total }} responses</p>
 
-    <!-- Responses Table -->
-    <div class="card mb-4">
-        <div class="card-body p-0">
-            <div class="table-responsive w-100">
-                <table class="table table-striped table-bordered table-hover table-sm mb-0 llm-response-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Date</th>
-                            <th>Provider</th>
-                            <th>Model</th>
-                            <th>Parameters</th>
-                            <th>Story</th>
-                            <th>Question</th>
-                            <th>Response</th>
-                            <th>Flagged</th>
-                            <th>Review Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for response in responses %}
-                        <tr>
-                            <td>{{ response.response_id }}</td>
-                            <td>{{ response.timestamp.strftime('%d/%m/%y') }}<br><small class="text-muted">{{ response.timestamp.strftime('%H:%M') }}</small></td>
-                            <td>{{ response.prompt.model.provider.provider_name }}</td>
-                            <td>{{ response.prompt.model.name }}</td>
-                            <td>
-                                {% if response.prompt.payload %}
-                                    <ul class="list-unstyled mb-0 small">
-                                        <li><strong>Temperature:</strong> {{ response.prompt.temperature }}</li>
-                                        <li><strong>Max Tokens:</strong> {{ response.prompt.max_tokens }}</li>
-                                        <li><strong>Top P:</strong> {{ response.prompt.top_p }}</li>
-                                    </ul>
-                                {% else %}
-                                    <em class="text-muted">None</em>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div style="white-space: normal;">
-                                    {{ response.prompt.story.content }}
+    <!-- Card-Based Responses (Replacing Table) -->
+    <div class="row">
+        {% for response in responses %}
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 {% if response.flagged_for_review %}border-danger{% endif %}">
+                <div class="card-header d-flex justify-content-between align-items-center {% if response.flagged_for_review %}bg-danger bg-opacity-10{% endif %}">
+                    <div>
+                        <strong>ID:</strong> {{ response.response_id }} 
+                        <span class="ms-3"><strong>Date:</strong> {{ response.timestamp.strftime('%d/%m/%y') }} {{ response.timestamp.strftime('%H:%M') }}</span>
+                    </div>
+                    <div>
+                        {% if response.flagged_for_review %}
+                            <span class="badge bg-danger">Flagged</span>
+                        {% else %}
+                            <span class="badge bg-success">OK</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Provider:</strong> {{ response.prompt.model.provider.provider_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Model:</strong> {{ response.prompt.model.name }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <strong>Parameters:</strong>
+                            {% if response.prompt.payload %}
+                                <span class="small">Temp: {{ response.prompt.temperature }}, Max Tokens: {{ response.prompt.max_tokens }}, Top P: {{ response.prompt.top_p }}</span>
+                            {% else %}
+                                <em class="text-muted">None</em>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="mb-1"><strong>Story:</strong> <small class="text-muted">(ID: {{ response.prompt.story_id }})</small></div>
+                            <div class="card">
+                                <div class="card-body p-2 bg-light">
+                                    <div style="max-height: 150px; overflow-y: auto;">
+                                        {{ response.prompt.story.content }}
+                                    </div>
                                 </div>
-                                <small class="text-muted">ID: {{ response.prompt.story_id }}</small>
-                            </td>
-                            <td>
-                                <div style="white-space: normal;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="mb-1"><strong>Question:</strong> <small class="text-muted">(ID: {{ response.prompt.question_id }})</small></div>
+                            <div class="card">
+                                <div class="card-body p-2 bg-light">
                                     {{ response.prompt.question.content }}
                                 </div>
-                                <small class="text-muted">ID: {{ response.prompt.question_id }}</small>
-                            </td>
-                            <td>
-                                <div style="max-height: 150px; overflow-y: auto; white-space: normal;">
-                                    {{ response.response_content }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="mb-1"><strong>Response:</strong></div>
+                            <div class="card">
+                                <div class="card-body p-2">
+                                    <div style="max-height: 200px; overflow-y: auto;">
+                                        {{ response.response_content }}
+                                    </div>
                                 </div>
-                            </td>
-                            <td class="text-center">
-                                <form method="POST" action="{{ url_for('main.view_responses', **request.args) }}">
-                                    <input type="hidden" name="response_id" value="{{ response.response_id }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('main.view_responses', **request.args) }}">
+                        <input type="hidden" name="response_id" value="{{ response.response_id }}">
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="form-check mb-2">
                                     <input type="checkbox" id="flagged_{{ response.response_id }}" 
-       name="flagged_for_review_{{ response.response_id }}" 
-       class="form-check-input"
-       {% if response.flagged_for_review %}checked{% endif %}>
-                                </form>
-                            </td>
-                            <td>
-                                <form method="POST" action="{{ url_for('main.view_responses', **request.args) }}">
-                                    <input type="hidden" name="response_id" value="{{ response.response_id }}">
-                                    <textarea name="review_notes_{{ response.response_id }}" class="form-control review-notes-area" rows="3">{{ response.review_notes or '' }}</textarea>
-                                    <button type="submit" class="btn btn-sm btn-primary mt-2 w-100">Save</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="10" class="text-center">No responses found matching your criteria</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                           name="flagged_for_review_{{ response.response_id }}" 
+                                           class="form-check-input"
+                                           {% if response.flagged_for_review %}checked{% endif %}>
+                                    <label class="form-check-label" for="flagged_{{ response.response_id }}">
+                                        Flag for review
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label for="notes_{{ response.response_id }}" class="form-label">Review Notes:</label>
+                                <textarea name="review_notes_{{ response.response_id }}" 
+                                          id="notes_{{ response.response_id }}"
+                                          class="form-control review-notes-area" 
+                                          rows="3">{{ response.review_notes or '' }}</textarea>
+                                <button type="submit" class="btn btn-sm btn-primary mt-2 w-100">Save</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">No responses found matching your criteria</div>
+        </div>
+        {% endfor %}
     </div>
 
     <!-- Pagination -->
@@ -203,64 +234,6 @@
         </ul>
     </nav>
 </div>
-
-<!-- Edit Modals -->
-{% for response in responses %}
-<div class="modal fade" id="editModal{{ response.response_id }}" tabindex="-1" aria-labelledby="editModalLabel{{ response.response_id }}" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel{{ response.response_id }}">Edit Response #{{ response.response_id }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editForm{{ response.response_id }}" method="POST" action="{{ url_for('main.view_responses', **request.args) }}">
-                    <input type="hidden" name="response_id" value="{{ response.response_id }}">
-                    <div class="mb-3">
-                        <label class="form-label">Date & Time:</label>
-                        <input type="text" class="form-control" value="{{ response.timestamp.strftime('%d/%m/%Y at %H:%M') }}" disabled>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Provider:</label>
-                        <input type="text" class="form-control" value="{{ response.prompt.model.provider.provider_name }}" disabled>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Model:</label>
-                        <input type="text" class="form-control" value="{{ response.prompt.model.name }}" disabled>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Story:</label>
-                        <textarea class="form-control" rows="3" disabled>{{ response.prompt.story.content }}</textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Question:</label>
-                        <textarea class="form-control" rows="2" disabled>{{ response.prompt.question.content }}</textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Response:</label>
-                        <textarea class="form-control" rows="5" disabled>{{ response.response_content }}</textarea>
-                    </div>
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="flagged{{ response.response_id }}" 
-                               name="flagged_for_review_{{ response.response_id }}" {% if response.flagged_for_review %}checked{% endif %}>
-                        <label class="form-check-label" for="flagged{{ response.response_id }}">Flag for review</label>
-                    </div>
-                    <div class="mb-3">
-                        <label for="notes{{ response.response_id }}" class="form-label">Review Notes:</label>
-                        <textarea class="form-control" id="notes{{ response.response_id }}" 
-                                  name="review_notes_{{ response.response_id }}" rows="3">{{ response.review_notes }}</textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" form="editForm{{ response.response_id }}" class="btn btn-primary">Save changes</button>
-            </div>
-        </div>
-    </div>
-</div>
-{% endfor %}
 
 {% endblock %}
 
