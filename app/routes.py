@@ -1,5 +1,5 @@
 import datetime
-from flask import Blueprint, flash, render_template, request, redirect, url_for, session, jsonify, Response as FlaskResponse
+from flask import Blueprint, flash, render_template, request, redirect, url_for, session, jsonify, Response as FlaskResponse, send_file
 from . import db, create_app
 from .services import story_service, question_service, story_builder_service, llm_service, category_service
 from .models import Template, Story, Question, Model, Provider, Response, StoryCategory, Prompt
@@ -9,6 +9,8 @@ import threading
 from threading import Thread
 import asyncio
 import uuid
+import csv
+import io
 
 #Silly placeholder to test push to new branch.
 
@@ -1072,6 +1074,64 @@ def update_response_flag():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
+    
+
+
+@bp.route('/export_responses', methods=['GET'])
+def export_responses():
+    # Get the same filters you use in view_responses
+    provider = request.args.get('provider', '')
+    model = request.args.get('model', '')
+    # ...other filters...
+    
+    # Build and execute the query (same as in view_responses but without pagination)
+    query = db.session.query(Response)
+    # ...apply the same filters...
+    
+    # Get all matching responses
+    responses = query.all()
+    
+    # Create a memory file for the CSV data
+    mem_file = io.StringIO()
+    csv_writer = csv.writer(mem_file, quoting=csv.QUOTE_MINIMAL)
+    
+    # Write header row
+    csv_writer.writerow(['ID', 'Date', 'Time', 'Provider', 'Model', 
+                         'Temperature', 'Max Tokens', 'Top P',
+                         'Story ID', 'Story', 'Question ID', 'Question', 
+                         'Response', 'Flagged', 'Review Notes'])
+    
+    # Write data rows
+    for response in responses:
+        csv_writer.writerow([
+            response.response_id,
+            response.timestamp.strftime('%d/%m/%Y'),
+            response.timestamp.strftime('%H:%M'),
+            response.prompt.model.provider.provider_name,
+            response.prompt.model.name,
+            response.prompt.temperature,
+            response.prompt.max_tokens,
+            response.prompt.top_p,
+            response.prompt.story_id,
+            response.prompt.story.content,
+            response.prompt.question_id,
+            response.prompt.question.content,
+            response.response_content,
+            'Yes' if response.flagged_for_review else 'No',
+            response.review_notes or ''
+        ])
+    
+    # Move cursor to beginning of file
+    mem_file.seek(0)
+    
+    # Add an export button to your template
+    return send_file(
+        io.BytesIO(mem_file.getvalue().encode('utf-8')),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name=f'responses_export_{datetime.datetime.now().strftime("%Y%m%d")}.csv'
+    )
+
 
 @bp.route('/clear_session', methods=['GET'])
 def clear_session():
