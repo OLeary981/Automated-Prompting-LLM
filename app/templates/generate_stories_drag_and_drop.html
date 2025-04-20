@@ -63,7 +63,9 @@
                                 
                                 <div class="input-group mb-2">
                                     <input type="text" class="form-control new-words" 
-                                           data-field="{{ field_name }}" placeholder="Add more words (comma-separated)">
+                                           data-field="{{ field_name }}" placeholder="Add more words (comma-separated)"
+                                           spellcheck="true" 
+                                            lang="en-GB">
                                     <div class="input-group-append">
                                         <button class="btn btn-outline-primary add-words-btn" 
                                                 type="button" data-field="{{ field_name }}">Add</button>
@@ -94,7 +96,9 @@
                                     
                                     <div class="input-group mb-2">
                                         <input type="text" class="form-control new-words" 
-                                               data-field="{{ field_name }}" placeholder="Enter words (comma-separated)">
+                                               data-field="{{ field_name }}" placeholder="Enter words (comma-separated)"
+                                               spellcheck="true" 
+                                                lang="en-GB">
                                         <div class="input-group-append">
                                             <button class="btn btn-outline-primary add-words-btn" 
                                                     type="button" data-field="{{ field_name }}">Add</button>
@@ -163,7 +167,8 @@
                                 <label for="new_category" class="form-label">Add New Category:</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="new_category" 
-                                           name="new_category" placeholder="Enter a new category name">
+                                           name="new_category" placeholder="Enter a new category name"
+                                           spellcheck="true" lang="en-GB">
                                     <div class="input-group-append">
                                         <button class="btn btn-outline-secondary" type="button" 
                                                 id="add-new-category-btn">Add</button>

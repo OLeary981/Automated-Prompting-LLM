@@ -186,9 +186,11 @@
                             <div class="col-md-12">
                                 <label for="notes_{{ response.response_id }}" class="form-label">Review Notes:</label>
                                 <textarea name="review_notes_{{ response.response_id }}" 
-                                          id="notes_{{ response.response_id }}"
-                                          class="form-control review-notes-area" 
-                                          rows="3">{{ response.review_notes or '' }}</textarea>
+                                id="notes_{{ response.response_id }}"
+                                class="form-control review-notes-area" 
+                                rows="3"                                          
+                                spellcheck="true"
+                                lang="en-GB">{{ response.review_notes or '' }}</textarea>
                                 <button type="submit" class="btn btn-sm btn-primary mt-2 w-100">Save</button>
                             </div>
                         </div>

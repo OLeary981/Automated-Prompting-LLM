@@ -49,7 +49,7 @@ def add_story():
             except Exception as e:
                 flash(f'Error adding story: {str(e)}', 'danger')
                 print(f"An error occurred: {e}")
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.see_all_stories'))
     
     # Get all existing categories for the form
     categories = category_service.get_all_categories()
