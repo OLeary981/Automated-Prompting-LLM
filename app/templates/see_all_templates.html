@@ -16,6 +16,22 @@
             <h5 class="mb-0">Add New Template</h5>
         </div>
         <div class="card-body">
+            <!-- Move the fields section inside the card-body -->
+            <div class="form-group mb-3">
+                <label>Available Fields:</label>
+                <div class="field-buttons">
+                    {% if template_fields %}
+                        {% for field in template_fields %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary me-2 mb-2 field-btn" 
+                                    data-field="{{ field }}">{{ field }}</button>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No fields found in the database</p>
+                    {% endif %}
+                </div>
+                <small class="form-text text-muted">Click any field to add it to your template.</small>
+            </div>
+            
             <form action="{{ url_for('main.add_template') }}" method="POST">
                 <div class="form-group">
                     <label for="template_content">Template Content</label>
@@ -24,7 +40,7 @@
                     <small class="form-text text-muted">Use placeholders like {name}, {location}, etc. for dynamic
                         content generation.</small>
                 </div>
-                <button type="submit" class="btn btn-success">Add Template</button>
+                <button type="submit" class="btn btn-success mt-3">Add Template</button>
             </form>
         </div>
     </div>
@@ -124,5 +140,43 @@
         </ul>
     </nav>
     {% endif %}
-</div> <!-- This closing div was missing - it closes the container -->
+</div> 
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get template textarea
+        const templateTextarea = document.getElementById('template_content');
+        
+        // Add click handlers for all field buttons
+        document.querySelectorAll('.field-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const fieldName = this.getAttribute('data-field');
+                insertFieldAtCursor(templateTextarea, fieldName);
+            });
+        });
+        
+        // Function to insert field at cursor position
+        function insertFieldAtCursor(textarea, fieldName) {
+            const startPos = textarea.selectionStart;
+            const endPos = textarea.selectionEnd;
+            const textToInsert = `{${fieldName}}`;
+            
+            // Insert the field at cursor position
+            textarea.value = 
+                textarea.value.substring(0, startPos) + 
+                textToInsert + 
+                textarea.value.substring(endPos);
+                
+            // Set cursor position after inserted field
+            textarea.focus();
+            textarea.selectionStart = startPos + textToInsert.length;
+            textarea.selectionEnd = startPos + textToInsert.length;
+            
+            // Trigger input event for validation (if you have template validation)
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    });
+    </script>
+
 {% endblock %}
+
