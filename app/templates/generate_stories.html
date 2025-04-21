@@ -26,7 +26,7 @@
                     <form action="{{ url_for('main.add_word') }}" method="POST" class="form-inline">
                         <input type="hidden" name="field_name" value="{{ field }}">
                         <input type="hidden" name="template_id" value="{{ template.template_id }}">
-                        <input type="text" name="new_words" class="form-control ml-2" placeholder="Add words">
+                        <input type="text" name="new_words" class="form-control ml-2" placeholder="Add words" spellcheck="true" lang="en-GB">
                         <button type="submit" class="btn btn-primary ml-2">Add</button>
                     </form>
                 </li>
@@ -42,7 +42,7 @@
                             <form action="{{ url_for('main.add_word') }}" method="POST" class="form-inline">
                                 <input type="hidden" name="field_name" value="{{ field }}">
                                 <input type="hidden" name="template_id" value="{{ template.template_id }}">
-                                <input type="text" name="new_words" class="form-control ml-2" placeholder="Add words">
+                                <input type="text" name="new_words" class="form-control ml-2" placeholder="Add words" spellcheck="true" lang="en-GB">
                                 <button type="submit" class="btn btn-primary ml-2">Add</button>
                             </form>
                         </li>
