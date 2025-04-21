@@ -1,14 +1,18 @@
-from flask import Blueprint, flash, render_template, request, redirect, url_for, session, jsonify, Response as FlaskResponse
+import datetime
+from flask import Blueprint, flash, render_template, request, redirect, url_for, session, jsonify, Response as FlaskResponse, send_file
 from . import db, create_app
 from .services import story_service, question_service, story_builder_service, llm_service, category_service
-from .models import Template, Story, Question, Model, Provider, Response, StoryCategory
+from .models import Template, Story, Question, Model, Provider, Response, StoryCategory, Prompt, Field
 import time
 import json
 import threading
 from threading import Thread
 import asyncio
 import uuid
+import csv
+import io
 
+#Silly placeholder to test push to new branch.
 
 # Create a blueprint for the routes
 bp = Blueprint('main', __name__)
@@ -45,7 +49,7 @@ def add_story():
             except Exception as e:
                 flash(f'Error adding story: {str(e)}', 'danger')
                 print(f"An error occurred: {e}")
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.see_all_stories'))
     
     # Get all existing categories for the form
     categories = category_service.get_all_categories()
@@ -197,13 +201,11 @@ def add_question():
 
 @bp.route('/see_all_templates')
 def see_all_templates():
-    # Get search and filter parameters
+    # Current pagination and search code remains the same
     search_text = request.args.get('search_text', '')
-    sort_by = request.args.get('sort_by', 'desc')  # Default to newest first
-    
-    # Get page parameters
+    sort_by = request.args.get('sort_by', 'desc')
     page = request.args.get('page', 1, type=int)
-    per_page = 10  # Number of templates per page
+    per_page = 10
     
     # Build the query
     query = db.session.query(Template)
@@ -222,10 +224,15 @@ def see_all_templates():
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     templates = pagination.items
     
+    # Get all fields from the Field table
+    fields = db.session.query(Field.field).order_by(Field.field).all()
+    template_fields = [field[0] for field in fields]  # Extract field names from result tuples
+    
     return render_template('see_all_templates.html', 
                           templates=templates, 
                           pagination=pagination, 
-                          sort_by=sort_by)
+                          sort_by=sort_by,
+                          template_fields=template_fields)
 
 @bp.route('/add_template', methods=['POST'])
 def add_template():
@@ -932,6 +939,202 @@ def llm_response():
                           model=session.get('model'), 
                           provider=session.get('provider'), 
                           question=question)
+
+@bp.route('/view_responses', methods=['GET', 'POST'])
+def view_responses():
+    if request.method == 'POST':
+        # Process form data for response updates
+        response_id = request.form.get('response_id')
+        
+        if response_id:
+            # Check if the response exists
+            response = db.session.query(Response).get(response_id)
+            if response:
+                # Update flag status - checked boxes return 'on', unchecked return None
+                flagged_for_review = f'flagged_for_review_{response_id}' in request.form
+                review_notes = request.form.get(f'review_notes_{response_id}', '')
+                
+                # Apply changes
+                response.flagged_for_review = flagged_for_review
+                response.review_notes = review_notes
+                db.session.commit()
+                
+                flash('Response updated successfully!', 'success')
+            else:
+                flash('Error: Response not found.', 'danger')
+                
+        # Redirect back to the same page (with filters preserved)
+        return redirect(url_for('main.view_responses', **request.args))
+    
+ # GET request - handle filtering
+    provider = request.args.get('provider', '')
+    model = request.args.get('model', '')
+    flagged_only = 'flagged_only' in request.args
+    question_id = request.args.get('question_id', '')
+    story_id = request.args.get('story_id', '')
+    
+    # Date range filtering
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
+    
+    # Sorting option
+    sort = request.args.get('sort', 'date_desc')
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    
+    # Build query with the existing joins
+    query = db.session.query(Response).\
+        join(Prompt, Response.prompt_id == Prompt.prompt_id).\
+        join(Model, Prompt.model_id == Model.model_id).\
+        join(Provider, Model.provider_id == Provider.provider_id).\
+        join(Story, Prompt.story_id == Story.story_id).\
+        join(Question, Prompt.question_id == Question.question_id)
+    
+    # Apply regular filters
+    if provider:
+        query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
+    if model:
+        query = query.filter(Model.name.ilike(f'%{model}%'))
+    if flagged_only:
+        query = query.filter(Response.flagged_for_review == True)
+    if question_id:
+        query = query.filter(Prompt.question_id == question_id)
+    if story_id:
+        query = query.filter(Prompt.story_id == story_id)
+    
+    # Apply date range filters
+    if start_date:
+        try:
+            start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(Response.timestamp >= start_date_obj)
+        except ValueError:
+            flash(f"Invalid start date format: {start_date}", "warning")
+    
+    if end_date:
+        try:
+            # Add one day to include the end date fully
+            end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            query = query.filter(Response.timestamp < end_date_obj)
+        except ValueError:
+            flash(f"Invalid end date format: {end_date}", "warning")
+    
+    # Apply sorting
+    if sort == 'date_asc':
+        query = query.order_by(Response.timestamp.asc())
+    else:  # Default to date_desc
+        query = query.order_by(Response.timestamp.desc())
+    
+    # Paginate results
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    responses = pagination.items
+    
+    # Get data for filter dropdowns
+    providers = db.session.query(Provider).all()
+    models = db.session.query(Model).all()
+    questions = db.session.query(Question).all()
+    
+    return render_template('see_all_responses.html', 
+                          responses=responses,
+                          pagination=pagination,
+                          providers=providers,
+                          models=models,
+                          questions=questions,
+                          current_filters={
+                              'provider': provider,
+                              'model': model,
+                              'flagged_only': flagged_only,
+                              'question_id': question_id,
+                              'story_id': story_id,
+                              'start_date': start_date,
+                              'end_date': end_date,
+                              'sort': sort
+                          })
+
+@bp.route('/update_response_flag', methods=['POST'])
+def update_response_flag():
+    """AJAX endpoint to quickly toggle a response's flag status"""
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': False, 'message': 'Invalid request'}), 400
+    
+    data = request.get_json()
+    response_id = data.get('response_id')
+    flagged = data.get('flagged', False)
+    
+    try:
+        response = db.session.query(Response).get(response_id)
+        if not response:
+            return jsonify({'success': False, 'message': 'Response not found'}), 404
+        
+        response.flagged_for_review = flagged
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'response_id': response_id,
+            'flagged': response.flagged_for_review
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+    
+
+
+@bp.route('/export_responses', methods=['GET'])
+def export_responses():
+    # Get the same filters you use in view_responses
+    provider = request.args.get('provider', '')
+    model = request.args.get('model', '')
+    # ...other filters...
+    
+    # Build and execute the query (same as in view_responses but without pagination)
+    query = db.session.query(Response)
+    # ...apply the same filters...
+    
+    # Get all matching responses
+    responses = query.all()
+    
+    # Create a memory file for the CSV data
+    mem_file = io.StringIO()
+    csv_writer = csv.writer(mem_file, quoting=csv.QUOTE_MINIMAL)
+    
+    # Write header row
+    csv_writer.writerow(['ID', 'Date', 'Time', 'Provider', 'Model', 
+                         'Temperature', 'Max Tokens', 'Top P',
+                         'Story ID', 'Story', 'Question ID', 'Question', 
+                         'Response', 'Flagged', 'Review Notes'])
+    
+    # Write data rows
+    for response in responses:
+        csv_writer.writerow([
+            response.response_id,
+            response.timestamp.strftime('%d/%m/%Y'),
+            response.timestamp.strftime('%H:%M'),
+            response.prompt.model.provider.provider_name,
+            response.prompt.model.name,
+            response.prompt.temperature,
+            response.prompt.max_tokens,
+            response.prompt.top_p,
+            response.prompt.story_id,
+            response.prompt.story.content,
+            response.prompt.question_id,
+            response.prompt.question.content,
+            response.response_content,
+            'Yes' if response.flagged_for_review else 'No',
+            response.review_notes or ''
+        ])
+    
+    # Move cursor to beginning of file
+    mem_file.seek(0)
+    
+    # Add an export button to your template
+    return send_file(
+        io.BytesIO(mem_file.getvalue().encode('utf-8')),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name=f'responses_export_{datetime.datetime.now().strftime("%Y%m%d")}.csv'
+    )
+
 
 @bp.route('/clear_session', methods=['GET'])
 def clear_session():
