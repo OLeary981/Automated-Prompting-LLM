@@ -2,7 +2,7 @@ import datetime
 from flask import Blueprint, flash, render_template, request, redirect, url_for, session, jsonify, Response as FlaskResponse, send_file
 from . import db, create_app
 from .services import story_service, question_service, story_builder_service, llm_service, category_service
-from .models import Template, Story, Question, Model, Provider, Response, StoryCategory, Prompt
+from .models import Template, Story, Question, Model, Provider, Response, StoryCategory, Prompt, Field
 import time
 import json
 import threading
@@ -201,13 +201,11 @@ def add_question():
 
 @bp.route('/see_all_templates')
 def see_all_templates():
-    # Get search and filter parameters
+    # Current pagination and search code remains the same
     search_text = request.args.get('search_text', '')
-    sort_by = request.args.get('sort_by', 'desc')  # Default to newest first
-    
-    # Get page parameters
+    sort_by = request.args.get('sort_by', 'desc')
     page = request.args.get('page', 1, type=int)
-    per_page = 10  # Number of templates per page
+    per_page = 10
     
     # Build the query
     query = db.session.query(Template)
@@ -226,10 +224,15 @@ def see_all_templates():
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     templates = pagination.items
     
+    # Get all fields from the Field table
+    fields = db.session.query(Field.field).order_by(Field.field).all()
+    template_fields = [field[0] for field in fields]  # Extract field names from result tuples
+    
     return render_template('see_all_templates.html', 
                           templates=templates, 
                           pagination=pagination, 
-                          sort_by=sort_by)
+                          sort_by=sort_by,
+                          template_fields=template_fields)
 
 @bp.route('/add_template', methods=['POST'])
 def add_template():
