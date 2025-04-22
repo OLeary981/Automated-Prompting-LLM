@@ -135,50 +135,37 @@ def see_all_stories():
 def update_story_selection():
     data = request.get_json()
     
-    # Check for clear_all action
+    # Get the current selection from session
+    selected_story_ids = session.get('story_ids', [])
+    
+    # Clear all selected stories
     if data.get('action') == 'clear_all':
-        # Completely remove story_ids from session
-        session.pop('story_ids', None)
-        return jsonify({
-            'success': True,
-            'selected_count': 0,
-            'selected_ids': [],
-            'message': 'All story selections cleared'
-        })
-    # Check if the request is AJAX
-    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify({'error': 'Invalid request'}), 400
+        selected_story_ids = []
     
-    # Get the data from the request
-    data = request.get_json()
-    story_id = data.get('story_id')
-    selected = data.get('selected', False)
+    # Select multiple stories at once (for batch operations)
+    elif data.get('action') == 'select_multiple':
+        story_ids = data.get('story_ids', [])
+        for story_id in story_ids:
+            if story_id not in selected_story_ids:
+                selected_story_ids.append(story_id)
     
-    # Validate story_id
-    if not story_id:
-        return jsonify({'error': 'No story ID provided'}), 400
+    # Handle individual toggle
+    elif 'story_id' in data:
+        story_id = str(data['story_id'])
+        is_selected = data.get('selected', False)
+        
+        if is_selected and story_id not in selected_story_ids:
+            selected_story_ids.append(story_id)
+        elif not is_selected and story_id in selected_story_ids:
+            selected_story_ids.remove(story_id)
     
-    # Get current selection from session
-    story_ids = session.get('story_ids', [])
+    # Store updated selection in session
+    session['story_ids'] = selected_story_ids
     
-    # Convert to list if it's not already
-    if not isinstance(story_ids, list):
-        story_ids = []
-    
-    # Update the selection
-    if selected and story_id not in story_ids:
-        story_ids.append(story_id)
-    elif not selected and story_id in story_ids:
-        story_ids.remove(story_id)
-    
-    # Update the session
-    session['story_ids'] = story_ids
-    
-    # Return the updated selection count
     return jsonify({
         'success': True,
-        'selected_count': len(story_ids),
-        'selected_ids': story_ids
+        'selected_count': len(selected_story_ids),
+        'selected_ids': selected_story_ids
     })
 
 @bp.route('/see_all_questions')
