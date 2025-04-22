@@ -214,32 +214,135 @@ document.addEventListener('DOMContentLoaded', function() {
 // Select all visible stories
 function selectAllVisible() {
     const checkboxes = document.querySelectorAll('.story-row:not([style*="display: none"]) .story-checkbox');
+    
+    // First collect all story IDs that need to be selected
+    const storyIdsToSelect = [];
     checkboxes.forEach(checkbox => {
         if (!checkbox.checked) {
-            checkbox.checked = true;
-            checkbox.dispatchEvent(new Event('change'));
+            const storyId = checkbox.getAttribute('data-id');
+            storyIdsToSelect.push(storyId);
+            checkbox.checked = true;  // Update visual state
         }
     });
+    
+    // If there are stories to select, make a single batch request
+    if (storyIdsToSelect.length > 0) {
+        fetch('{{ url_for("main.update_story_selection") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                action: 'select_multiple',
+                story_ids: storyIdsToSelect
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update counts
+            document.getElementById('selected-count').textContent = data.selected_count;
+            document.getElementById('selected-count-badge').textContent = data.selected_count + " stories selected";
+            
+            // Enable/disable process button
+            if (data.selected_count > 0) {
+                document.getElementById('process-selected-btn').classList.remove('disabled');
+            }
+        })
+        .catch(error => console.error('Error selecting stories:', error));
+    }
 }
 
 // Deselect all visible stories
 function deselectAllVisible() {
     const checkboxes = document.querySelectorAll('.story-row:not([style*="display: none"]) .story-checkbox');
+    
+    // First collect all story IDs that need to be deselected
+    const storyIdsToDeselect = [];
     checkboxes.forEach(checkbox => {
         if (checkbox.checked) {
-            checkbox.checked = false;
-            checkbox.dispatchEvent(new Event('change'));
+            const storyId = checkbox.getAttribute('data-id');
+            storyIdsToDeselect.push(storyId);
+            checkbox.checked = false;  // Update visual state
         }
     });
+    
+    // If there are stories to deselect, make a single batch request
+    if (storyIdsToDeselect.length > 0) {
+        fetch('{{ url_for("main.update_story_selection") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                action: 'deselect_multiple',
+                story_ids: storyIdsToDeselect
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update counts
+            document.getElementById('selected-count').textContent = data.selected_count;
+            document.getElementById('selected-count-badge').textContent = data.selected_count + " stories selected";
+            
+            // Enable/disable process button
+            if (data.selected_count === 0) {
+                document.getElementById('process-selected-btn').classList.add('disabled');
+            }
+        })
+        .catch(error => console.error('Error deselecting stories:', error));
+    }
 }
 
 // Invert selection of visible stories
 function invertVisibleSelection() {
     const checkboxes = document.querySelectorAll('.story-row:not([style*="display: none"]) .story-checkbox');
+    
+    // Collect story IDs to select and deselect
+    const storyIdsToSelect = [];
+    const storyIdsToDeselect = [];
+    
     checkboxes.forEach(checkbox => {
-        checkbox.checked = !checkbox.checked;
-        checkbox.dispatchEvent(new Event('change'));
+        const storyId = checkbox.getAttribute('data-id');
+        if (checkbox.checked) {
+            storyIdsToDeselect.push(storyId);
+            checkbox.checked = false;  // Update visual state
+        } else {
+            storyIdsToSelect.push(storyId);
+            checkbox.checked = true;   // Update visual state
+        }
     });
+    
+    // If there are changes to make, send a batch request
+    if (storyIdsToSelect.length > 0 || storyIdsToDeselect.length > 0) {
+        fetch('{{ url_for("main.update_story_selection") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                action: 'invert_selection',
+                select_ids: storyIdsToSelect,
+                deselect_ids: storyIdsToDeselect
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update counts
+            document.getElementById('selected-count').textContent = data.selected_count;
+            document.getElementById('selected-count-badge').textContent = data.selected_count + " stories selected";
+            
+            // Enable/disable process button
+            if (data.selected_count > 0) {
+                document.getElementById('process-selected-btn').classList.remove('disabled');
+            } else {
+                document.getElementById('process-selected-btn').classList.add('disabled');
+            }
+        })
+        .catch(error => console.error('Error inverting story selection:', error));
+    }
 }
 
 // Select all stories matching current filter
