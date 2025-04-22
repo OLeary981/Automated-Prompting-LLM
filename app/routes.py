@@ -337,7 +337,7 @@ def generate_stories():
         template=template, 
         fields=fields,
         missing_fields=missing_fields,
-        categories=categories  # Pass categories to the template
+        categories=categories  
     )
 
 @bp.route('/display_generated_stories', methods=['GET'])

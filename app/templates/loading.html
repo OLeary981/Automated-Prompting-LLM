@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-5" id = "loading-container">
     <h2>Processing Your Request</h2>
     
     <div class="progress mt-4 mb-4">
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
             retryBtn.textContent = 'Return to Home';
             retryBtn.className = 'btn btn-primary mt-3';
             retryBtn.onclick = () => window.location.href = '/';
-            document.querySelector('.container').appendChild(retryBtn);
+            document.getElementById('loading-container').appendChild(retryBtn);
         });
         
         // Keep the default onmessage handler for backward compatibility
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 retryBtn.textContent = 'Return to Home';
                 retryBtn.className = 'btn btn-primary mt-3';
                 retryBtn.onclick = () => window.location.href = '/';
-                document.querySelector('.container').appendChild(retryBtn);
+                document.getElementById('loading-container').appendChild(retryBtn);
                 break;
             
             default:
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     homeButton.textContent = 'Return to Home';
                     homeButton.className = 'btn btn-primary';
                     homeButton.onclick = () => window.location.href = '/';
-                    document.querySelector('.container').appendChild(homeButton);
+                    document.getElementById('loading-container').appendChild(homeButton);
                 } else {
                     showError('Failed to cancel processing. Please try again.');
                 }
@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
         homeButton.textContent = 'Return to Home';
         homeButton.className = 'btn btn-primary mt-3';
         homeButton.onclick = () => window.location.href = '/';
-        document.querySelector('.container').appendChild(homeButton);
+        document.getElementById('loading-container').appendChild(homeButton);
     }
 });
 </script>
