@@ -16,7 +16,7 @@ Models and Providers:
 - how does that work with imports like "from groq import Groq"? is "lazy loading" the answer?
 Testing
 
-Session vs URL
+***Session vs URL
 *Benefits of Using Session
 -Cleaner URLs: URLs become shorter and more readable
 -State Persistence: User preferences persist across page refreshes
