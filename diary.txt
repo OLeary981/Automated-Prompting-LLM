@@ -1,4 +1,39 @@
 Notes:
+Jobs list:
+Report - contents page (chronological vs categories?)
+Category functionality:
+- database migration to add a template-category table
+- story_builder_service changes to ensure that categories are added when new templates are saved and when stories are made using the template.
+Response searching and sorting:
+- ability to navigate from selected stories to see responses related to them.
+- ability to search by keyword (in story or response?)
+- ability to search responses by the category of the story sent
+Response exporting
+- ability to select columns (user designs their own report)?
+Models and Providers:
+- Ability to add and edit providers and models - creating a provider factory
+- Changes to database provider and model tables to include code needed tof the prompt
+- how does that work with imports like "from groq import Groq"? is "lazy loading" the answer?
+Testing
+Session vs URL
+*Benefits of Using Session
+-Cleaner URLs: URLs become shorter and more readable
+-State Persistence: User preferences persist across page refreshes
+-Security: Sensitive parameters aren't visible in the URL
+-Flexibility: Easier to add or remove parameters without changing URL structure
+*Caveats and Considerations
+-Session Size: Don't store large datasets in the session
+-Bookmarking: URLs without parameters can't be bookmarked with specific filters
+-Sharing: URLs without parameters can't be easily shared with specific views
+-User Expectations: Users expect the back button to maintain their state
+*Hybrid Approach
+-For the best experience, consider a hybrid approach:
+-Use session for processing state, jobs, and selected items
+-Keep search and filtering parameters in URLs for bookmarking/sharing
+-Add a "Save filters as default" option that stores preferences in the session
+
+
+
 ** 26/02/25 - stories working up to generating stories from template, then breaking as it is mixed up in the sending stories to LLM route. 
 Generated stories are being added to the database its, when it then tries to re-route to "do you want to send them to the LLM" stuff it breaks. 
 
