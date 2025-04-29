@@ -14,8 +14,52 @@ function updateField(fieldName, action, word) {
     calculatePermutations(); // Ensure permutations are recalculated immediately
 }
 
+/**
+ * Ensures that each field in fieldData contains only unique words
+ * @returns {boolean} True if changes were made, false otherwise
+ */
+function ensureUniqueWordsInFields() {
+    let changesMade = false;
+    
+    // Iterate through each field
+    for (const fieldName in fieldData) {
+        // Get current words in this field
+        const words = fieldData[fieldName];
+        
+        // Skip if no words or only one word (can't have duplicates)
+        if (!words || words.length <= 1) continue;
+        
+        // Create a Set to get unique words (preserving original order)
+        const uniqueWords = [];
+        const seen = new Set();
+        
+        words.forEach(word => {
+            if (!seen.has(word)) {
+                seen.add(word);
+                uniqueWords.push(word);
+            } else {
+                changesMade = true;
+                console.warn(`Duplicate word "${word}" found in field "${fieldName}" - removing duplicate`);
+            }
+        });
+        
+        // Update fieldData if changes were made
+        if (uniqueWords.length !== words.length) {
+            fieldData[fieldName] = uniqueWords;
+        }
+    }
+    
+    return changesMade;
+}
+
 function refreshUI() {
     console.log("Refreshing UI...");
+
+        // Ensure no duplicate words
+        const uniqueChanges = ensureUniqueWordsInFields();
+        if (uniqueChanges) {
+            console.log("Removed duplicate words from fields");
+        }
     
     // Update each field container
     for (const [fieldName, words] of Object.entries(fieldData)) {
@@ -111,14 +155,14 @@ function handleWordClick(word, fieldName) {
 
     // Handle "Delete from Database" action
     document.getElementById('deleteWordBtn').onclick = () => {
-        deleteWordFromDatabase(fieldName, word);
+        deleteWordFromDatabase(fieldName, word);        
         $('#wordActionModal').modal('hide'); // Hide the modal after the action
         refreshUI();
     };
 
     // Handle "Remove from Group" action
     document.getElementById('removeWordBtn').onclick = () => {
-        updateField(fieldName, 'remove', word);
+        updateField(fieldName, 'remove', word);        
         refreshUI();
         $('#wordActionModal').modal('hide'); // Hide the modal after the action
     };
@@ -227,20 +271,32 @@ function setupDragDrop() {
             const fromField = fromContainer?.dataset.field;
             const toField = container.dataset.field;
 
+            // Update data models but PREVENT refreshUI() from being called
             if (fromField && fromField !== toField) {
-                updateField(fromField, 'remove', word);
+                // Remove from source but don't refresh yet
+                if (fieldData[fromField]) {
+                    fieldData[fromField] = fieldData[fromField].filter(w => w !== word);
+                }
             }
 
             if (toField) {
-                updateField(toField, 'add', word);
-                const newBadge = createWordBadge(word, toField);
-                container.appendChild(newBadge);
-
+                // Add to target but don't refresh yet
+                if (!fieldData[toField]) fieldData[toField] = [];
+                if (!fieldData[toField].includes(word)) {
+                    fieldData[toField].push(word);
+                    allWords.set(word, toField);
+                }
+                
                 // Persist the word to the database
-                handleWordAddition(toField, word);
+                addWordsToField(toField, word);
             }
-
+            
+            // Remove the dragged element
             fromEl.remove();
+            
+            // Ensure no duplicates and do a single refresh at the end
+            ensureUniqueWordsInFields();
+            refreshUI();
         });
     });
 }
@@ -260,6 +316,7 @@ function initAddButtons() {
                 console.warn(`No valid words entered for field "${field}".`);
                 return;
             }
+            ensureUniqueWordsInFields();
 
             const container = document.getElementById(`field-${field}`);
             words.forEach(word => {
@@ -267,8 +324,7 @@ function initAddButtons() {
                 if (!fieldData[field].includes(word)) {
                     fieldData[field].push(word);
                     allWords.set(word, field);
-                    const badge = createWordBadge(word, field);
-                    container.appendChild(badge);
+                    
                     
                 }
             });
@@ -326,7 +382,7 @@ function addWordsToField(fieldName, words) {
     .catch(error => {
         console.error('Error:', error);
     });
-    refreshUI();
+    
 }
 
 
@@ -352,7 +408,13 @@ function initialize() {
     initAddButtons();
     initClearButtons();
     setupDragDrop();
+    ensureUniqueWordsInFields(); 
     refreshUI();
 }
+
+$('#wordActionModal').on('hide.bs.modal', function () {
+    // fix for accessibility problem (Aria-hidden thing)
+    document.activeElement.blur();
+});
 
 document.addEventListener('DOMContentLoaded', initialize);
