@@ -329,19 +329,60 @@ def generate_stories():
 
 @bp.route('/display_generated_stories', methods=['GET'])
 def display_generated_stories():
-    session['story_ids'] = session.get('generated_story_ids', [])
-    story_ids = session.get('generated_story_ids', [])
-    stories = [db.session.query(Story).get(story_id) for story_id in story_ids]    
+    # Convert to strings for consistency
+    generated_story_ids = [str(story_id) for story_id in session.get('generated_story_ids', [])]
+    session['story_ids'] = generated_story_ids
+    
+    # When querying, convert back to integers
+    stories = [db.session.query(Story).get(int(story_id)) for story_id in generated_story_ids]    
     return render_template('display_generated_stories.html', stories=stories)
 
 @bp.route('/add_word', methods=['POST'])
 def add_word():
-    field_name = request.form.get('field_name')
-    new_words = request.form.get('new_words')
-    template_id = request.form.get('template_id')
-    if field_name and new_words:
-        story_builder_service.add_words_to_field(field_name, new_words)
-    return redirect(url_for('main.generate_stories', template_id=template_id))
+    # Check if this is an AJAX request or a form submission
+    is_ajax = request.headers.get('Content-Type') == 'application/json'
+    
+    if is_ajax:
+        # Handle AJAX request (from JavaScript)
+        data = request.get_json()
+        field_name = data.get('field_name')
+        new_words = data.get('new_words')
+        
+        if field_name and new_words:
+            try:
+                story_builder_service.add_words_to_field(field_name, new_words)
+                return jsonify({'success': True, 'message': f'Word(s) added to {field_name}'})
+            except Exception as e:
+                return jsonify({'success': False, 'message': str(e)}), 500
+        return jsonify({'success': False, 'message': 'Missing required fields'}), 400
+    else:
+        # Handle form submission (from HTML form)
+        field_name = request.form.get('field_name')
+        new_words = request.form.get('new_words')
+        template_id = request.form.get('template_id')
+        
+        if field_name and new_words:
+            story_builder_service.add_words_to_field(field_name, new_words)
+        
+        return redirect(url_for('main.generate_stories', template_id=template_id))
+
+@bp.route('/delete_word', methods=['POST'])
+def delete_word():
+    data = request.get_json()
+    field_name = data.get('field_name')
+    word = data.get('word')
+
+    if field_name and word:
+        try:
+            print(f"Attempting to delete word '{word}' from field '{field_name}'")
+            story_builder_service.delete_word_from_field(field_name, word)
+            return jsonify({'success': True, 'message': f'Word "{word}" deleted from field "{field_name}".'})
+        except Exception as e:
+            import traceback
+            print(f"ERROR deleting word '{word}' from field '{field_name}':")
+            print(traceback.format_exc())  # This prints the full stack trace
+            return jsonify({'success': False, 'message': str(e)}), 500
+    return jsonify({'success': False, 'message': 'Invalid data provided.'}), 400
 
 @bp.route('/select_model', methods=['GET', 'POST'])
 def select_model():
@@ -679,7 +720,7 @@ def start_processing(job_id):
         loop = get_event_loop()
         
         # Start processing in background
-        asyncio.run_coroutine_threadsafe(
+        task = asyncio.run_coroutine_threadsafe(
             process_llm_requests(
                 job_id, 
                 params["model_id"], 
@@ -690,6 +731,10 @@ def start_processing(job_id):
             loop
         )
         
+        job["task"] = task
+        job["status"] = "started"
+
+
         return jsonify({"status": "started"})
     
     except Exception as e:
@@ -1125,10 +1170,34 @@ def export_responses():
 
 @bp.route('/clear_session', methods=['GET'])
 def clear_session():
-    print("Session before printing:")
+    print("Session before clearing:")
     print(session)
-    print("Clearing session")
+    print("Clearing session and canceling background tasks")
+    
+    # Cancel and clean up any ongoing processing jobs
+    cleared_jobs = 0
+    for job_id, job in list(processing_jobs.items()):
+        try:
+            # Cancel the task if it exists and is not done
+            if "task" in job and hasattr(job["task"], "cancel") and not job["task"].done():
+                print(f"Canceling task for job {job_id}")
+                job["task"].cancel()
+                cleared_jobs += 1
+            
+            # Mark job as cancelled
+            job["status"] = "cancelled"
+            job["processing"] = False
+        except Exception as e:
+            print(f"Error canceling job {job_id}: {str(e)}")
+    
+    # Clear all processing jobs
+    processing_jobs.clear()
+    
+    # Clear session data
     session.clear()
-    flash('Session data cleared!', 'success')
-    print(session)
+    
+    flash(f'Session data cleared and {cleared_jobs} background tasks cancelled!', 'success')
+    print("Session after clearing:", session)
+    print(f"Cleared {cleared_jobs} tasks from processing_jobs")
+    
     return redirect(url_for('main.index'))
