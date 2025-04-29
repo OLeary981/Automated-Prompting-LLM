@@ -52,20 +52,38 @@ function calculatePermutations() {
     const warningEl = document.getElementById('permutation-warning');
     const emptyWarning = document.getElementById('empty-fields-warning');
 
+    // Return early if essential elements don't exist
+    if (!countEl) {
+        console.warn("Permutation count element not found");
+        return;
+    }
+
     const empty = Object.values(fieldData).some(words => words.length === 0);
+    
     if (empty) {
         countEl.textContent = '0';
-        emptyWarning.style.display = 'block';
-        warningEl.style.display = 'none';
+        
+        if (emptyWarning) {
+            emptyWarning.style.display = 'block';
+        }
+        
+        if (warningEl) {
+            warningEl.style.display = 'none';
+        }
         return;
     } else {
-        emptyWarning.style.display = 'none';
+        if (emptyWarning) {
+            emptyWarning.style.display = 'none';
+        }
     }
 
     let total = 1;
     Object.values(fieldData).forEach(words => total *= words.length);
     countEl.textContent = total.toLocaleString();
-    warningEl.style.display = total > 100 ? 'block' : 'none';
+    
+    if (warningEl) {
+        warningEl.style.display = total > 100 ? 'block' : 'none';
+    }
 }
 
 function createWordBadge(word, fieldName) {
@@ -107,6 +125,14 @@ function handleWordClick(word, fieldName) {
 }
 
 function deleteWordFromDatabase(fieldName, word) {
+    // Immediately remove from allWords so it doesn't show in Available Words
+    // even if the API call takes time
+    allWords.delete(word);
+    
+    // Remove from fieldData
+    updateField(fieldName, 'remove', word);
+    
+    // Then perform the API call
     fetch('/delete_word', {
         method: 'POST',
         headers: {
@@ -127,19 +153,18 @@ function deleteWordFromDatabase(fieldName, word) {
         return response.json();
     })
     .then(data => {
-        console.log(`Word "${word}" deleted from the database.`);
+        console.log(`Server response: ${JSON.stringify(data)}`);
         
-        // Remove from fieldData
-        updateField(fieldName, 'remove', word);
-        
-        // IMPORTANT: Also remove from allWords Map so it doesn't show in Available Words
-        allWords.delete(word);
-        
-        refreshUI();
+        if (data.success) {
+            console.log(`Word "${word}" deleted from the database.`);
+            // The operation succeeded, make sure allWords doesn't have this word
+            allWords.delete(word);
+            refreshUI();
+        } else {
+            console.error(`Failed to delete word: ${data.message}`);
+            // Maybe show an error message to the user
+        }
     })
-    .catch(error => {
-        console.error('Error:', error);
-    });
 }
 
 function handleDragStart(e) {
