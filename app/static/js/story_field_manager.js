@@ -1,5 +1,5 @@
 const fieldData = {};
-const allWords = new Map(); // word -> original field
+const allWords = new Map();
 
 function updateField(fieldName, action, word) {
     if (!fieldData[fieldName]) fieldData[fieldName] = [];
@@ -269,11 +269,10 @@ function initAddButtons() {
                     allWords.set(word, field);
                     const badge = createWordBadge(word, field);
                     container.appendChild(badge);
-
-                    // Persist the word to the database
-                    handleWordAddition(field, word);
+                    
                 }
             });
+            addWordsToField(field, words);
 
             input.value = ''; // Clear the input field
             refreshUI();
@@ -292,7 +291,15 @@ function initClearButtons() {
     });
 }
 
-function addWordToField(fieldName, word) {
+/**
+ * Adds one or more words to a field
+ * @param {string} fieldName - The field to add words to
+ * @param {string|string[]} words - Single word or array of words to add
+ */
+function addWordsToField(fieldName, words) {
+    // Convert array of words to comma-separated string if needed
+    const wordsString = Array.isArray(words) ? words.join(',') : words;
+    
     fetch('/add_word', {
         method: 'POST',
         headers: {
@@ -300,7 +307,7 @@ function addWordToField(fieldName, word) {
         },
         body: JSON.stringify({
             field_name: fieldName,
-            new_words: word,
+            new_words: wordsString,
         }),
     })
     .then(response => {
@@ -311,9 +318,9 @@ function addWordToField(fieldName, word) {
     })
     .then(data => {
         if (data.success) {
-            console.log(`Word "${word}" added to field "${fieldName}"`);
+            console.log(`Words added to field "${fieldName}": ${wordsString}`);
         } else {
-            console.error(`Failed to add word: ${data.message}`);
+            console.error(`Failed to add words: ${data.message}`);
         }
     })
     .catch(error => {
@@ -322,9 +329,7 @@ function addWordToField(fieldName, word) {
     refreshUI();
 }
 
-function handleWordAddition(fieldName, word) {
-    addWordToField(fieldName, word);
-}
+
 
 function initialize() {
     document.querySelectorAll('.field-words').forEach(fieldDiv => {
