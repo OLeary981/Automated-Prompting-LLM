@@ -41,10 +41,11 @@
                 <div class="col-md-6">                    
                     <div class="card mb-4">
                         <div class="card-header">Available Words</div>
-                        <div class="card-body">
+                        <div class="card-body">                            
                             <div id="available-words-container">
                                 <!-- Field categories will be created here by JavaScript -->
                             </div>
+                            <small class="text-muted">Drag words from here to a field to include them in your stories</small>
                         </div>
                     </div>
                 </div>
@@ -98,7 +99,7 @@
                                     </div>
                                     {% endfor %}
                                 </div>
-                                <small class="text-muted">Click a word to remove it or drag to reposition</small>
+                                <small class="text-muted">Click a word to see options for removal</small>
                             </div>
                             {% endfor %}
                             
@@ -126,7 +127,7 @@
                                     
                                     <div id="field-{{ field_name }}" class="word-container field-words" 
                                          data-field="{{ field_name }}"></div>
-                                    <small class="text-muted">Click a word to remove it or drag to reposition</small>
+                                    <small class="text-muted">Click a word to see options for removal</small>
                                 </div>
                                 {% endfor %}
                             </div>

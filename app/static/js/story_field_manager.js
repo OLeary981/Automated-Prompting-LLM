@@ -1,5 +1,5 @@
 const fieldData = {};
-const allWords = new Map();
+const allWords = {};
 
 function updateField(fieldName, action, word) {
     if (!fieldData[fieldName]) fieldData[fieldName] = [];
@@ -20,19 +20,19 @@ function updateField(fieldName, action, word) {
  */
 function ensureUniqueWordsInFields() {
     let changesMade = false;
-    
+
     // Iterate through each field
     for (const fieldName in fieldData) {
         // Get current words in this field
         const words = fieldData[fieldName];
-        
+
         // Skip if no words or only one word (can't have duplicates)
         if (!words || words.length <= 1) continue;
-        
+
         // Create a Set to get unique words (preserving original order)
         const uniqueWords = [];
         const seen = new Set();
-        
+
         words.forEach(word => {
             if (!seen.has(word)) {
                 seen.add(word);
@@ -42,32 +42,32 @@ function ensureUniqueWordsInFields() {
                 console.warn(`Duplicate word "${word}" found in field "${fieldName}" - removing duplicate`);
             }
         });
-        
+
         // Update fieldData if changes were made
         if (uniqueWords.length !== words.length) {
             fieldData[fieldName] = uniqueWords;
         }
     }
-    
+
     return changesMade;
 }
 
 function refreshUI() {
     console.log("Refreshing UI...");
 
-        // Ensure no duplicate words
-        const uniqueChanges = ensureUniqueWordsInFields();
-        if (uniqueChanges) {
-            console.log("Removed duplicate words from fields");
-        }
-    
+    // Ensure no duplicate words
+    const uniqueChanges = ensureUniqueWordsInFields();
+    if (uniqueChanges) {
+        console.log("Removed duplicate words from fields");
+    }
+
     // Update each field container
     for (const [fieldName, words] of Object.entries(fieldData)) {
         const fieldContainer = document.getElementById(`field-${fieldName}`);
         if (fieldContainer) {
             // Clear existing word badges
             fieldContainer.innerHTML = '';
-            
+
             // Add word badges for each word
             words.forEach(word => {
                 const badge = createWordBadge(word, fieldName);
@@ -103,14 +103,14 @@ function calculatePermutations() {
     }
 
     const empty = Object.values(fieldData).some(words => words.length === 0);
-    
+
     if (empty) {
         countEl.textContent = '0';
-        
+
         if (emptyWarning) {
             emptyWarning.style.display = 'block';
         }
-        
+
         if (warningEl) {
             warningEl.style.display = 'none';
         }
@@ -124,9 +124,34 @@ function calculatePermutations() {
     let total = 1;
     Object.values(fieldData).forEach(words => total *= words.length);
     countEl.textContent = total.toLocaleString();
-    
+
     if (warningEl) {
         warningEl.style.display = total > 100 ? 'block' : 'none';
+    }
+}
+
+/**
+ * Associates a word with a field
+ * @param {string} word - The word to associate
+ * @param {string} field - The field to associate with
+ */
+function associateWordWithField(word, field) {
+    if (!allWords[word]) {
+        allWords[word] = [];
+    }
+    if (!allWords[word].includes(field)) {
+        allWords[word].push(field);
+    }
+}
+
+/**
+ * Removes an association between a word and field
+ * @param {string} word - The word to update
+ * @param {string} field - The field to remove
+ */
+function removeFieldAssociation(word, field) {
+    if (allWords[word]) {
+        allWords[word] = allWords[word].filter(f => f !== field);
     }
 }
 
@@ -145,7 +170,10 @@ function createWordBadge(word, fieldName) {
         handleWordClick(word, fieldName);
     });
 
-    if (fieldName) allWords.set(word, fieldName);
+    if (fieldName) {
+        associateWordWithField(word, fieldName);
+    }
+
     return badge;
 }
 
@@ -155,14 +183,14 @@ function handleWordClick(word, fieldName) {
 
     // Handle "Delete from Database" action
     document.getElementById('deleteWordBtn').onclick = () => {
-        deleteWordFromDatabase(fieldName, word);        
+        deleteWordFromDatabase(fieldName, word);
         $('#wordActionModal').modal('hide'); // Hide the modal after the action
         refreshUI();
     };
 
     // Handle "Remove from Group" action
     document.getElementById('removeWordBtn').onclick = () => {
-        updateField(fieldName, 'remove', word);        
+        updateField(fieldName, 'remove', word);
         refreshUI();
         $('#wordActionModal').modal('hide'); // Hide the modal after the action
     };
@@ -171,11 +199,12 @@ function handleWordClick(word, fieldName) {
 function deleteWordFromDatabase(fieldName, word) {
     // Immediately remove from allWords so it doesn't show in Available Words
     // even if the API call takes time
-    allWords.delete(word);
-    
-    // Remove from fieldData
-    updateField(fieldName, 'remove', word);
-    
+    delete allWords[word]; 
+
+    if (fieldData[fieldName]) {
+        fieldData[fieldName] = fieldData[fieldName].filter(w => w !== word);
+    }
+
     // Then perform the API call
     fetch('/delete_word', {
         method: 'POST',
@@ -187,28 +216,25 @@ function deleteWordFromDatabase(fieldName, word) {
             word: word,
         }),
     })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(data => {
-                console.error(`Error: ${data.message || 'Unknown error'}`);
-                throw new Error(data.message || 'Failed to delete word');
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log(`Server response: ${JSON.stringify(data)}`);
-        
-        if (data.success) {
-            console.log(`Word "${word}" deleted from the database.`);
-            // The operation succeeded, make sure allWords doesn't have this word
-            allWords.delete(word);
-            refreshUI();
-        } else {
-            console.error(`Failed to delete word: ${data.message}`);
-            // Maybe show an error message to the user
-        }
-    })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    console.error(`Error: ${data.message || 'Unknown error'}`);
+                    throw new Error(data.message || 'Failed to delete word');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(`Server response: ${JSON.stringify(data)}`);
+
+            if (data.success) {
+                console.log(`Word "${word}" deleted from the database.`);               
+            } else {
+                console.error(`Failed to delete word: ${data.message}`);
+                // Maybe show an error message to the user
+            }
+        })
 }
 
 function handleDragStart(e) {
@@ -227,10 +253,18 @@ function updateAvailableWords() {
     const usedWords = new Set(Object.values(fieldData).flat());
     const fieldGroups = {};
 
-    allWords.forEach((field, word) => {
+    // Group unused words by their originating fields
+    Object.keys(allWords).forEach(word => {
         if (!usedWords.has(word)) {
-            if (!fieldGroups[field]) fieldGroups[field] = [];
-            fieldGroups[field].push(word);
+            // Use the first field the word is associated with
+            const fields = allWords[word];
+            if (fields && fields.length > 0) {
+                const primaryField = fields[0]; // Use first field as primary
+                if (!fieldGroups[primaryField]) {
+                    fieldGroups[primaryField] = [];
+                }
+                fieldGroups[primaryField].push(word);
+            }
         }
     });
 
@@ -259,7 +293,10 @@ function updateAvailableWords() {
 }
 
 function setupDragDrop() {
-    document.querySelectorAll('.word-container').forEach(container => {
+    // Make both field containers and word containers droppable
+    const allDropTargets = document.querySelectorAll('.field-words, .word-container');
+
+    allDropTargets.forEach(container => {
         container.addEventListener('dragover', e => e.preventDefault());
         container.addEventListener('drop', e => {
             e.preventDefault();
@@ -267,34 +304,40 @@ function setupDragDrop() {
             const fromEl = document.querySelector('.dragging');
             if (!fromEl) return;
 
-            const fromContainer = fromEl.closest('.word-container');
-            const fromField = fromContainer?.dataset.field;
+            // Determine source and target fields
+            const fromFieldContainer = fromEl.closest('.field-words');
+            const fromWordContainer = fromEl.closest('.word-container');
+            const isFromField = fromFieldContainer !== null;
+            const isToField = container.classList.contains('field-words');
+
+            const fromField = isFromField ? fromFieldContainer.dataset.field :
+                (fromWordContainer ? fromWordContainer.dataset.field : null);
             const toField = container.dataset.field;
 
-            // Update data models but PREVENT refreshUI() from being called
-            if (fromField && fromField !== toField) {
-                // Remove from source but don't refresh yet
-                if (fieldData[fromField]) {
-                    fieldData[fromField] = fieldData[fromField].filter(w => w !== word);
-                }
+            console.log(`Dragging "${word}" from ${isFromField ? 'field' : 'available'} (${fromField}) to ${isToField ? 'field' : 'available'} (${toField})`);
+
+            // Don't do anything if dragging to the same container type and field
+            if (fromField === toField && isFromField === isToField) return;
+
+            // Remove from source field if coming from a field
+            if (isFromField && fieldData[fromField]) {
+                fieldData[fromField] = fieldData[fromField].filter(w => w !== word);
             }
 
-            if (toField) {
-                // Add to target but don't refresh yet
+            // Add to target field if going to a field
+            if (isToField) {
                 if (!fieldData[toField]) fieldData[toField] = [];
                 if (!fieldData[toField].includes(word)) {
                     fieldData[toField].push(word);
-                    allWords.set(word, toField);
+                    associateWordWithField(word, toField);
                 }
-                
-                // Persist the word to the database
+
+                // Only persist to database when adding to a field
                 addWordsToField(toField, word);
             }
-            
-            // Remove the dragged element
+
+            // Remove UI element and refresh
             fromEl.remove();
-            
-            // Ensure no duplicates and do a single refresh at the end
             ensureUniqueWordsInFields();
             refreshUI();
         });
@@ -323,9 +366,9 @@ function initAddButtons() {
                 if (!fieldData[field]) fieldData[field] = [];
                 if (!fieldData[field].includes(word)) {
                     fieldData[field].push(word);
-                    allWords.set(word, field);
-                    
-                    
+                    associateWordWithField(word, field);
+
+
                 }
             });
             addWordsToField(field, words);
@@ -340,6 +383,7 @@ function initClearButtons() {
     document.querySelectorAll('.clear-field-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const field = btn.dataset.field;
+
             fieldData[field] = [];
             document.getElementById(`field-${field}`).innerHTML = '';
             refreshUI();
@@ -355,7 +399,7 @@ function initClearButtons() {
 function addWordsToField(fieldName, words) {
     // Convert array of words to comma-separated string if needed
     const wordsString = Array.isArray(words) ? words.join(',') : words;
-    
+
     fetch('/add_word', {
         method: 'POST',
         headers: {
@@ -366,26 +410,24 @@ function addWordsToField(fieldName, words) {
             new_words: wordsString,
         }),
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            console.log(`Words added to field "${fieldName}": ${wordsString}`);
-        } else {
-            console.error(`Failed to add words: ${data.message}`);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-    
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                console.log(`Words added to field "${fieldName}": ${wordsString}`);
+            } else {
+                console.error(`Failed to add words: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+
 }
-
-
 
 function initialize() {
     document.querySelectorAll('.field-words').forEach(fieldDiv => {
@@ -394,7 +436,7 @@ function initialize() {
         fieldDiv.querySelectorAll('.word-badge').forEach(el => {
             const word = el.dataset.word;
             fieldData[field].push(word);
-            allWords.set(word, field);
+            associateWordWithField(word, field);
             el.addEventListener('click', () => handleWordClick(word, field));
             el.querySelector('.word-remove').addEventListener('click', e => {
                 e.stopPropagation();
@@ -408,7 +450,7 @@ function initialize() {
     initAddButtons();
     initClearButtons();
     setupDragDrop();
-    ensureUniqueWordsInFields(); 
+    ensureUniqueWordsInFields();
     refreshUI();
 }
 
