@@ -235,6 +235,9 @@ def generate_stories():
     if request.method == 'POST':
         # For form submissions (field updates, generation)
         template_id = request.form.get('template_id')
+
+        if template_id: session['template_id'] = template_id
+
         print("Form data received:")
         print("generate button:", "generate" in request.form)
         print("update_fields button:", "update_fields" in request.form)
@@ -247,7 +250,7 @@ def generate_stories():
             field_data = json.loads(request.form.get('field_data', '{}'))
             story_builder_service.update_field_words(field_data)
             flash('Fields updated successfully!', 'success')
-            return redirect(url_for('main.generate_stories', template_id=template_id))
+            return redirect(url_for('main.generate_stories'))
             
         elif 'generate' in request.form:
             # Generate stories with current fields
@@ -255,6 +258,12 @@ def generate_stories():
                 # Parse the field data from the form
                 field_data = json.loads(request.form.get('field_data', '{}'))
                 story_builder_service.update_field_words(field_data)  # Save fields
+
+
+                template_id = session.get('template_id')
+                if not template_id:
+                    flash('No template selected. Please select a template first.', 'danger')
+                    return redirect(url_for('main.generate_stories'))
                 
                 # Process categories - both existing and new ones
                 category_ids = []
@@ -290,13 +299,17 @@ def generate_stories():
                 import traceback
                 traceback.print_exc()  # Print the full error stack
                 flash(f'Error generating stories: {str(e)}', 'danger')
-                return redirect(url_for('main.generate_stories', template_id=template_id))
+                return redirect(url_for('main.generate_stories'))
     
     # GET request - display the form
     templates = story_builder_service.get_all_templates()
     
-    # Get template_id either from query params (GET) or form data (POST)
-    template_id = request.args.get('template_id') or request.form.get('template_id')
+    # Get template_id either session (by default) or if I've missed something, from the args for backwards compat
+    template_id = session.get('template_id') or request.args.get('template_id')
+
+    # Update session if template_id came from query params
+    if request.args.get('template_id'):
+        session['template_id'] = request.args.get('template_id')
     
     fields = {}
     missing_fields = []
