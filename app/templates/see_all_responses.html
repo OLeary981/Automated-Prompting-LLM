@@ -8,6 +8,47 @@
         <h1>Response Database</h1>
     </div>
 
+    <!-- NEW: Story Selection Card -->
+    {% if session.get('story_ids') %}
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Story Selection</h5>
+        </div>
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-info fs-6 me-2">{{ session.get('story_ids')|length }} stories selected</span>
+                    <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil-square"></i> Modify Selection
+                    </a>
+                </div>
+                <a href="{{ url_for('main.view_responses', 
+                           clear_stories=1,
+                           provider=current_filters.provider, 
+                           model=current_filters.model, 
+                           flagged_only='true' if current_filters.flagged_only else None, 
+                           question_id=current_filters.question_id,
+                           start_date=current_filters.start_date, 
+                           end_date=current_filters.end_date, 
+                           sort=current_filters.sort) }}" class="btn btn-outline-danger">
+                    <i class="bi bi-x"></i> Clear Story Selection
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex align-items-center">
+                <span class="me-3">No stories currently selected for filtering.</span>
+                <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil-square"></i> Select Stories
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Filters Card -->
     <div class="card mb-4">
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -21,9 +62,10 @@
                         <select class="form-select form-select-sm" id="provider" name="provider">
                             <option value="">All Providers</option>
                             {% for provider in providers %}
-                                <option value="{{ provider.provider_name }}" {% if current_filters.provider == provider.provider_name %}selected{% endif %}>
-                                    {{ provider.provider_name }}
-                                </option>
+                            <option value="{{ provider.provider_name }}" {% if
+                                current_filters.provider==provider.provider_name %}selected{% endif %}>
+                                {{ provider.provider_name }}
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
@@ -32,9 +74,10 @@
                         <select class="form-select form-select-sm" id="model" name="model">
                             <option value="">All Models</option>
                             {% for model in models %}
-                                <option value="{{ model.name }}" {% if current_filters.model == model.name %}selected{% endif %}>
-                                    {{ model.name }}
-                                </option>
+                            <option value="{{ model.name }}" {% if current_filters.model==model.name %}selected{% endif
+                                %}>
+                                {{ model.name }}
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
@@ -43,36 +86,38 @@
                         <select class="form-select form-select-sm" id="question_id" name="question_id">
                             <option value="">All Questions</option>
                             {% for question in questions %}
-                                <option value="{{ question.question_id }}" {% if current_filters.question_id|string == question.question_id|string %}selected{% endif %}>
-                                    {{ question.content|truncate(30) }}
-                                </option>
+                            <option value="{{ question.question_id }}" {% if
+                                current_filters.question_id|string==question.question_id|string %}selected{% endif %}>
+                                {{ question.content|truncate(30) }}
+                            </option>
                             {% endfor %}
                         </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="story_id" class="form-label">Story ID:</label>
-                        <input type="text" class="form-control form-control-sm" id="story_id" name="story_id" value="{{ current_filters.story_id }}">
                     </div>
                     <!-- Date Filters -->
                     <div class="col-md-3">
                         <label for="start_date" class="form-label">From Date:</label>
-                        <input type="date" class="form-control form-control-sm" id="start_date" name="start_date" value="{{ current_filters.start_date }}">
+                        <input type="date" class="form-control form-control-sm" id="start_date" name="start_date"
+                            value="{{ current_filters.start_date }}">
                     </div>
                     <div class="col-md-3">
                         <label for="end_date" class="form-label">To Date:</label>
-                        <input type="date" class="form-control form-control-sm" id="end_date" name="end_date" value="{{ current_filters.end_date }}">
+                        <input type="date" class="form-control form-control-sm" id="end_date" name="end_date"
+                            value="{{ current_filters.end_date }}">
                     </div>
                     <div class="col-md-3">
                         <label for="sort" class="form-label">Sort Order:</label>
                         <select class="form-select form-select-sm" id="sort" name="sort">
-                            <option value="date_desc" {% if current_filters.sort == 'date_desc' %}selected{% endif %}>Newest First</option>
-                            <option value="date_asc" {% if current_filters.sort == 'date_asc' %}selected{% endif %}>Oldest First</option>
+                            <option value="date_desc" {% if current_filters.sort=='date_desc' %}selected{% endif %}>
+                                Newest First</option>
+                            <option value="date_asc" {% if current_filters.sort=='date_asc' %}selected{% endif %}>Oldest
+                                First</option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label d-block">&nbsp;</label>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="flagged_only" name="flagged_only" {% if current_filters.flagged_only %}checked{% endif %}>
+                            <input class="form-check-input" type="checkbox" id="flagged_only" name="flagged_only" {% if
+                                current_filters.flagged_only %}checked{% endif %}>
                             <label class="form-check-label" for="flagged_only">Show only flagged responses</label>
                         </div>
                     </div>
@@ -80,159 +125,170 @@
                     <div class="col-md-12 d-flex justify-content-start mt-3">
                         <button type="submit" class="btn btn-sm btn-primary me-3">Apply Filters</button>
                         <a href="{{ url_for('main.view_responses') }}" class="btn btn-sm btn-secondary me-3">Reset</a>
-                        <a href="{{ url_for('main.export_responses') }}" class="btn btn-sm btn-success" onclick="this.href = this.href + window.location.search;">Export CSV</a>
+                        <a href="{{ url_for('main.export_responses') }}" class="btn btn-sm btn-success"
+                            onclick="this.href = this.href + window.location.search;">Export CSV</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <p>Showing {{ pagination.page * pagination.per_page - pagination.per_page + 1 }}–{{ pagination.page * pagination.per_page if pagination.page * pagination.per_page < pagination.total else pagination.total }} of {{ pagination.total }} responses</p>
+    <p>Showing {{ pagination.page * pagination.per_page - pagination.per_page + 1 }}–{{ pagination.page *
+        pagination.per_page if pagination.page * pagination.per_page < pagination.total else pagination.total }} of {{
+            pagination.total }} responses</p>
 
-    <!-- Card-Based Responses (Replacing Table) -->
-    <div class="row">
-        {% for response in responses %}
-        <div class="col-lg-6 mb-4">
-            <div class="card h-100 {% if response.flagged_for_review %}border-danger{% endif %}">
-                <div class="card-header d-flex justify-content-between align-items-center {% if response.flagged_for_review %}bg-danger bg-opacity-10{% endif %}">
-                    <div>
-                        <strong>ID:</strong> {{ response.response_id }} 
-                        <span class="ms-3"><strong>Date:</strong> {{ response.timestamp.strftime('%d/%m/%y') }} {{ response.timestamp.strftime('%H:%M') }}</span>
-                    </div>
-                    <div>
-                        {% if response.flagged_for_review %}
-                            <span class="badge bg-danger">Flagged</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <strong>Provider:</strong> {{ response.prompt.model.provider.provider_name }}
+            <!-- Card-Based Responses (Replacing Table) -->
+            <div class="row">
+                {% for response in responses %}
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100 {% if response.flagged_for_review %}border-danger{% endif %}">
+                        <div
+                            class="card-header d-flex justify-content-between align-items-center {% if response.flagged_for_review %}bg-danger bg-opacity-10{% endif %}">
+                            <div>
+                                <strong>ID:</strong> {{ response.response_id }}
+                                <span class="ms-3"><strong>Date:</strong> {{ response.timestamp.strftime('%d/%m/%y') }}
+                                    {{ response.timestamp.strftime('%H:%M') }}</span>
+                            </div>
+                            <div>
+                                {% if response.flagged_for_review %}
+                                <span class="badge bg-danger">Flagged</span>
+                                {% endif %}
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <strong>Model:</strong> {{ response.prompt.model.name }}
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <strong>Parameters:</strong>
-                            {% if response.prompt.payload %}
-                                <span class="small">Temp: {{ response.prompt.temperature }}, Max Tokens: {{ response.prompt.max_tokens }}, Top P: {{ response.prompt.top_p }}</span>
-                            {% else %}
-                                <em class="text-muted">None</em>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <div class="mb-1"><strong>Story:</strong> <small class="text-muted">(ID: {{ response.prompt.story_id }})</small></div>
-                            <div class="card">
-                                <div class="card-body p-2 bg-light">
-                                    <div style="max-height: 150px; overflow-y: auto;">
-                                        {{ response.prompt.story.content }}
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <strong>Provider:</strong> {{ response.prompt.model.provider.provider_name }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Model:</strong> {{ response.prompt.model.name }}
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <strong>Parameters:</strong>
+                                    {% if response.prompt.payload %}
+                                    <span class="small">Temp: {{ response.prompt.temperature }}, Max Tokens: {{
+                                        response.prompt.max_tokens }}, Top P: {{ response.prompt.top_p }}</span>
+                                    {% else %}
+                                    <em class="text-muted">None</em>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <div class="mb-1"><strong>Story:</strong> <small class="text-muted">(ID: {{
+                                            response.prompt.story_id }})</small></div>
+                                    <div class="card">
+                                        <div class="card-body p-2 bg-light">
+                                            <div style="max-height: 150px; overflow-y: auto;">
+                                                {{ response.prompt.story.content }}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <div class="mb-1"><strong>Question:</strong> <small class="text-muted">(ID: {{ response.prompt.question_id }})</small></div>
-                            <div class="card">
-                                <div class="card-body p-2 bg-light">
-                                    {{ response.prompt.question.content }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <div class="mb-1"><strong>Response:</strong></div>
-                            <div class="card">
-                                <div class="card-body p-2">
-                                    <div style="max-height: 200px; overflow-y: auto;">
-                                        {{ response.response_content }}
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <div class="mb-1"><strong>Question:</strong> <small class="text-muted">(ID: {{
+                                            response.prompt.question_id }})</small></div>
+                                    <div class="card">
+                                        <div class="card-body p-2 bg-light">
+                                            {{ response.prompt.question.content }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <form method="POST" action="{{ url_for('main.view_responses', **request.args) }}">
-                        <input type="hidden" name="response_id" value="{{ response.response_id }}">
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <div class="form-check mb-2">
-                                    <input type="checkbox" id="flagged_{{ response.response_id }}" 
-                                           name="flagged_for_review_{{ response.response_id }}" 
-                                           class="form-check-input"
-                                           {% if response.flagged_for_review %}checked{% endif %}>
-                                    <label class="form-check-label" for="flagged_{{ response.response_id }}">
-                                        Flag for review
-                                    </label>
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <div class="mb-1"><strong>Response:</strong></div>
+                                    <div class="card">
+                                        <div class="card-body p-2">
+                                            <div style="max-height: 200px; overflow-y: auto;">
+                                                {{ response.response_content }}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-12">
-                                <label for="notes_{{ response.response_id }}" class="form-label">Review Notes:</label>
-                                <textarea name="review_notes_{{ response.response_id }}" 
-                                id="notes_{{ response.response_id }}"
-                                class="form-control review-notes-area" 
-                                rows="3"                                          
-                                spellcheck="true"
-                                lang="en-GB">{{ response.review_notes or '' }}</textarea>
-                                <button type="submit" class="btn btn-sm btn-primary mt-2 w-100">Save</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        {% else %}
-        <div class="col-12">
-            <div class="alert alert-info">No responses found matching your criteria</div>
-        </div>
-        {% endfor %}
-    </div>
 
-    <!-- Pagination -->
-    <nav aria-label="Page navigation">
-        <ul class="pagination">
-            {% if pagination.has_prev %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('main.view_responses', page=pagination.prev_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Previous</a>
-                </li>
-            {% else %}
-                <li class="page-item disabled"><span class="page-link">Previous</span></li>
-            {% endif %}
-            
-            {% for page_num in pagination.iter_pages() %}
-                {% if page_num %}
-                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
-                        <a class="page-link" href="{{ url_for('main.view_responses', page=page_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">{{ page_num }}</a>
-                    </li>
+                            <form method="POST" action="{{ url_for('main.view_responses', **request.args) }}">
+                                <input type="hidden" name="response_id" value="{{ response.response_id }}">
+
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" id="flagged_{{ response.response_id }}"
+                                                name="flagged_for_review_{{ response.response_id }}"
+                                                class="form-check-input" {% if response.flagged_for_review %}checked{%
+                                                endif %}>
+                                            <label class="form-check-label" for="flagged_{{ response.response_id }}">
+                                                Flag for review
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <label for="notes_{{ response.response_id }}" class="form-label">Review
+                                            Notes:</label>
+                                        <textarea name="review_notes_{{ response.response_id }}"
+                                            id="notes_{{ response.response_id }}" class="form-control review-notes-area"
+                                            rows="3" spellcheck="true"
+                                            lang="en-GB">{{ response.review_notes or '' }}</textarea>
+                                        <button type="submit" class="btn btn-sm btn-primary mt-2 w-100">Save</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
                 {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">No responses found matching your criteria</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="{{ url_for('main.view_responses', page=pagination.prev_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Previous</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                    {% endif %}
+
+                    {% for page_num in pagination.iter_pages() %}
+                    {% if page_num %}
+                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                        <a class="page-link"
+                            href="{{ url_for('main.view_responses', page=page_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">{{
+                            page_num }}</a>
+                    </li>
+                    {% else %}
                     <li class="page-item disabled"><span class="page-link">...</span></li>
-                {% endif %}
-            {% endfor %}
-            
-            {% if pagination.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('main.view_responses', page=pagination.next_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Next</a>
-                </li>
-            {% else %}
-                <li class="page-item disabled"><span class="page-link">Next</span></li>
-            {% endif %}
-        </ul>
-    </nav>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="{{ url_for('main.view_responses', page=pagination.next_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Next</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
 </div>
 
 {% endblock %}
@@ -253,19 +309,19 @@
                 flagged: flagged
             })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Reload the page to show updated data
-                location.reload();
-            } else {
-                alert('Error updating flag status: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while updating the flag status');
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload the page to show updated data
+                    location.reload();
+                } else {
+                    alert('Error updating flag status: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the flag status');
+            });
     }
 </script>
 {% endblock %}
