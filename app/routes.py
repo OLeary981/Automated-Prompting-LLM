@@ -1012,13 +1012,22 @@ def view_responses():
                 
         # Redirect back to the same page (with filters preserved)
         return redirect(url_for('main.view_responses', **request.args))
+        
+    # Initialize story_ids to avoid UnboundLocalError
+    story_ids = []
     
- # GET request - handle filtering
+    # GET request - handle filtering
     provider = request.args.get('provider', '')
     model = request.args.get('model', '')
     flagged_only = 'flagged_only' in request.args
     question_id = request.args.get('question_id', '')
     story_id = request.args.get('story_id', '')
+    
+    
+    # Handle "clear stories" parameter
+    if 'clear_stories' in request.args:
+        if 'story_ids' in session:
+            session.pop('story_ids')
     
     # Date range filtering
     start_date = request.args.get('start_date', '')
@@ -1044,11 +1053,22 @@ def view_responses():
     if model:
         query = query.filter(Model.name.ilike(f'%{model}%'))
     if flagged_only:
-        query = query.filter(Response.flagged_for_review == True)
+        query = query.filter(Response.flagged_for_review.is_(True))
     if question_id:
         query = query.filter(Prompt.question_id == question_id)
+    
+    # Handle story filtering - either a single story_id from URL or multiple from session
     if story_id:
+        # Single story filter from URL parameter
         query = query.filter(Prompt.story_id == story_id)
+    elif session.get('story_ids'):
+        # Multiple stories from session
+        story_ids = session.get('story_ids', [])
+        if story_ids:
+            # Convert to integers ONLY when querying the database
+            int_story_ids = [int(sid) for sid in story_ids]
+            query = query.filter(Prompt.story_id.in_(int_story_ids))
+            flash(f'Showing responses for {len(story_ids)} selected stories', 'info')
     
     # Apply date range filters
     if start_date:
