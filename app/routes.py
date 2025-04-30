@@ -236,7 +236,8 @@ def generate_stories():
         # For form submissions (field updates, generation)
         template_id = request.form.get('template_id')
 
-        if template_id: session['template_id'] = template_id
+        if template_id:
+            session['template_id'] = template_id
 
         print("Form data received:")
         print("generate button:", "generate" in request.form)
@@ -437,11 +438,12 @@ def select_story():
         return redirect(url_for('main.select_story'))
     else:
         # GET request - check for mode parameter
-        mode = request.args.get('mode')
+        # mode = request.args.get('mode') - commented out as not used at the moment (testing if all still ok)
         story_ids = session.get('story_ids', [])
         
         # If mode=add or no stories selected, show the selection page
-        if mode == 'add' or not story_ids:
+        # if mode == 'add' or not story_ids:
+        if not story_ids:
             return redirect(url_for('main.see_all_stories'))
         else:
             # Otherwise show the selected stories
