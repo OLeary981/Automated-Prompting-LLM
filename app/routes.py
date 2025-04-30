@@ -1129,15 +1129,56 @@ def update_response_flag():
 
 @bp.route('/export_responses', methods=['GET'])
 def export_responses():
-    # Get the same filters you use in view_responses
     provider = request.args.get('provider', '')
     model = request.args.get('model', '')
-    # ...other filters...
+    flagged_only = 'flagged_only' in request.args
+    question_id = request.args.get('question_id', '')
+    story_id = request.args.get('story_id', '')
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
+    sort = request.args.get('sort', 'date_desc')
     
-    # Build and execute the query (same as in view_responses but without pagination)
-    query = db.session.query(Response)
-    # ...apply the same filters...
+    # Build query with the existing joins - EXACTLY as in view_responses
+    query = db.session.query(Response).\
+        join(Prompt, Response.prompt_id == Prompt.prompt_id).\
+        join(Model, Prompt.model_id == Model.model_id).\
+        join(Provider, Model.provider_id == Provider.provider_id).\
+        join(Story, Prompt.story_id == Story.story_id).\
+        join(Question, Prompt.question_id == Question.question_id)
     
+    # Apply regular filters
+    if provider:
+        query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
+    if model:
+        query = query.filter(Model.name.ilike(f'%{model}%'))
+    if flagged_only:
+        query = query.filter(Response.flagged_for_review == True)
+    if question_id:
+        query = query.filter(Prompt.question_id == question_id)
+    if story_id:
+        query = query.filter(Prompt.story_id == story_id)
+    
+    # Apply date range filters
+    if start_date:
+        try:
+            start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(Response.timestamp >= start_date_obj)
+        except ValueError:
+            flash(f"Invalid start date format: {start_date}", "warning")
+    
+    if end_date:
+        try:
+            # Add one day to include the end date fully
+            end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            query = query.filter(Response.timestamp < end_date_obj)
+        except ValueError:
+            flash(f"Invalid end date format: {end_date}", "warning")
+    
+    # Apply sorting - though it doesn't matter much for export
+    if sort == 'date_asc':
+        query = query.order_by(Response.timestamp.asc())
+    else:  # Default to date_desc
+        query = query.order_by(Response.timestamp.desc())
     # Get all matching responses
     responses = query.all()
     
