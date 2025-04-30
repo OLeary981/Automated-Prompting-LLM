@@ -6,10 +6,10 @@
 <div class="container">
     <h1>Generate Stories</h1>
     
-    <form method="GET" action="{{ url_for('main.generate_stories') }}" id="template-form">
+    <form method="POST" action="{{ url_for('main.generate_stories') }}" id="template-form">
         <div class="form-group">
             <label for="template">Select a Template:</label>
-            <select class="form-control" id="template" name="template_id" onchange="this.form.submit()">
+            <select class="form-control" id="template" name="template_id">
                 <option value="">Select a template</option>
                 {% for template in templates %}
                 <option value="{{ template.template_id }}" {% if selected_template_id|string == template.template_id|string %}selected{% endif %}>
@@ -19,6 +19,12 @@
             </select>
         </div>
     </form>
+    
+    <script>
+    document.getElementById('template').addEventListener('change', function() {
+        document.getElementById('template-form').submit();
+    });
+    </script>
     
     {% if template %}
     <div class="mt-4">
