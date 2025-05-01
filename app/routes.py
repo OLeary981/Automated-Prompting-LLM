@@ -1198,36 +1198,34 @@ def view_responses():
     # Check for response_ids in session (from view_prompt_responses or view_story_responses)
     response_ids = session.get('response_ids', [])
     
-    # If we have response IDs in session and no clear_responses parameter, 
-    # filter the responses based on those IDs
+    # First apply base filters - these will always be applied
+    if provider:
+        query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
+    if model:
+        query = query.filter(Model.name.ilike(f'%{model}%'))
+    if flagged_only:
+        query = query.filter(Response.flagged_for_review.is_(True))
+    if question_id:
+        query = query.filter(Prompt.question_id == question_id)
+    
+    # If we have response_ids in session and no clear_responses parameter, 
+    # ADDITIONALLY filter the responses based on those IDs
     if response_ids and 'clear_responses' not in request.args:
         # Convert the response IDs to integers for the query
         int_response_ids = [int(rid) for rid in response_ids]
         query = query.filter(Response.response_id.in_(int_response_ids))
-    else:
-        # If we don't have response_ids or if they were cleared,
-        # apply the regular filters
-        if provider:
-            query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
-        if model:
-            query = query.filter(Model.name.ilike(f'%{model}%'))
-        if flagged_only:
-            query = query.filter(Response.flagged_for_review.is_(True))
-        if question_id:
-            query = query.filter(Prompt.question_id == question_id)
         
-        # Handle story filtering - either a single story_id from URL or multiple from session
-        if story_id:
-            # Single story filter from URL parameter
-            query = query.filter(Prompt.story_id == int(story_id))
-        elif session.get('story_ids'):
-            # Multiple stories from session
-            story_ids = session.get('story_ids', [])
-            if story_ids:
-                # Convert to integers ONLY when querying the database
-                int_story_ids = [int(sid) for sid in story_ids]
-                query = query.filter(Prompt.story_id.in_(int_story_ids))
-                flash(f'Showing responses for {len(story_ids)} selected stories', 'info')
+    # Handle story filtering - either a single story_id from URL or multiple from session
+    if story_id:
+        # Single story filter from URL parameter
+        query = query.filter(Prompt.story_id == int(story_id))
+    elif session.get('story_ids') and 'clear_stories' not in request.args:
+        # Multiple stories from session
+        story_ids = session.get('story_ids', [])
+        if story_ids:
+            # Convert to integers ONLY when querying the database
+            int_story_ids = [int(sid) for sid in story_ids]
+            query = query.filter(Prompt.story_id.in_(int_story_ids))
     
     # Apply date range filters and sorting as before...
     # [Your existing code for date filtering and sorting]
