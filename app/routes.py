@@ -623,80 +623,149 @@ def can_start_new_job():
     return active_jobs < 5
 
 # Main processing function that will run in the background asyncio loop
-async def process_llm_requests(job_id, model_id, story_ids, question_id, parameters):
+async def process_llm_requests(job_id, model_id=None, story_ids=None, question_id=None, parameters=None):
     app = create_app()
     with app.app_context():
         job = processing_jobs[job_id]
+        
+        # Check if this is a rerun job
+        is_rerun = False
+        prompts_data = None
+        
+        if 'params' in job and job['params'].get('is_rerun'):
+            is_rerun = True
+            prompts_data = job['params'].get('prompts_data', [])
+            job["total"] = len(prompts_data)
+        else:
+            # Standard processing
+            job["total"] = len(story_ids)
+        
         job["status"] = "running"
-        job["total"] = len(story_ids)
         job["completed"] = 0
         job["results"] = {}
         
         try:
-            # Process each story
-            for i, story_id in enumerate(story_ids):
-                # Check if job has been cancelled
-                if job_id not in processing_jobs:
-                    return
-                
-                # Call the LLM service for this story
-                story = llm_service.get_story_by_id(story_id)
-                question = llm_service.get_question_by_id(question_id)
-                provider_name = llm_service.get_provider_name_by_model_id(model_id)
-                model_name = llm_service.get_model_name_by_id(model_id)
-                
-                # Simulate API rate limiting delay
-                request_delay = llm_service.get_request_delay_by_model_id(model_id)
-                if i > 0 and request_delay > 0:
-                    await asyncio.sleep(request_delay)
-                
-                # Make the actual API call (non-async)
-                # We run this in a thread pool since it's a blocking operation
-                try:
-                    def call_llm_with_context():
-                        # This ensures we have an app context in this thread
-                        with app.app_context():
-                            return llm_service.call_llm(
-                                provider_name, 
-                                story.content, 
-                                question.content, 
-                                story_id, 
-                                question_id, 
-                                model_name, 
-                                model_id, 
-                                **parameters
-                            )
-
-                    loop = asyncio.get_running_loop()
-                    # THIS IS THE CRITICAL CHANGE - use the function, not lambda
-                    response = await loop.run_in_executor(
-                        None,
-                        call_llm_with_context
-                    )
+            if is_rerun:
+                # Process each prompt
+                for i, prompt_data in enumerate(prompts_data):
+                    # Check if job has been cancelled
+                    if job_id not in processing_jobs:
+                        return
                     
-                    # Update job state
-                    job["completed"] += 1
-                    if response:
-                        # Check if response is a dictionary with response_id
-                        if isinstance(response, dict) and "response_id" in response:
-                            job["results"][story_id] = {'response_id': response["response_id"]}
-                        # Check if response is an object with response_id attribute
-                        elif hasattr(response, 'response_id'):
-                            job["results"][story_id] = {'response_id': response.response_id}
-                        else:
-                            print(f"Warning: Unexpected response format: {type(response)}")
-                            job["results"][story_id] = {'error': 'Invalid response format'}
-                except Exception as e:
-                    print(f"Error processing story {story_id}: {str(e)}")
-                    import traceback
-                    traceback.print_exc()
-                    job["results"][story_id] = {'error': str(e)}
-                
-                # Calculate and update progress percentage
-                progress = int((job["completed"] / job["total"]) * 100)
-                job["progress"] = progress
-                job["last_activity"] = time.time()
-                
+                    # Get the prompt data
+                    prompt_id = prompt_data['prompt_id']
+                    model_id = prompt_data['model_id']
+                    story_id = prompt_data['story_id']
+                    question_id = prompt_data['question_id']
+                    parameters = prompt_data['parameters']
+                    
+                    # Call the LLM service for this prompt
+                    try:
+                        # Get the story, question, and model details
+                        story = llm_service.get_story_by_id(story_id)
+                        question = llm_service.get_question_by_id(question_id)
+                        provider_name = llm_service.get_provider_name_by_model_id(model_id)
+                        model_name = llm_service.get_model_name_by_id(model_id)
+                        
+                        # Simulate API rate limiting delay
+                        request_delay = llm_service.get_request_delay_by_model_id(model_id)
+                        if i > 0 and request_delay > 0:
+                            await asyncio.sleep(request_delay)
+                        
+                        # Make the actual API call (non-async)
+                        def call_llm_with_context():
+                            with app.app_context():
+                                return llm_service.call_llm(
+                                    provider_name, 
+                                    story.content, 
+                                    question.content, 
+                                    story_id, 
+                                    question_id, 
+                                    model_name, 
+                                    model_id, 
+                                    rerun_from_prompt_id=prompt_id,
+                                    **parameters
+                                )
+                        
+                        loop = asyncio.get_running_loop()
+                        response = await loop.run_in_executor(None, call_llm_with_context)
+                        
+                        # Update job state
+                        job["completed"] += 1
+                        if response:
+                            if isinstance(response, dict) and "response_id" in response:
+                                job["results"][prompt_id] = {'response_id': response["response_id"]}
+                            elif hasattr(response, 'response_id'):
+                                job["results"][prompt_id] = {'response_id': response.response_id}
+                            else:
+                                print(f"Warning: Unexpected response format: {type(response)}")
+                                job["results"][prompt_id] = {'error': 'Invalid response format'}
+                    except Exception as e:
+                        print(f"Error processing prompt {prompt_id}: {str(e)}")
+                        import traceback
+                        traceback.print_exc()
+                        job["results"][prompt_id] = {'error': str(e)}
+                    
+                    # Calculate and update progress percentage
+                    progress = int((job["completed"] / job["total"]) * 100)
+                    job["progress"] = progress
+                    job["last_activity"] = time.time()
+            else:
+                # Original story-by-story processing
+                for i, story_id in enumerate(story_ids):
+                    if job_id not in processing_jobs:
+                        return
+                        
+                    try:
+                        # Get story content
+                        story = llm_service.get_story_by_id(story_id)
+                        question = llm_service.get_question_by_id(question_id)
+                        provider_name = llm_service.get_provider_name_by_model_id(model_id)
+                        model_name = llm_service.get_model_name_by_id(model_id)
+                        
+                        # Simulate API rate limiting delay
+                        request_delay = llm_service.get_request_delay_by_model_id(model_id)
+                        if i > 0 and request_delay > 0:
+                            await asyncio.sleep(request_delay)
+                        
+                        # Make the actual API call (non-async)
+                        def call_llm_with_context():
+                            with app.app_context():
+                                return llm_service.call_llm(
+                                    provider_name, 
+                                    story.content, 
+                                    question.content, 
+                                    story_id, 
+                                    question_id, 
+                                    model_name, 
+                                    model_id,
+                                    **parameters
+                                )
+                        
+                        loop = asyncio.get_running_loop()
+                        response = await loop.run_in_executor(None, call_llm_with_context)
+                        
+                        # Update job state
+                        job["completed"] += 1
+                        if response:
+                            if isinstance(response, dict) and "response_id" in response:
+                                job["results"][story_id] = {'response_id': response["response_id"]}
+                            elif hasattr(response, 'response_id'):
+                                job["results"][story_id] = {'response_id': response.response_id}
+                            else:
+                                print(f"Warning: Unexpected response format: {type(response)}")
+                                job["results"][story_id] = {'error': 'Invalid response format'}
+                    except Exception as e:
+                        print(f"Error processing story {story_id}: {str(e)}")
+                        import traceback
+                        traceback.print_exc()
+                        job["results"][story_id] = {'error': str(e)}
+                    
+                    # Calculate and update progress percentage
+                    progress = int((job["completed"] / job["total"]) * 100)
+                    job["progress"] = progress
+                    job["last_activity"] = time.time()
+            
             # Mark job as completed
             job["status"] = "completed"
             job["progress"] = 100
@@ -718,7 +787,6 @@ async def process_llm_requests(job_id, model_id, story_ids, question_id, paramet
             if job_id in processing_jobs:
                 # Don't delete yet, just mark status
                 job["processing"] = False
-
 
 def cleanup_old_jobs():
     """Clean up old jobs that are no longer needed to prevent memory leaks"""
@@ -1210,8 +1278,6 @@ def update_response_flag():
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
     
-
-
 @bp.route('/export_responses', methods=['GET'])
 def export_responses():
     provider = request.args.get('provider', '')
@@ -1307,6 +1373,224 @@ def export_responses():
         as_attachment=True,
         download_name=f'responses_export_{datetime.datetime.now().strftime("%Y%m%d")}.csv'
     )
+
+
+@bp.route('/see_all_prompts', methods=['GET', 'POST'])
+def see_all_prompts():
+    if request.method == 'POST':
+        # Process form data for prompt updates if needed
+        # (Similar to view_responses POST handler but for prompts)
+        return redirect(url_for('main.see_all_prompts', **request.args))
+        
+    # Initialize prompt_ids for selection
+    selected_prompt_ids = session.get('prompt_ids', [])
+    
+    # GET request - handle filtering
+    provider = request.args.get('provider', '')
+    model = request.args.get('model', '')
+    question_id = request.args.get('question_id', '')
+    story_id = request.args.get('story_id', '')
+    
+    # Date range filtering
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
+    
+    # Sorting option
+    sort = request.args.get('sort', 'date_desc')
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    
+    # Build query with joins
+    query = db.session.query(
+        Prompt, 
+        db.func.max(Response.timestamp).label('last_used')
+    ).\
+        join(Model, Prompt.model_id == Model.model_id).\
+        join(Provider, Model.provider_id == Provider.provider_id).\
+        join(Story, Prompt.story_id == Story.story_id).\
+        join(Question, Prompt.question_id == Question.question_id).\
+        outerjoin(Response, Prompt.prompt_id == Response.prompt_id).\
+        group_by(Prompt.prompt_id)
+    
+    # Apply regular filters
+    if provider:
+        query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
+    if model:
+        query = query.filter(Model.name.ilike(f'%{model}%'))
+    if question_id:
+        query = query.filter(Prompt.question_id == question_id)
+    if story_id:
+        query = query.filter(Prompt.story_id == story_id)
+    
+    # Apply date range filters
+    if start_date:
+        try:
+            start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(Response.timestamp >= start_date_obj)
+        except ValueError:
+            flash(f"Invalid start date format: {start_date}", "warning")
+    
+    if end_date:
+        try:
+            # Add one day to include the end date fully
+            end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            query = query.filter(Response.timestamp < end_date_obj)
+        except ValueError:
+            flash(f"Invalid end date format: {end_date}", "warning")
+    
+    # Apply sorting
+    if sort == 'date_asc':
+        query = query.order_by(db.func.max(Response.timestamp).asc())
+    else:  # Default to date_desc
+        query = query.order_by(db.func.max(Response.timestamp).desc())
+    
+    # Paginate results
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    prompt_data = pagination.items
+    
+    # Get data for filter dropdowns
+    providers = db.session.query(Provider).all()
+    models = db.session.query(Model).all()
+    questions = db.session.query(Question).all()
+    
+    return render_template('see_all_prompts.html', 
+                          prompts=prompt_data,
+                          pagination=pagination,
+                          providers=providers,
+                          models=models,
+                          questions=questions,
+                          selected_prompt_ids=selected_prompt_ids,
+                          current_filters={
+                              'provider': provider,
+                              'model': model,
+                              'question_id': question_id,
+                              'story_id': story_id,
+                              'start_date': start_date,
+                              'end_date': end_date,
+                              'sort': sort
+                          })
+
+@bp.route('/update_prompt_selection', methods=['POST'])
+def update_prompt_selection():
+    """AJAX endpoint to update prompt selection in session"""
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': False, 'message': 'Invalid request'}), 400
+    
+    data = request.get_json()
+    
+    # Get the current selection from session
+    selected_prompt_ids = session.get('prompt_ids', [])
+    
+    # Clear all selected prompts
+    if data.get('action') == 'clear_all':
+        selected_prompt_ids = []
+    
+    # Select multiple prompts at once (for batch operations)
+    elif data.get('action') == 'select_multiple':
+        prompt_ids = data.get('prompt_ids', [])
+        for prompt_id in prompt_ids:
+            if prompt_id not in selected_prompt_ids:
+                selected_prompt_ids.append(prompt_id)
+    
+    # Handle individual toggle
+    elif 'prompt_id' in data:
+        prompt_id = str(data['prompt_id'])
+        is_selected = data.get('selected', False)
+        
+        if is_selected and prompt_id not in selected_prompt_ids:
+            selected_prompt_ids.append(prompt_id)
+        elif not is_selected and prompt_id in selected_prompt_ids:
+            selected_prompt_ids.remove(prompt_id)
+    
+    # Store updated selection in session
+    session['prompt_ids'] = selected_prompt_ids
+    
+    return jsonify({
+        'success': True,
+        'selected_count': len(selected_prompt_ids),
+        'selected_ids': selected_prompt_ids
+    })
+
+@bp.route('/rerun_prompts', methods=['POST'])
+def rerun_prompts():
+    """Endpoint to rerun selected prompts"""
+    # Get selected prompt IDs from session
+    prompt_ids = session.get('prompt_ids', [])
+    
+    if not prompt_ids:
+        flash('No prompts selected to rerun.', 'warning')
+        return redirect(url_for('main.see_all_prompts'))
+    
+    # Create a new job for rerunning these prompts
+    job_id = str(uuid.uuid4())
+    
+    try:
+        # Collect all the data needed for rerunning
+        prompts_data = []
+        for prompt_id in prompt_ids:
+            prompt = db.session.query(Prompt).get(int(prompt_id))
+            if prompt:
+                prompts_data.append({
+                    'prompt_id': prompt.prompt_id,
+                    'model_id': prompt.model_id,
+                    'story_id': prompt.story_id,
+                    'question_id': prompt.question_id,
+                    'parameters': {
+                        'temperature': prompt.temperature,
+                        'max_tokens': prompt.max_tokens,
+                        'top_p': prompt.top_p
+                    }
+                })
+        
+        if not prompts_data:
+            flash('No valid prompts found to rerun.', 'warning')
+            return redirect(url_for('main.see_all_prompts'))
+            
+        # Store job info
+        processing_jobs[job_id] = {
+            "status": "initializing",
+            "progress": 0,
+            "total": len(prompts_data),
+            "completed": 0,
+            "results": {},
+            "processing": True,
+            "last_activity": time.time(),
+            "params": {
+                "prompts_data": prompts_data,
+                "is_rerun": True
+            }
+        }
+        
+        # Store job ID in session
+        session['job_id'] = job_id
+        
+        # Clean up old jobs
+        cleanup_old_jobs()
+        
+        return redirect(url_for('main.loading'))
+        
+    except Exception as e:
+        flash(f'Error setting up prompt rerun: {str(e)}', 'danger')
+        return redirect(url_for('main.see_all_prompts'))
+
+@bp.route('/view_prompt_responses/<int:prompt_id>')
+def view_prompt_responses(prompt_id):
+    """View all responses for a specific prompt"""
+    # Get all responses for this prompt
+    responses = db.session.query(Response).filter(Response.prompt_id == prompt_id).all()
+    
+    if not responses:
+        flash(f'No responses found for prompt ID {prompt_id}', 'info')
+        return redirect(url_for('main.see_all_prompts'))
+    
+    # Set response IDs in session to filter the responses page
+    session['response_ids'] = [str(r.response_id) for r in responses]
+    
+    # Redirect to responses page
+    return redirect(url_for('main.view_responses'))
+
+
 
 
 @bp.route('/clear_session', methods=['GET'])

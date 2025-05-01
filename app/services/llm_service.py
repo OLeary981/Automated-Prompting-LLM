@@ -102,13 +102,63 @@ def save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id,
 
 #     return response_content
 
-def call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, **parameters):
-    if provider_name == "groq":
-        return call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, **parameters)
-    elif provider_name == "hf":
-        return call_LLM_HF(story, question, story_id, question_id, model_name, model_id, **parameters)
+def call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, rerun_from_prompt_id=None, **parameters):
+    """
+    Call the language model with the given parameters.
+    
+    If rerun_from_prompt_id is provided, reuses that prompt instead of creating a new one.
+    """
+    # Check if this is a rerun from an existing prompt
+    if rerun_from_prompt_id:
+        # Get the existing prompt
+        prompt = db.session.query(Prompt).filter_by(prompt_id=rerun_from_prompt_id).first()
+        if not prompt:
+            raise ValueError(f"Prompt ID {rerun_from_prompt_id} not found")
+        
+        # Extract parameters from the existing prompt
+        existing_temperature = prompt.temperature
+        existing_max_tokens = prompt.max_tokens
+        existing_top_p = prompt.top_p
+        
+        # Get associated story and question
+        story = db.session.query(Story).get(prompt.story_id).content
+        question = db.session.query(Question).get(prompt.question_id).content
+        
+        # Use the provider-specific function but with parameters from the existing prompt
+        if provider_name == "groq":
+            return call_LLM_GROQ(
+                story, 
+                question, 
+                prompt.story_id, 
+                prompt.question_id, 
+                model_name, 
+                model_id,
+                temperature=existing_temperature,
+                max_tokens=existing_max_tokens,
+                top_p=existing_top_p
+            )
+        elif provider_name == "hf":
+            return call_LLM_HF(
+                story, 
+                question, 
+                prompt.story_id, 
+                prompt.question_id, 
+                model_name, 
+                model_id,
+                temperature=existing_temperature,
+                max_tokens=existing_max_tokens,
+                top_p=existing_top_p
+            )
+        else:
+            raise ValueError(f"Unknown provider: {provider_name}")
     else:
-        raise ValueError(f"Unknown provider: {provider_name}")
+        # Standard processing (your existing code)
+        if provider_name == "groq":
+            return call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, **parameters)
+        elif provider_name == "hf":
+            return call_LLM_HF(story, question, story_id, question_id, model_name, model_id, **parameters)
+        else:
+            raise ValueError(f"Unknown provider: {provider_name}")
 
 def prepare_and_call_llm(model_id, story_ids, question_id, parameters, progress_callback=None):
     print("You've reached call LLM let's look at what is in the session")

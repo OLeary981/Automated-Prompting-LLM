@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+
+{% block title %}Prompt Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding-left: 1rem; padding-right: 1rem;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Prompt Management</h1>
+    </div>
+
+    <!-- Selection Summary Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Prompt Selection</h5>
+            <div>
+                <span class="badge bg-primary me-2">{{ prompts|length }} prompts visible</span>
+                <span class="badge bg-success" id="selected-count-badge">{{ selected_prompt_ids|length }} prompts selected</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="btn-group mb-3" role="group">
+                        <button type="button" class="btn btn-outline-secondary" onclick="selectAllVisible()">
+                            Select Visible ({{ prompts|length }})
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="deselectAllVisible()">
+                            Deselect Visible
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="invertVisibleSelection()">
+                            Invert Visible Selection
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end mb-3">
+                    <button id="clear-all-btn" class="btn btn-outline-danger" onclick="clearSelection()">
+                        Clear Selection
+                    </button>
+                </div>
+            </div>
+            
+            <div class="d-grid gap-2">
+                <button id="rerun-selected-btn" class="btn btn-success btn-lg {% if not selected_prompt_ids %}disabled{% endif %}" 
+                        onclick="rerunSelectedPrompts()">
+                    Rerun <span id="selected-count">{{ selected_prompt_ids|length }}</span> Selected Prompts
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Filter Options</h5>
+        </div>
+        <div class="collapse show" id="filterCollapse">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('main.see_all_prompts') }}" class="row gy-3 gx-4">
+                    <!-- First row: Provider, Model, Question -->
+                    <div class="col-md-3">
+                        <label for="provider" class="form-label">Provider:</label>
+                        <div class="w-100"></div>
+                        <select class="form-select form-select-sm" id="provider" name="provider">
+                            <option value="">All Providers</option>
+                            {% for provider in providers %}
+                            <option value="{{ provider.provider_name }}" {% if current_filters.provider==provider.provider_name %}selected{% endif %}>
+                                {{ provider.provider_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="model" class="form-label">Model:</label>
+                        <div class="w-100"></div>
+                        <select class="form-select form-select-sm" id="model" name="model">
+                            <option value="">All Models</option>
+                            {% for model in models %}
+                            <option value="{{ model.name }}" {% if current_filters.model==model.name %}selected{% endif %}>
+                                {{ model.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="question_id" class="form-label">Question:</label>
+                        <div class="w-100"></div>
+                        <select class="form-select form-select-sm" id="question_id" name="question_id">
+                            <option value="">All Questions</option>
+                            {% for question in questions %}
+                            <option value="{{ question.question_id }}" {% if current_filters.question_id|string==question.question_id|string %}selected{% endif %}>
+                                {{ question.content|truncate(30) }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="w-100" style="margin-bottom: 1.5rem;"></div>
+
+                    <!-- Second row: Dates and Sort -->
+                    <div class="col-md-3">
+                        <label for="start_date" class="form-label">From Date:</label>
+                        <div class="w-100"></div>
+                        <input type="date" class="form-control form-control-sm" id="start_date" name="start_date"
+                            value="{{ current_filters.start_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="end_date" class="form-label">To Date:</label>
+                        <div class="w-100"></div>
+                        <input type="date" class="form-control form-control-sm" id="end_date" name="end_date"
+                            value="{{ current_filters.end_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="sort" class="form-label">Sort Order:</label>
+                        <div class="w-100"></div>
+                        <select class="form-select form-select-sm" id="sort" name="sort">
+                            <option value="date_desc" {% if current_filters.sort=='date_desc' %}selected{% endif %}>
+                                Last Used (Newest First)</option>
+                            <option value="date_asc" {% if current_filters.sort=='date_asc' %}selected{% endif %}>
+                                Last Used (Oldest First)</option>
+                        </select>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="col-md-12 d-flex justify-content-start mt-3">
+                        <button type="submit" class="btn btn-sm btn-primary me-3">Apply Filters</button>
+                        <a href="{{ url_for('main.see_all_prompts') }}" class="btn btn-sm btn-secondary">Reset</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <p>Showing {{ pagination.page * pagination.per_page - pagination.per_page + 1 }}–{{ pagination.page *
+        pagination.per_page if pagination.page * pagination.per_page < pagination.total else pagination.total }} of {{
+            pagination.total }} prompts</p>
+
+    <!-- Card-Based Prompts -->
+    <div class="row">
+        {% for prompt_item in prompts %}
+        {% set prompt = prompt_item[0] %}
+        {% set last_used = prompt_item[1] %}
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input prompt-checkbox" id="prompt_{{ prompt.prompt_id }}" 
+                                   data-id="{{ prompt.prompt_id }}"
+                                   {% if prompt.prompt_id|string in selected_prompt_ids %}checked{% endif %}>
+                            <label class="form-check-label" for="prompt_{{ prompt.prompt_id }}">
+                                <strong>ID:</strong> {{ prompt.prompt_id }}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        {% if last_used %}
+                        <span class="badge bg-info">Last Used: {{ last_used.strftime('%d/%m/%y %H:%M') }}</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Never Used</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Provider:</strong> {{ prompt.model.provider.provider_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Model:</strong> {{ prompt.model.name }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <strong>Parameters:</strong>
+                            <span class="small">Temp: {{ prompt.temperature }}, Max Tokens: {{ prompt.max_tokens }}, Top P: {{ prompt.top_p }}</span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="mb-1"><strong>Story:</strong> <small class="text-muted">(ID: {{ prompt.story_id }})</small></div>
+                            <div class="card">
+                                <div class="card-body p-2 bg-light">
+                                    <div style="max-height: 150px; overflow-y: auto;">
+                                        {{ prompt.story.content }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="mb-1"><strong>Question:</strong> <small class="text-muted">(ID: {{ prompt.question_id }})</small></div>
+                            <div class="card">
+                                <div class="card-body p-2 bg-light">
+                                    {{ prompt.question.content }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{{ url_for('main.view_prompt_responses', prompt_id=prompt.prompt_id) }}" 
+                           class="btn btn-outline-secondary">
+                            View All Responses for this Prompt
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">No prompts found matching your criteria</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if pagination.has_prev %}
+            <li class="page-item">
+                <a class="page-link"
+                    href="{{ url_for('main.see_all_prompts', page=pagination.prev_num, provider=current_filters.provider, model=current_filters.model, question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Previous</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+
+            {% for page_num in pagination.iter_pages() %}
+            {% if page_num %}
+            <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                <a class="page-link"
+                    href="{{ url_for('main.see_all_prompts', page=page_num, provider=current_filters.provider, model=current_filters.model, question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">{{
+                    page_num }}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            {% endfor %}
+
+            {% if pagination.has_next %}
+            <li class="page-item">
+                <a class="page-link"
+                    href="{{ url_for('main.see_all_prompts', page=pagination.next_num, provider=current_filters.provider, model=current_filters.model, question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Next</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Track selected prompts
+    const checkboxes = document.querySelectorAll('.prompt-checkbox');
+    const selectedCount = document.getElementById('selected-count');
+    const selectedCountBadge = document.getElementById('selected-count-badge');
+    const rerunButton = document.getElementById('rerun-selected-btn');
+    
+    // Add event listeners to all checkboxes
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const promptId = this.getAttribute('data-id');
+            const isChecked = this.checked;
+            
+            // Send AJAX request to update session
+            fetch('{{ url_for("main.update_prompt_selection") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    prompt_id: promptId,
+                    selected: isChecked
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Always update the count displays
+                selectedCount.textContent = data.selected_count;
+                selectedCountBadge.textContent = data.selected_count + " prompts selected";
+                
+                // Enable/disable the rerun button based on selection
+                if (data.selected_count > 0) {
+                    rerunButton.classList.remove('disabled');
+                } else {
+                    rerunButton.classList.add('disabled');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating selection:', error);
+            });
+        });
+    });
+});
+
+// Select all visible prompts
+function selectAllVisible() {
+    const checkboxes = document.querySelectorAll('.prompt-checkbox:not([disabled])');
+    
+    // First collect all prompt IDs that need to be selected
+    const promptIdsToSelect = [];
+    checkboxes.forEach(checkbox => {
+        if (!checkbox.checked) {
+            const promptId = checkbox.getAttribute('data-id');
+            promptIdsToSelect.push(promptId);
+            checkbox.checked = true;  // Update visual state
+        }
+    });
+    
+    // If there are prompts to select, make a single batch request
+    if (promptIdsToSelect.length > 0) {
+        fetch('{{ url_for("main.update_prompt_selection") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                action: 'select_multiple',
+                prompt_ids: promptIdsToSelect
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update counts
+            document.getElementById('selected-count').textContent = data.selected_count;
+            document.getElementById('selected-count-badge').textContent = data.selected_count + " prompts selected";
+            
+            // Enable/disable rerun button
+            if (data.selected_count > 0) {
+                document.getElementById('rerun-selected-btn').classList.remove('disabled');
+            }
+        })
+        .catch(error => console.error('Error selecting prompts:', error));
+    }
+}
+
+// Deselect all visible prompts
+function deselectAllVisible() {
+    const checkboxes = document.querySelectorAll('.prompt-checkbox:checked');
+    
+    // First collect all prompt IDs that need to be deselected
+    const promptIdsToDeselect = [];
+    checkboxes.forEach(checkbox => {
+        const promptId = checkbox.getAttribute('data-id');
+        promptIdsToDeselect.push(promptId);
+        checkbox.checked = false;  // Update visual state
+    });
+    
+    // If there are prompts to deselect, make a single batch request
+    if (promptIdsToDeselect.length > 0) {
+        fetch('{{ url_for("main.update_prompt_selection") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                action: 'deselect_multiple',
+                prompt_ids: promptIdsToDeselect
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update counts
+            document.getElementById('selected-count').textContent = data.selected_count;
+            document.getElementById('selected-count-badge').textContent = data.selected_count + " prompts selected";
+            
+            // Enable/disable rerun button
+            if (data.selected_count === 0) {
+                document.getElementById('rerun-selected-btn').classList.add('disabled');
+            }
+        })
+        .catch(error => console.error('Error deselecting prompts:', error));
+    }
+}
+
+// Invert selection of visible prompts
+function invertVisibleSelection() {
+    const checkboxes = document.querySelectorAll('.prompt-checkbox');
+    
+    // Collect prompt IDs to select and deselect
+    const promptIdsToSelect = [];
+    const promptIdsToDeselect = [];
+    
+    checkboxes.forEach(checkbox => {
+        const promptId = checkbox.getAttribute('data-id');
+        if (checkbox.checked) {
+            promptIdsToDeselect.push(promptId);
+            checkbox.checked = false;  // Update visual state
+        } else {
+            promptIdsToSelect.push(promptId);
+            checkbox.checked = true;   // Update visual state
+        }
+    });
+    
+    // If there are changes to make, send a batch request
+    if (promptIdsToSelect.length > 0 || promptIdsToDeselect.length > 0) {
+        fetch('{{ url_for("main.update_prompt_selection") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                action: 'invert_selection',
+                select_ids: promptIdsToSelect,
+                deselect_ids: promptIdsToDeselect
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update counts
+            document.getElementById('selected-count').textContent = data.selected_count;
+            document.getElementById('selected-count-badge').textContent = data.selected_count + " prompts selected";
+            
+            // Enable/disable rerun button
+            if (data.selected_count > 0) {
+                document.getElementById('rerun-selected-btn').classList.remove('disabled');
+            } else {
+                document.getElementById('rerun-selected-btn').classList.add('disabled');
+            }
+        })
+        .catch(error => console.error('Error inverting prompt selection:', error));
+    }
+}
+
+// Clear all selected prompts
+function clearSelection() {
+    // Send request to clear all selected prompts
+    fetch('{{ url_for("main.update_prompt_selection") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            action: 'clear_all'  // Special action to completely clear the session
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Uncheck all checkboxes
+        document.querySelectorAll('.prompt-checkbox').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        
+        // Update count displays to zero
+        document.getElementById('selected-count').textContent = "0";
+        document.getElementById('selected-count-badge').textContent = "0 prompts selected";
+        
+        // Disable the rerun button
+        document.getElementById('rerun-selected-btn').classList.add('disabled');
+        
+        // Provide user feedback
+        alert('All prompt selections have been cleared.');
+    })
+    .catch(error => {
+        console.error('Error clearing selection:', error);
+    });
+}
+
+// Function to rerun selected prompts
+function rerunSelectedPrompts() {
+    const selectedCount = parseInt(document.getElementById('selected-count').textContent);
+    
+    if (selectedCount > 0) {
+        if (confirm(`Are you sure you want to rerun ${selectedCount} selected prompts?`)) {
+            // Submit the form to rerun prompts
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ url_for("main.rerun_prompts") }}';
+            document.body.appendChild(form);
+            form.submit();
+        }
+    } else {
+        alert('Please select at least one prompt to rerun.');
+    }
+}
+</script>
+{% endblock %}
