@@ -447,7 +447,7 @@ function viewSelectedResponses() {
     
     if (selectedCount > 0) {
         // Redirect to view_responses with story_ids filter
-        window.location.href = '{{ url_for("main.view_responses") }}'
+        window.location.href = '{{ url_for("main.view_story_responses") }}'
     } else {
         alert('Please select at least one story first.');
     }
