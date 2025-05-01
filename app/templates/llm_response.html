@@ -7,7 +7,7 @@
     <h1>LLM Responses</h1>
 
     <!-- Display model, provider, and question at the top -->
-    <div class="card mt-4">
+    <div class="card mt-4 mb-4">
         <div class="card-header">
             Model and Provider
         </div>
@@ -18,45 +18,86 @@
         </div>
     </div>
 
- 
-
-    <!-- Display responses in a table format -->
-    <table class="table table-striped mt-4 llm-response-table">
-        <thead>
-            <tr>
-                <th scope="col">Story ID</th>
-                <th scope="col">Story</th>
-                <th scope="col">Response</th>
-                <th scope="col">Flag for Review</th>
-                <th scope="col">Review Notes</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for story, response_detail in combined_data %}
-            <tr>
-                <td>{{ story.story_id }}</td>
-                <td>{{ story.content }}</td>
-                <td>{{ response_detail.response_content }}</td>
-                <td>
-                    <input type="checkbox" id="flag_{{ response_detail.response_id }}" 
-                        class="form-check-input" {% if response_detail.flagged_for_review %}checked{% endif %}
-                        onchange="document.getElementById('flag_hidden_{{ response_detail.response_id }}').value = this.checked">
-                </td>
-                <td class="review-notes-cell">
-                    <form action="{{ url_for('main.llm_response') }}" method="POST">
+    <!-- Card-Based Responses -->
+    <div class="row">
+        {% for story, response_detail in combined_data %}
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 {% if response_detail.flagged_for_review %}border-danger{% endif %}">
+                <div class="card-header d-flex justify-content-between align-items-center {% if response_detail.flagged_for_review %}bg-danger bg-opacity-10{% endif %}">
+                    <div>
+                        <strong>Story ID:</strong> {{ story.story_id }}
+                    </div>
+                    <div>
+                        {% if response_detail.flagged_for_review %}
+                            <span class="badge bg-danger">Flagged</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="mb-1"><strong>Story:</strong></div>
+                            <div class="card">
+                                <div class="card-body p-2 bg-light">
+                                    <div style="max-height: 150px; overflow-y: auto;">
+                                        {{ story.content }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="mb-1"><strong>Response:</strong></div>
+                            <div class="card">
+                                <div class="card-body p-2">
+                                    <div style="height: 250px; overflow-y: auto;">
+                                        {{ response_detail.response_content }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('main.llm_response') }}">
                         <input type="hidden" id="flag_hidden_{{ response_detail.response_id }}" 
                                name="flagged_for_review_{{ response_detail.response_id }}" 
                                value="{% if response_detail.flagged_for_review %}true{% else %}false{% endif %}">
-                        <textarea name="review_notes_{{ response_detail.response_id }}"
-                            class="form-control review-notes-area" rows="6" spellcheck="true"
-                            lang="en-GB">{{ response_detail.review_notes or '' }}</textarea>
                         <input type="hidden" name="response_id" value="{{ response_detail.response_id }}">
-                        <button type="submit" class="btn btn-primary mt-2 w-100">Save</button>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="form-check mb-2">
+                                    <input type="checkbox" id="flag_{{ response_detail.response_id }}" 
+                                           name="flag_{{ response_detail.response_id }}" 
+                                           class="form-check-input"
+                                           {% if response_detail.flagged_for_review %}checked{% endif %}
+                                           onchange="document.getElementById('flag_hidden_{{ response_detail.response_id }}').value = this.checked">
+                                    <label class="form-check-label" for="flag_{{ response_detail.response_id }}">
+                                        Flag for review
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label for="notes_{{ response_detail.response_id }}" class="form-label">Review Notes:</label>
+                                <textarea name="review_notes_{{ response_detail.response_id }}" 
+                                          id="notes_{{ response_detail.response_id }}"
+                                          class="form-control review-notes-area" 
+                                          rows="2"
+                                          spellcheck="true"
+                                          lang="en-GB">{{ response_detail.review_notes or '' }}</textarea>
+                                <button type="submit" class="btn btn-primary mt-2 w-100">Save</button>
+                            </div>
+                        </div>
                     </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}

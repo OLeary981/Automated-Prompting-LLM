@@ -235,6 +235,10 @@ def generate_stories():
     if request.method == 'POST':
         # For form submissions (field updates, generation)
         template_id = request.form.get('template_id')
+
+        if template_id:
+            session['template_id'] = template_id
+
         print("Form data received:")
         print("generate button:", "generate" in request.form)
         print("update_fields button:", "update_fields" in request.form)
@@ -247,7 +251,7 @@ def generate_stories():
             field_data = json.loads(request.form.get('field_data', '{}'))
             story_builder_service.update_field_words(field_data)
             flash('Fields updated successfully!', 'success')
-            return redirect(url_for('main.generate_stories', template_id=template_id))
+            return redirect(url_for('main.generate_stories'))
             
         elif 'generate' in request.form:
             # Generate stories with current fields
@@ -255,6 +259,12 @@ def generate_stories():
                 # Parse the field data from the form
                 field_data = json.loads(request.form.get('field_data', '{}'))
                 story_builder_service.update_field_words(field_data)  # Save fields
+
+
+                template_id = session.get('template_id')
+                if not template_id:
+                    flash('No template selected. Please select a template first.', 'danger')
+                    return redirect(url_for('main.generate_stories'))
                 
                 # Process categories - both existing and new ones
                 category_ids = []
@@ -290,13 +300,17 @@ def generate_stories():
                 import traceback
                 traceback.print_exc()  # Print the full error stack
                 flash(f'Error generating stories: {str(e)}', 'danger')
-                return redirect(url_for('main.generate_stories', template_id=template_id))
+                return redirect(url_for('main.generate_stories'))
     
     # GET request - display the form
     templates = story_builder_service.get_all_templates()
     
-    # Get template_id either from query params (GET) or form data (POST)
-    template_id = request.args.get('template_id') or request.form.get('template_id')
+    # Get template_id either session (by default) or if I've missed something, from the args for backwards compat
+    template_id = session.get('template_id') or request.args.get('template_id')
+
+    # Update session if template_id came from query params
+    if request.args.get('template_id'):
+        session['template_id'] = request.args.get('template_id')
     
     fields = {}
     missing_fields = []
@@ -329,19 +343,60 @@ def generate_stories():
 
 @bp.route('/display_generated_stories', methods=['GET'])
 def display_generated_stories():
-    session['story_ids'] = session.get('generated_story_ids', [])
-    story_ids = session.get('generated_story_ids', [])
-    stories = [db.session.query(Story).get(story_id) for story_id in story_ids]    
+    # Convert to strings for consistency
+    generated_story_ids = [str(story_id) for story_id in session.get('generated_story_ids', [])]
+    session['story_ids'] = generated_story_ids
+    
+    # When querying, convert back to integers
+    stories = [db.session.query(Story).get(int(story_id)) for story_id in generated_story_ids]    
     return render_template('display_generated_stories.html', stories=stories)
 
 @bp.route('/add_word', methods=['POST'])
 def add_word():
-    field_name = request.form.get('field_name')
-    new_words = request.form.get('new_words')
-    template_id = request.form.get('template_id')
-    if field_name and new_words:
-        story_builder_service.add_words_to_field(field_name, new_words)
-    return redirect(url_for('main.generate_stories', template_id=template_id))
+    # Check if this is an AJAX request or a form submission
+    is_ajax = request.headers.get('Content-Type') == 'application/json'
+    
+    if is_ajax:
+        # Handle AJAX request (from JavaScript)
+        data = request.get_json()
+        field_name = data.get('field_name')
+        new_words = data.get('new_words')
+        
+        if field_name and new_words:
+            try:
+                story_builder_service.add_words_to_field(field_name, new_words)
+                return jsonify({'success': True, 'message': f'Word(s) added to {field_name}'})
+            except Exception as e:
+                return jsonify({'success': False, 'message': str(e)}), 500
+        return jsonify({'success': False, 'message': 'Missing required fields'}), 400
+    else:
+        # Handle form submission (from HTML form)
+        field_name = request.form.get('field_name')
+        new_words = request.form.get('new_words')
+        template_id = request.form.get('template_id')
+        
+        if field_name and new_words:
+            story_builder_service.add_words_to_field(field_name, new_words)
+        
+        return redirect(url_for('main.generate_stories', template_id=template_id))
+
+@bp.route('/delete_word', methods=['POST'])
+def delete_word():
+    data = request.get_json()
+    field_name = data.get('field_name')
+    word = data.get('word')
+
+    if field_name and word:
+        try:
+            print(f"Attempting to delete word '{word}' from field '{field_name}'")
+            story_builder_service.delete_word_from_field(field_name, word)
+            return jsonify({'success': True, 'message': f'Word "{word}" deleted from field "{field_name}".'})
+        except Exception as e:
+            import traceback
+            print(f"ERROR deleting word '{word}' from field '{field_name}':")
+            print(traceback.format_exc())  # This prints the full stack trace
+            return jsonify({'success': False, 'message': str(e)}), 500
+    return jsonify({'success': False, 'message': 'Invalid data provided.'}), 400
 
 @bp.route('/select_model', methods=['GET', 'POST'])
 def select_model():
@@ -383,11 +438,12 @@ def select_story():
         return redirect(url_for('main.select_story'))
     else:
         # GET request - check for mode parameter
-        mode = request.args.get('mode')
+        # mode = request.args.get('mode') - commented out as not used at the moment (testing if all still ok)
         story_ids = session.get('story_ids', [])
         
         # If mode=add or no stories selected, show the selection page
-        if mode == 'add' or not story_ids:
+        # if mode == 'add' or not story_ids:
+        if not story_ids:
             return redirect(url_for('main.see_all_stories'))
         else:
             # Otherwise show the selected stories
@@ -679,7 +735,7 @@ def start_processing(job_id):
         loop = get_event_loop()
         
         # Start processing in background
-        asyncio.run_coroutine_threadsafe(
+        task = asyncio.run_coroutine_threadsafe(
             process_llm_requests(
                 job_id, 
                 params["model_id"], 
@@ -690,6 +746,10 @@ def start_processing(job_id):
             loop
         )
         
+        job["task"] = task
+        job["status"] = "started"
+
+
         return jsonify({"status": "started"})
     
     except Exception as e:
@@ -952,13 +1012,22 @@ def view_responses():
                 
         # Redirect back to the same page (with filters preserved)
         return redirect(url_for('main.view_responses', **request.args))
+        
+    # Initialize story_ids to avoid UnboundLocalError
+    story_ids = []
     
- # GET request - handle filtering
+    # GET request - handle filtering
     provider = request.args.get('provider', '')
     model = request.args.get('model', '')
     flagged_only = 'flagged_only' in request.args
     question_id = request.args.get('question_id', '')
     story_id = request.args.get('story_id', '')
+    
+    
+    # Handle "clear stories" parameter
+    if 'clear_stories' in request.args:
+        if 'story_ids' in session:
+            session.pop('story_ids')
     
     # Date range filtering
     start_date = request.args.get('start_date', '')
@@ -984,11 +1053,22 @@ def view_responses():
     if model:
         query = query.filter(Model.name.ilike(f'%{model}%'))
     if flagged_only:
-        query = query.filter(Response.flagged_for_review == True)
+        query = query.filter(Response.flagged_for_review.is_(True))
     if question_id:
         query = query.filter(Prompt.question_id == question_id)
+    
+    # Handle story filtering - either a single story_id from URL or multiple from session
     if story_id:
+        # Single story filter from URL parameter
         query = query.filter(Prompt.story_id == story_id)
+    elif session.get('story_ids'):
+        # Multiple stories from session
+        story_ids = session.get('story_ids', [])
+        if story_ids:
+            # Convert to integers ONLY when querying the database
+            int_story_ids = [int(sid) for sid in story_ids]
+            query = query.filter(Prompt.story_id.in_(int_story_ids))
+            flash(f'Showing responses for {len(story_ids)} selected stories', 'info')
     
     # Apply date range filters
     if start_date:
@@ -1069,15 +1149,56 @@ def update_response_flag():
 
 @bp.route('/export_responses', methods=['GET'])
 def export_responses():
-    # Get the same filters you use in view_responses
     provider = request.args.get('provider', '')
     model = request.args.get('model', '')
-    # ...other filters...
+    flagged_only = 'flagged_only' in request.args
+    question_id = request.args.get('question_id', '')
+    story_id = request.args.get('story_id', '')
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
+    sort = request.args.get('sort', 'date_desc')
     
-    # Build and execute the query (same as in view_responses but without pagination)
-    query = db.session.query(Response)
-    # ...apply the same filters...
+    # Build query with the existing joins - EXACTLY as in view_responses
+    query = db.session.query(Response).\
+        join(Prompt, Response.prompt_id == Prompt.prompt_id).\
+        join(Model, Prompt.model_id == Model.model_id).\
+        join(Provider, Model.provider_id == Provider.provider_id).\
+        join(Story, Prompt.story_id == Story.story_id).\
+        join(Question, Prompt.question_id == Question.question_id)
     
+    # Apply regular filters
+    if provider:
+        query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
+    if model:
+        query = query.filter(Model.name.ilike(f'%{model}%'))
+    if flagged_only:
+        query = query.filter(Response.flagged_for_review == True)
+    if question_id:
+        query = query.filter(Prompt.question_id == question_id)
+    if story_id:
+        query = query.filter(Prompt.story_id == story_id)
+    
+    # Apply date range filters
+    if start_date:
+        try:
+            start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(Response.timestamp >= start_date_obj)
+        except ValueError:
+            flash(f"Invalid start date format: {start_date}", "warning")
+    
+    if end_date:
+        try:
+            # Add one day to include the end date fully
+            end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            query = query.filter(Response.timestamp < end_date_obj)
+        except ValueError:
+            flash(f"Invalid end date format: {end_date}", "warning")
+    
+    # Apply sorting - though it doesn't matter much for export
+    if sort == 'date_asc':
+        query = query.order_by(Response.timestamp.asc())
+    else:  # Default to date_desc
+        query = query.order_by(Response.timestamp.desc())
     # Get all matching responses
     responses = query.all()
     
@@ -1125,10 +1246,34 @@ def export_responses():
 
 @bp.route('/clear_session', methods=['GET'])
 def clear_session():
-    print("Session before printing:")
+    print("Session before clearing:")
     print(session)
-    print("Clearing session")
+    print("Clearing session and canceling background tasks")
+    
+    # Cancel and clean up any ongoing processing jobs
+    cleared_jobs = 0
+    for job_id, job in list(processing_jobs.items()):
+        try:
+            # Cancel the task if it exists and is not done
+            if "task" in job and hasattr(job["task"], "cancel") and not job["task"].done():
+                print(f"Canceling task for job {job_id}")
+                job["task"].cancel()
+                cleared_jobs += 1
+            
+            # Mark job as cancelled
+            job["status"] = "cancelled"
+            job["processing"] = False
+        except Exception as e:
+            print(f"Error canceling job {job_id}: {str(e)}")
+    
+    # Clear all processing jobs
+    processing_jobs.clear()
+    
+    # Clear session data
     session.clear()
-    flash('Session data cleared!', 'success')
-    print(session)
+    
+    flash(f'Session data cleared and {cleared_jobs} background tasks cancelled!', 'success')
+    print("Session after clearing:", session)
+    print(f"Cleared {cleared_jobs} tasks from processing_jobs")
+    
     return redirect(url_for('main.index'))

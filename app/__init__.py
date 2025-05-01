@@ -8,7 +8,7 @@ db = SQLAlchemy()
 
 def create_app(config=None): 
     # Create the Flask app
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='static')
 
     # Load configuration from config.py
     app.config.from_object('config.Config')

@@ -81,10 +81,17 @@
                 </div>
             </div>
             
-            <div class="d-grid">
+   
+            <div class="d-grid gap-2">
                 <button id="process-selected-btn" class="btn btn-success btn-lg {% if not selected_story_ids %}disabled{% endif %}" 
                         onclick="proceedToLLM()">
                     Process <span id="selected-count">{{ selected_story_ids|length }}</span> Selected Stories with LLM
+                </button>
+                
+                <!-- Add this new button -->
+                <button id="view-responses-btn" class="btn btn-info btn-lg {% if not selected_story_ids %}disabled{% endif %}" 
+                        onclick="viewSelectedResponses()">
+                    View Existing Responses for Selected Stories
                 </button>
             </div>
         </div>
@@ -432,6 +439,18 @@ function clearSelection() {
 // Function to proceed to LLM processing
 function proceedToLLM() {
     window.location.href = '{{ url_for("main.select_story") }}';
+}
+
+function viewSelectedResponses() {
+    // Get the selected story IDs from the session (they're already there)
+    const selectedCount = parseInt(document.getElementById('selected-count').textContent);
+    
+    if (selectedCount > 0) {
+        // Redirect to view_responses with story_ids filter
+        window.location.href = '{{ url_for("main.view_responses") }}'
+    } else {
+        alert('Please select at least one story first.');
+    }
 }
 </script>
 {% endblock %}
