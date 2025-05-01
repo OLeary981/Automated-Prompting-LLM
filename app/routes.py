@@ -399,7 +399,17 @@ def delete_word():
     return jsonify({'success': False, 'message': 'Invalid data provided.'}), 400
 
 @bp.route('/select_model', methods=['GET', 'POST'])
-def select_model():
+def select_model():    
+    # Check for story IDs in session
+    if not session.get('story_ids') and request.method == 'GET':
+        flash('To continue, please select one or more stories first.', 'info')
+        return redirect(url_for('main.see_all_stories'))
+    
+    # Check for question_id in session
+    if not session.get('question_id') and request.method == 'GET':
+        flash('Please select a question to ask about your stories.', 'info')
+        return redirect(url_for('main.see_all_questions'))
+
     if request.method == 'POST':
         model_id = request.form.get('model_id')
         model = db.session.query(Model).filter_by(model_id=model_id).first()
@@ -501,8 +511,33 @@ def select_question():
         return redirect(url_for('main.select_model'))  # Next step
     else:
         questions = llm_service.get_all_questions()
-        return render_template('select_question.html', questions=questions)
+        return render_template('see_all_questions.html', questions=questions)
 
+@bp.route('/update_question_selection', methods=['POST'])
+def update_question_selection():
+    data = request.get_json()
+    
+    # Check if we're clearing the selection
+    if data.get('clear'):
+        if 'question_id' in session:
+            session.pop('question_id')
+        return jsonify({'success': True})
+    
+    # Otherwise update the question selection
+    question_id = data.get('question_id')
+    if question_id:
+        # Verify the question exists
+        question = db.session.query(Question).get(question_id)
+        if question:
+            session['question_id'] = question_id
+            return jsonify({
+                'success': True,
+                'question_id': question_id,
+                'content': question.content
+            })
+        return jsonify({'success': False, 'message': 'Question not found'}), 404
+    
+    return jsonify({'success': False, 'message': 'No question_id provided'}), 400
 
 @bp.route('/select_parameters', methods=['GET', 'POST'])
 def select_parameters():
