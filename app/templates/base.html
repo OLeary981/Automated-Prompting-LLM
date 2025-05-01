@@ -2,218 +2,224 @@
 <html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}LLM Automated Prompting Tool{% endblock %}</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/static.css') }}">
-    {% block head %}{% endblock %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}LLM Automated Prompting Tool{% endblock %}</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/static.css') }}">
+  {% block head %}{% endblock %}
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">LLM Automated Prompting Tool</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.see_all_templates') }}">Templates</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.see_all_stories') }}">Stories</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.see_all_questions') }}">Questions</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.view_responses') }}">
-                            <i class="bi bi-database"></i> Response Database
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
     <div class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }}">{{ message }}</div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
-
-        {% block content %}{% endblock %}
+      <a class="navbar-brand" href="{{ url_for('main.index') }}">LLM Automated Prompting Tool</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main.see_all_templates') }}">Templates</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main.see_all_stories') }}">Stories</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main.see_all_questions') }}">Questions</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main.see_all_prompts') }}">Prompts</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main.view_responses') }}">
+              <i class="bi bi-database"></i> Response Database
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
+  </nav>
 
-    <!-- Session Preservation Modal -->
-    {% if session.get('story_ids') or session.get('question_id') or session.get('parameters') or session.get('model_id') or session.get('model') or session.get('provider') %}
-    <div class="modal fade" id="sessionPreservationModal" tabindex="-1" role="dialog" aria-labelledby="sessionPreservationModalLabel" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="sessionPreservationModalLabel">Preserve Your Work</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p>You have active work in progress. Would you like to keep:</p>
-            
-            <form>
-              {% if session.get('model_id') or session.get('model') or session.get('provider') %}
-              <div class="form-check mb-2">
-                <input type="checkbox" class="form-check-input" id="keepModel" checked>
-                <label class="form-check-label" for="keepModel">
-                  <strong>Model selection</strong>
-                  {% if session.get('model') and session.get('provider') %}
-                    <small class="text-muted d-block">{{ session.get('provider') }} / {{ session.get('model') }}</small>
-                  {% elif session.get('model') %}
-                    <small class="text-muted d-block">{{ session.get('model') }}</small>
-                  {% endif %}
-                </label>
-              </div>
-              {% endif %}
-              
-              {% if session.get('parameters') %}
-              <div class="form-check mb-2">
-                <input type="checkbox" class="form-check-input" id="keepParameters" checked>
-                <label class="form-check-label" for="keepParameters">
-                  <strong>Parameter settings</strong>
-                  <small class="text-muted d-block">Temperature, max tokens, etc.</small>
-                </label>
-              </div>
-              {% endif %}
-              
-              {% if session.get('story_ids') %}
-              <div class="form-check mb-2">
-                <input type="checkbox" class="form-check-input" id="keepStories" checked>
-                <label class="form-check-label" for="keepStories">
-                  <strong>Selected stories ({{ session.get('story_ids')|length }})</strong>
-                  <small class="text-muted d-block">Your currently selected story set</small>
-                </label>
-              </div>
-              {% endif %}
-              
-              {% if session.get('question_id') %}
-              <div class="form-check mb-2">
-                <input type="checkbox" class="form-check-input" id="keepQuestion" checked>
-                <label class="form-check-label" for="keepQuestion">
-                  <strong>Current question</strong>
-                  <small class="text-muted d-block">The question you're currently working with</small>
-                </label>
-              </div>
-              {% endif %}
-              
-              <input type="hidden" id="continueUrl" value="">
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" id="continueNavigation">Continue</button>
-          </div>
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </div>
+
+  <!-- Session Preservation Modal -->
+  {% if session.get('story_ids') or session.get('question_id') or session.get('parameters') or session.get('model_id')
+  or session.get('model') or session.get('provider') %}
+  <div class="modal fade" id="sessionPreservationModal" tabindex="-1" role="dialog"
+    aria-labelledby="sessionPreservationModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="sessionPreservationModalLabel">Preserve Your Work</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>You have active work in progress. Would you like to keep:</p>
+
+          <form>
+            {% if session.get('model_id') or session.get('model') or session.get('provider') %}
+            <div class="form-check mb-2">
+              <input type="checkbox" class="form-check-input" id="keepModel" checked>
+              <label class="form-check-label" for="keepModel">
+                <strong>Model selection</strong>
+                {% if session.get('model') and session.get('provider') %}
+                <small class="text-muted d-block">{{ session.get('provider') }} / {{ session.get('model') }}</small>
+                {% elif session.get('model') %}
+                <small class="text-muted d-block">{{ session.get('model') }}</small>
+                {% endif %}
+              </label>
+            </div>
+            {% endif %}
+
+            {% if session.get('parameters') %}
+            <div class="form-check mb-2">
+              <input type="checkbox" class="form-check-input" id="keepParameters" checked>
+              <label class="form-check-label" for="keepParameters">
+                <strong>Parameter settings</strong>
+                <small class="text-muted d-block">Temperature, max tokens, etc.</small>
+              </label>
+            </div>
+            {% endif %}
+
+            {% if session.get('story_ids') %}
+            <div class="form-check mb-2">
+              <input type="checkbox" class="form-check-input" id="keepStories" checked>
+              <label class="form-check-label" for="keepStories">
+                <strong>Selected stories ({{ session.get('story_ids')|length }})</strong>
+                <small class="text-muted d-block">Your currently selected story set</small>
+              </label>
+            </div>
+            {% endif %}
+
+            {% if session.get('question_id') %}
+            <div class="form-check mb-2">
+              <input type="checkbox" class="form-check-input" id="keepQuestion" checked>
+              <label class="form-check-label" for="keepQuestion">
+                <strong>Current question</strong>
+                <small class="text-muted d-block">The question you're currently working with</small>
+              </label>
+            </div>
+            {% endif %}
+
+            <input type="hidden" id="continueUrl" value="">
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="continueNavigation">Continue</button>
         </div>
       </div>
     </div>
-    {% endif %}
-    
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    
-    {% block scripts %}
-    <script>
-        // Automatically close alerts after 4 seconds
-        window.setTimeout(function () {
-            $(".alert").alert('close');
-        }, 3000);
-    </script>
-    {% endblock %}
-    
-    <!-- Session preservation script - OUTSIDE THE BLOCK -->
-    {% if session.get('story_ids') or session.get('question_id') or session.get('parameters') or session.get('model_id') or session.get('model') or session.get('provider') %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Skip certain links (current page, anchors, javascript, etc.)
-            function shouldSkipConfirmation(link) {
-                const href = link.getAttribute('href');
-                if (!href) return true;
-                if (href === '#') return true;
-                if (href.startsWith('javascript:')) return true;
-                if (link.classList.contains('no-confirm')) return true;
-                if (link.getAttribute('target') === '_blank') return true;
+  </div>
+  {% endif %}
 
-                // Don't show when clicking on the currently active nav item
-                if (link.parentElement.classList.contains('active')) return true;
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-                // Only trigger on external navigation (not within the app)
-                if (link.getAttribute('data-toggle') === 'modal') return true;
+  {% block scripts %}
+  <script>
+    // Automatically close alerts after 4 seconds
+    window.setTimeout(function () {
+      $(".alert").alert('close');
+    }, 3000);
+  </script>
+  {% endblock %}
 
-                return false;
-            }
+  <!-- Session preservation script - OUTSIDE THE BLOCK -->
+  {% if session.get('story_ids') or session.get('question_id') or session.get('parameters') or session.get('model_id')
+  or session.get('model') or session.get('provider') %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Skip certain links (current page, anchors, javascript, etc.)
+      function shouldSkipConfirmation(link) {
+        const href = link.getAttribute('href');
+        if (!href) return true;
+        if (href === '#') return true;
+        if (href.startsWith('javascript:')) return true;
+        if (link.classList.contains('no-confirm')) return true;
+        if (link.getAttribute('target') === '_blank') return true;
 
-            // Add click handler to all links in the navbar
-            const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
-            navLinks.forEach(function (link) {
-                link.addEventListener('click', function (e) {
-                    if (shouldSkipConfirmation(link)) return true;
+        // Don't show when clicking on the currently active nav item
+        if (link.parentElement.classList.contains('active')) return true;
 
-                    // Prevent default navigation
-                    e.preventDefault();
+        // Only trigger on external navigation (not within the app)
+        if (link.getAttribute('data-toggle') === 'modal') return true;
 
-                    // Store the URL to navigate to
-                    document.getElementById('continueUrl').value = link.getAttribute('href');
+        return false;
+      }
 
-                    // Show modal
-                    $('#sessionPreservationModal').modal('show');
-                });
-            });
+      // Add click handler to all links in the navbar
+      const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+      navLinks.forEach(function (link) {
+        link.addEventListener('click', function (e) {
+          if (shouldSkipConfirmation(link)) return true;
 
-            // Handle the continue button click
-            document.getElementById('continueNavigation').addEventListener('click', function () {
-                const targetUrl = document.getElementById('continueUrl').value;
-                let clearUrl = "{{ url_for('main.clear_session') }}?redirect_to=" + encodeURIComponent(targetUrl);
+          // Prevent default navigation
+          e.preventDefault();
 
-                // Check model option
-                {% if session.get('model_id') or session.get('model') or session.get('provider') %}
-                if (!document.getElementById('keepModel').checked) {
-                    clearUrl += '&clear_model=true';
-                }
-                {% endif %}
+          // Store the URL to navigate to
+          document.getElementById('continueUrl').value = link.getAttribute('href');
 
-                // Check each option and add parameters if needed
-                {% if session.get('parameters') %}
-                if (!document.getElementById('keepParameters').checked) {
-                    clearUrl += '&clear_parameters=true';
-                }
-                {% endif %}
-
-                {% if session.get('story_ids') %}
-                if (!document.getElementById('keepStories').checked) {
-                    clearUrl += '&clear_stories=true';
-                }
-                {% endif %}
-
-                {% if session.get('question_id') %}
-                if (!document.getElementById('keepQuestion').checked) {
-                    clearUrl += '&clear_question=true';
-                }
-                {% endif %}
-
-                // Close modal and navigate to our clear_session route with redirection
-                $('#sessionPreservationModal').modal('hide');
-                window.location.href = clearUrl;
-            });
+          // Show modal
+          $('#sessionPreservationModal').modal('show');
         });
-    </script>
-    {% endif %}
+      });
+
+      // Handle the continue button click
+      document.getElementById('continueNavigation').addEventListener('click', function () {
+        const targetUrl = document.getElementById('continueUrl').value;
+        let clearUrl = "{{ url_for('main.clear_session') }}?redirect_to=" + encodeURIComponent(targetUrl);
+
+        // Check model option
+        {% if session.get('model_id') or session.get('model') or session.get('provider') %}
+        if (!document.getElementById('keepModel').checked) {
+          clearUrl += '&clear_model=true';
+        }
+        {% endif %}
+
+        // Check each option and add parameters if needed
+        {% if session.get('parameters') %}
+        if (!document.getElementById('keepParameters').checked) {
+          clearUrl += '&clear_parameters=true';
+        }
+        {% endif %}
+
+        {% if session.get('story_ids') %}
+        if (!document.getElementById('keepStories').checked) {
+          clearUrl += '&clear_stories=true';
+        }
+        {% endif %}
+
+        {% if session.get('question_id') %}
+        if (!document.getElementById('keepQuestion').checked) {
+          clearUrl += '&clear_question=true';
+        }
+        {% endif %}
+
+        // Close modal and navigate to our clear_session route with redirection
+        $('#sessionPreservationModal').modal('hide');
+        window.location.href = clearUrl;
+      });
+    });
+  </script>
+  {% endif %}
 </body>
 
 </html>
