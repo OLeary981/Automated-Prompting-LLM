@@ -553,7 +553,37 @@ def select_parameters():
         model_id = session.get('model_id')
         model = llm_service.get_model_by_id(model_id)
         parameters = model.parameters
-        print("Time to select parameters")
+        saved_parameters = session.get('parameters', {})
+        
+        # Check if we have saved parameters that match the current model's parameters
+        # If so, use them instead of defaults
+        if saved_parameters:
+            print("Found saved parameters in session:", saved_parameters)
+            # Create a new parameters dict with saved values where available
+            for param_name, param_details in parameters.items():
+                if param_name in saved_parameters:
+                    # Convert the saved value to the appropriate type
+                    saved_value = saved_parameters[param_name]
+                    if param_details['type'] == 'float':
+                        try:
+                            saved_value = float(saved_value)
+                            # Check if saved value is within allowed range
+                            if saved_value >= param_details['min_value'] and saved_value <= param_details['max_value']:
+                                param_details['default'] = saved_value
+                        except (ValueError, TypeError):
+                            # Invalid saved value, stick with the default
+                            pass
+                    elif param_details['type'] == 'int':
+                        try:
+                            saved_value = int(saved_value)
+                            # Check if saved value is within allowed range
+                            if saved_value >= param_details['min_value'] and saved_value <= param_details['max_value']:
+                                param_details['default'] = saved_value
+                        except (ValueError, TypeError):
+                            # Invalid saved value, stick with the default
+                            pass
+        
+        print("Using parameters:", parameters)
         return render_template('select_parameters.html', parameters=parameters)
 
 def run_async_loop():
