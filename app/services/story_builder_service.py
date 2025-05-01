@@ -3,7 +3,7 @@ import re
 import time
 from app import db
 from app.models import Template, Story, Question, Word, Field, StoryCategory
-import llm as llm
+#import llm as llm
 
 def get_all_templates():
     return db.session.query(Template).all()
@@ -39,6 +39,54 @@ def add_words_to_field(field_name, new_words):
             if field not in existing_word.fields:
                 existing_word.fields.append(field)
     db.session.commit()
+
+def delete_word_from_field(field_name, word):
+    """
+    Remove a word from a field. If the word is not associated with any other fields,
+    it will be deleted from the database entirely.
+    
+    Args:
+        field_name (str): The name of the field
+        word (str): The word to remove
+        
+    Returns:
+        bool: True if successful
+        
+    Raises:
+        ValueError: If the field or word is not found, or if the word is not associated with the field
+    """
+    # Find the field in the database
+    field = db.session.query(Field).filter_by(field=field_name).first()
+    if not field:
+        raise ValueError(f"Field '{field_name}' not found.")
+
+    # Find the word in the database
+    word_entry = db.session.query(Word).filter_by(word=word).first()
+    if not word_entry:
+        raise ValueError(f"Word '{word}' not found.")
+    
+    # Check if the word is associated with the field
+    if word_entry not in field.words:
+        raise ValueError(f"Word '{word}' is not associated with field '{field_name}'.")
+    
+    # Remove the word from the field's collection
+    field.words.remove(word_entry)
+    
+    # Check if the word is still associated with any fields
+    remaining_fields = len(word_entry.fields)
+    
+    # If this was the last field association, delete the word entirely
+    if remaining_fields == 0:
+        print(f"Word '{word}' is no longer associated with any fields. Deleting it from the database.")
+        db.session.delete(word_entry)
+    else:
+        print(f"Word '{word}' is still associated with {remaining_fields} other fields. Keeping it in the database.")
+    
+    # Commit the changes
+    db.session.commit()
+    
+    print(f"Successfully removed word '{word}' from field '{field_name}'")
+    return True
 
 def generate_permutations(fields):
     """Generate all possible permutations of field values."""

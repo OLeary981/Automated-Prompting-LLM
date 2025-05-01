@@ -6,10 +6,10 @@
 <div class="container">
     <h1>Generate Stories</h1>
     
-    <form method="GET" action="{{ url_for('main.generate_stories') }}" id="template-form">
+    <form method="POST" action="{{ url_for('main.generate_stories') }}" id="template-form">
         <div class="form-group">
             <label for="template">Select a Template:</label>
-            <select class="form-control" id="template" name="template_id" onchange="this.form.submit()">
+            <select class="form-control" id="template" name="template_id">
                 <option value="">Select a template</option>
                 {% for template in templates %}
                 <option value="{{ template.template_id }}" {% if selected_template_id|string == template.template_id|string %}selected{% endif %}>
@@ -19,6 +19,12 @@
             </select>
         </div>
     </form>
+    
+    <script>
+    document.getElementById('template').addEventListener('change', function() {
+        document.getElementById('template-form').submit();
+    });
+    </script>
     
     {% if template %}
     <div class="mt-4">
@@ -41,14 +47,34 @@
                 <div class="col-md-6">                    
                     <div class="card mb-4">
                         <div class="card-header">Available Words</div>
-                        <div class="card-body">
+                        <div class="card-body">                            
                             <div id="available-words-container">
                                 <!-- Field categories will be created here by JavaScript -->
+                            </div>
+                            <small class="text-muted">Drag words from here to a field to include them in your stories</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="wordActionModal" tabindex="-1" role="dialog" aria-labelledby="wordActionModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="wordActionModalLabel">Remove Word</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Do you want to delete this word from the database or just remove it from this group of generated stories?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-danger" id="deleteWordBtn" data-dismiss="modal">Delete from Database</button>
+                                <button type="button" class="btn btn-primary" id="removeWordBtn" data-dismiss="modal">Remove from Group</button>
                             </div>
                         </div>
                     </div>
                 </div>
-                
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-header">Selected Fields</div>
@@ -79,7 +105,7 @@
                                     </div>
                                     {% endfor %}
                                 </div>
-                                <small class="text-muted">Click a word to remove it or drag to reposition</small>
+                                <small class="text-muted">Click a word to see options for removal</small>
                             </div>
                             {% endfor %}
                             
@@ -107,7 +133,7 @@
                                     
                                     <div id="field-{{ field_name }}" class="word-container field-words" 
                                          data-field="{{ field_name }}"></div>
-                                    <small class="text-muted">Click a word to remove it or drag to reposition</small>
+                                    <small class="text-muted">Click a word to see options for removal</small>
                                 </div>
                                 {% endfor %}
                             </div>
@@ -191,366 +217,7 @@
     </div>
     {% endif %}
 </div>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log("Document loaded - initializing word management");
-        
-        // Store all words in a common pool with their original field
-        const allWords = new Map(); // Map of word -> original field
-        const fieldData = {};
-        
-        // Initialize field data with current values
-        console.log("Initializing field data from database words...");
-        document.querySelectorAll('.field-words').forEach(fieldDiv => {
-            const fieldName = fieldDiv.dataset.field;
-            console.log(`Found field: ${fieldName}`);
-            fieldData[fieldName] = [];
-            
-            const wordElements = fieldDiv.querySelectorAll('.word-badge');
-            console.log(`Found ${wordElements.length} words in field ${fieldName}`);
-            
-            wordElements.forEach(wordEl => {
-                const word = wordEl.dataset.word;
-                fieldData[fieldName].push(word);
-                // Track the original field for each word
-                allWords.set(word, fieldName);
-                
-                // Initialize event handlers for existing word badges
-                initializeWordBadge(wordEl, word);
-            });
-        });
-        
-        // Add this function to initialize existing word badges
-        function initializeWordBadge(wordEl, word) {
-            // Add event listeners for drag operations
-            wordEl.addEventListener('dragstart', handleDragStart);
-            wordEl.addEventListener('dragend', handleDragEnd);
-            
-            // Add click handler for the whole badge
-            wordEl.addEventListener('click', function(event) {
-                // Only handle clicks if they're not on the remove button
-                const removeButton = wordEl.querySelector('.word-remove');
-                if (!removeButton.contains(event.target) && event.target !== removeButton) {
-                    const parentContainer = wordEl.parentNode;
-                    
-                    if (parentContainer.classList.contains('field-words')) {
-                        console.log(`Removing word "${word}" from field "${parentContainer.dataset.field}" (click)`);
-                        // Remove from field data
-                        const fieldName = parentContainer.dataset.field;
-                        const wordIndex = fieldData[fieldName].indexOf(word);
-                        if (wordIndex !== -1) {
-                            fieldData[fieldName].splice(wordIndex, 1);
-                        }
-                        
-                        // Move to available words
-                        wordEl.remove();
-                        updateAvailableWords();
-                        updateFieldDataJson();
-                    }
-                }
-            });
-            
-            // Add click handler for remove button
-            const removeButton = wordEl.querySelector('.word-remove');
-            if (removeButton) {
-                removeButton.addEventListener('click', function(event) {
-                    event.stopPropagation();
-                    const parentContainer = wordEl.parentNode;
-                    
-                    if (parentContainer.classList.contains('field-words')) {
-                        console.log(`Removing word "${word}" from field "${parentContainer.dataset.field}" (x button)`);
-                        // Remove from field data
-                        const fieldName = parentContainer.dataset.field;
-                        const wordIndex = fieldData[fieldName].indexOf(word);
-                        if (wordIndex !== -1) {
-                            fieldData[fieldName].splice(wordIndex, 1);
-                        }
-                    }
-                    
-                    // Move to available words
-                    wordEl.remove();
-                    updateAvailableWords();
-                    updateFieldDataJson();
-                }); 
-            }
-        }
-        
-        // Populate available words by category
-        function updateAvailableWords() {
-            console.log("Updating available words...");
-            const container = document.getElementById('available-words-container');
-            container.innerHTML = '';
-            
-            // Get all words currently in any field
-            const usedWords = new Set();
-            Object.values(fieldData).forEach(words => {
-                words.forEach(word => usedWords.add(word));
-            });
-            
-            // Group available words by their original field
-            const fieldGroups = {};
-            
-            // Add unused words to their respective field groups
-            allWords.forEach((fieldName, word) => {
-                if (!usedWords.has(word)) {
-                    if (!fieldGroups[fieldName]) {
-                        fieldGroups[fieldName] = [];
-                    }
-                    fieldGroups[fieldName].push(word);
-                }
-            });
-            
-            // Create a section for each field with available words
-            Object.keys(fieldGroups).sort().forEach(fieldName => {
-                const words = fieldGroups[fieldName];
-                if (words.length > 0) {
-                    console.log(`Creating available words section for field ${fieldName} with ${words.length} words`);
-                    // Create field header
-                    const fieldHeader = document.createElement('h6');
-                    fieldHeader.className = 'mt-3 mb-2 border-bottom pb-1';
-                    fieldHeader.textContent = fieldName;
-                    container.appendChild(fieldHeader);
-                    
-                    // Create word container for this field
-                    const wordContainer = document.createElement('div');
-                    wordContainer.className = 'word-container';
-                    wordContainer.id = `available-words-${fieldName}`;
-                    
-                    // Add words to this container
-                    words.forEach(word => {
-                        const wordEl = createWordBadge(word);
-                        wordEl.dataset.originalField = fieldName;
-                        wordContainer.appendChild(wordEl);
-                    });
-                    
-                    container.appendChild(wordContainer);
-                }
-            });
-            
-            // If there are no available words at all, display a message
-            if (Object.keys(fieldGroups).length === 0) {
-                const noWordsMsg = document.createElement('p');
-                noWordsMsg.className = 'text-muted text-center py-3';
-                noWordsMsg.textContent = 'All words are currently assigned to fields.';
-                container.appendChild(noWordsMsg);
-            }
-        }
-        
-        function createWordBadge(word) {
-            const wordEl = document.createElement('div');
-            wordEl.className = 'word-badge';
-            wordEl.draggable = true;
-            wordEl.dataset.word = word;
-            wordEl.innerHTML = `${word} <span class="word-remove">&times;</span>`;
-            
-            // Initialize the word badge with all event handlers
-            initializeWordBadge(wordEl, word);
-            
-            return wordEl;
-        }
-        
-        // Add drag and drop functionality
-        function handleDragStart(e) {
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', e.target.dataset.word);
-            e.target.classList.add('dragging');
-        }
-        
-        function handleDragEnd(e) {
-            e.target.classList.remove('dragging');
-        }
-        
-        document.querySelectorAll('.word-container').forEach(container => {
-            container.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-            });
-            
-            container.addEventListener('dragenter', function(e) {
-                e.preventDefault();
-                this.classList.add('drag-over');
-            });
-            
-            container.addEventListener('dragleave', function(e) {
-                this.classList.remove('drag-over');
-            });
-            
-            container.addEventListener('drop', function(e) {
-                e.preventDefault();
-                this.classList.remove('drag-over');
-                
-                const word = e.dataTransfer.getData('text/plain');
-                const draggingEl = document.querySelector('.dragging');
-                
-                if (draggingEl) {
-                    draggingEl.classList.remove('dragging');
-                    
-                    // Remove from source container's data
-                    const sourceContainer = draggingEl.parentNode;
-                    if (sourceContainer.classList.contains('field-words')) {
-                        const sourceField = sourceContainer.dataset.field;
-                        const wordIndex = fieldData[sourceField].indexOf(word);
-                        if (wordIndex !== -1) {
-                            fieldData[sourceField].splice(wordIndex, 1);
-                        }
-                    }
-                    
-                    // Add to target container's data if it's a field
-                    if (container.classList.contains('field-words')) {
-                        const targetField = container.dataset.field;
-                        fieldData[targetField].push(word);
-                    }
-                    
-                    // Move the element
-                    draggingEl.remove();
-                    
-                    // Create a new element in the target container
-                    const newWordEl = createWordBadge(word);
-                    container.appendChild(newWordEl);
-                    
-                    // Update available words
-                    updateAvailableWords();
-                    updateFieldDataJson();
-                }
-            });
-        });
-        
-        // Handle adding new words to fields
-        document.querySelectorAll('.add-words-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const fieldName = btn.dataset.field;
-                const input = document.querySelector(`.new-words[data-field="${fieldName}"]`);
-                const words = input.value.split(',').map(w => w.trim()).filter(w => w);
-                
-                if (words.length) {
-                    const fieldContainer = document.getElementById(`field-${fieldName}`);
-                    
-                    words.forEach(word => {
-                        // Add word to field data
-                        if (!fieldData[fieldName]) {
-                            fieldData[fieldName] = [];
-                        }
-                        fieldData[fieldName].push(word);
-                        
-                        // Track the original field for each word
-                        allWords.set(word, fieldName);
-                        
-                        // Create word badge
-                        const wordEl = createWordBadge(word);
-                        fieldContainer.appendChild(wordEl);
-                    });
-                    
-                    // Clear input
-                    input.value = '';
-                    updateFieldDataJson();
-                }
-            });
-        });
-        
-        // Handle clearing fields
-        document.querySelectorAll('.clear-field-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const fieldName = btn.dataset.field;
-                const fieldContainer = document.getElementById(`field-${fieldName}`);
-                
-                // Clear the field container
-                fieldContainer.innerHTML = '';
-                
-                // Clear field data
-                fieldData[fieldName] = [];
-                
-                // Update available words
-                updateAvailableWords();
-                updateFieldDataJson();
-            });
-        });
-        
-        // Function to calculate permutations
-        function calculatePermutations(fieldData) {
-            console.log("Calculating permutations based on current fields:", fieldData);
-            
-            // Check if any required field has no words
-            const emptyFieldsExist = Object.values(fieldData).some(words => words.length === 0);
-            const emptyWarning = document.getElementById('empty-fields-warning');
-            
-            if (emptyFieldsExist) {
-                // If any field has no words, we can't generate any stories
-                document.getElementById('permutation-count').textContent = '0';
-                emptyWarning.style.display = 'block';
-                return 0;
-            } else {
-                emptyWarning.style.display = 'none';
-            }
-            
-            // Calculate the number of permutations by multiplying the number of words in each field
-            let totalPermutations = 1;
-            Object.values(fieldData).forEach(words => {
-                totalPermutations *= words.length;
-            });
-            
-            // Update the UI
-            const countElement = document.getElementById('permutation-count');
-            countElement.textContent = totalPermutations.toLocaleString();
-            
-            // Show warning if there are too many permutations
-            const warningElement = document.getElementById('permutation-warning');
-            if (totalPermutations > 100) {
-                warningElement.style.display = 'block';
-            } else {
-                warningElement.style.display = 'none';
-            }
-            
-            return totalPermutations;
-        }
-        
-        // Update hidden field with current field data and calculate permutations
-        function updateFieldDataJson() {
-            document.getElementById('field-data-json').value = JSON.stringify(fieldData);
-            
-            // Calculate and update the permutation count
-            calculatePermutations(fieldData);
-        }
-        
-        // Initialize field data JSON and calculate initial permutations
-        updateFieldDataJson();
-        updateAvailableWords();
-    });
-    document.getElementById('add-new-category-btn').addEventListener('click', function() {
-    const input = document.getElementById('new_category');
-    const categoryName = input.value.trim();
-    
-    if (categoryName) {
-        // Create a hidden input for the new category
-        const hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = 'new_categories';
-        hiddenInput.value = categoryName;
-        
-        // Create a visual representation of the category
-        const badge = document.createElement('span');
-        badge.className = 'badge bg-info me-2 mb-1';
-        badge.innerHTML = `${categoryName} <i class="fas fa-times-circle"></i>`;
-        
-        // Add a remove button
-        const removeBtn = document.createElement('i');
-        removeBtn.className = 'ms-1 fas fa-times-circle';
-        removeBtn.style.cursor = 'pointer';
-        badge.appendChild(removeBtn);
-        
-        // Add remove functionality
-        removeBtn.addEventListener('click', function() {
-            badge.remove();
-            hiddenInput.remove();
-        });
-        
-        // Add to the DOM
-        document.getElementById('added-categories').appendChild(badge);
-        document.getElementById('fields-form').appendChild(hiddenInput);
-        
-        // Clear the input
-        input.value = '';
-    }
-});
+<script src="{{ url_for('static', filename='js/story_field_manager.js') }}" defer></script>
 
-</script>
+
 {% endblock %}

@@ -92,8 +92,10 @@
                 <td>{{ template.template_id }}</td>
                 <td>{{ template.content }}</td>
                 <td>
-                    <a href="{{ url_for('main.generate_stories', template_id=template.template_id) }}"
-                        class="btn btn-sm btn-primary">Generate Stories</a>
+                    <form method="POST" action="{{ url_for('main.generate_stories') }}" class="d-inline">
+                        <input type="hidden" name="template_id" value="{{ template.template_id }}">
+                        <button type="submit" class="btn btn-sm btn-primary">Generate Stories</button>
+                    </form>
                 </td>
             </tr>
             {% else %}
