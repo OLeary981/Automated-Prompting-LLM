@@ -8,8 +8,11 @@
 
     <!-- Display model, provider, and question at the top -->
     <div class="card mt-4 mb-4">
-        <div class="card-header">
-            Model and Provider
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Model and Provider</span>
+            <a href="{{ url_for('main.select_model') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-arrow-repeat"></i> Try with Different Model
+            </a>
         </div>
         <div class="card-body">
             <p><strong>Model:</strong> {{ model }}</p>
@@ -22,14 +25,17 @@
     <div class="row">
         {% for story, response_detail in combined_data %}
         <div class="col-lg-6 mb-4">
-            <div class="card h-100 {% if response_detail.flagged_for_review %}border-danger{% endif %}">
-                <div class="card-header d-flex justify-content-between align-items-center {% if response_detail.flagged_for_review %}bg-danger bg-opacity-10{% endif %}">
+            <!-- Change border-danger to a custom border style for flagged items -->
+            <div class="card h-100 {% if response_detail.flagged_for_review %}border border-danger{% endif %}">
+                <!-- Replace bg-danger bg-opacity-10 with a Bootstrap 4 compatible light red background -->
+                <div class="card-header d-flex justify-content-between align-items-center {% if response_detail.flagged_for_review %}bg-light text-danger{% endif %}">
                     <div>
                         <strong>Story ID:</strong> {{ story.story_id }}
                     </div>
                     <div>
                         {% if response_detail.flagged_for_review %}
-                            <span class="badge bg-danger">Flagged</span>
+                            <!-- Replace bg-danger with badge-danger for Bootstrap 4 -->
+                            <span class="badge badge-danger">Flagged</span>
                         {% endif %}
                     </div>
                 </div>

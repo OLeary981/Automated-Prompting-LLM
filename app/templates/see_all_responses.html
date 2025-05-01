@@ -57,13 +57,15 @@
         <div class="collapse show" id="filterCollapse">
             <div class="card-body">
                 <form method="GET" action="{{ url_for('main.view_responses') }}" class="row gy-3 gx-4">
+                    <!-- First row: Provider, Model, Question -->
+                    
                     <div class="col-md-3">
                         <label for="provider" class="form-label">Provider:</label>
+                        <div class="w-100"></div>
                         <select class="form-select form-select-sm" id="provider" name="provider">
                             <option value="">All Providers</option>
                             {% for provider in providers %}
-                            <option value="{{ provider.provider_name }}" {% if
-                                current_filters.provider==provider.provider_name %}selected{% endif %}>
+                            <option value="{{ provider.provider_name }}" {% if current_filters.provider==provider.provider_name %}selected{% endif %}>
                                 {{ provider.provider_name }}
                             </option>
                             {% endfor %}
@@ -71,41 +73,47 @@
                     </div>
                     <div class="col-md-3">
                         <label for="model" class="form-label">Model:</label>
+                        <div class="w-100"></div>
                         <select class="form-select form-select-sm" id="model" name="model">
                             <option value="">All Models</option>
                             {% for model in models %}
-                            <option value="{{ model.name }}" {% if current_filters.model==model.name %}selected{% endif
-                                %}>
+                            <option value="{{ model.name }}" {% if current_filters.model==model.name %}selected{% endif %}>
                                 {{ model.name }}
                             </option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <label for="question_id" class="form-label">Question:</label>
+                        <div class="w-100"></div>
                         <select class="form-select form-select-sm" id="question_id" name="question_id">
                             <option value="">All Questions</option>
                             {% for question in questions %}
-                            <option value="{{ question.question_id }}" {% if
-                                current_filters.question_id|string==question.question_id|string %}selected{% endif %}>
+                            <option value="{{ question.question_id }}" {% if current_filters.question_id|string==question.question_id|string %}selected{% endif %}>
                                 {{ question.content|truncate(30) }}
                             </option>
                             {% endfor %}
                         </select>
                     </div>
-                    <!-- Date Filters -->
+                    
+                    <div class="w-100" style="margin-bottom: 1.5rem;"></div>
+
+                    <!-- Second row: Dates and Sort -->
                     <div class="col-md-3">
                         <label for="start_date" class="form-label">From Date:</label>
+                        <div class="w-100"></div>
                         <input type="date" class="form-control form-control-sm" id="start_date" name="start_date"
                             value="{{ current_filters.start_date }}">
                     </div>
                     <div class="col-md-3">
                         <label for="end_date" class="form-label">To Date:</label>
+                        <div class="w-100"></div>
                         <input type="date" class="form-control form-control-sm" id="end_date" name="end_date"
                             value="{{ current_filters.end_date }}">
                     </div>
                     <div class="col-md-3">
                         <label for="sort" class="form-label">Sort Order:</label>
+                        <div class="w-100"></div>
                         <select class="form-select form-select-sm" id="sort" name="sort">
                             <option value="date_desc" {% if current_filters.sort=='date_desc' %}selected{% endif %}>
                                 Newest First</option>
@@ -121,10 +129,11 @@
                             <label class="form-check-label" for="flagged_only">Show only flagged responses</label>
                         </div>
                     </div>
+
                     <!-- Buttons -->
                     <div class="col-md-12 d-flex justify-content-start mt-3">
-                        <button type="submit" class="btn btn-sm btn-primary me-3">Apply Filters</button>
-                        <a href="{{ url_for('main.view_responses') }}" class="btn btn-sm btn-secondary me-3">Reset</a>
+                        <button type="submit" class="btn btn-sm btn-primary mr-3">Apply Filters</button>
+                        <a href="{{ url_for('main.view_responses') }}" class="btn btn-sm btn-secondary mr-3">Reset</a>
                         <a href="{{ url_for('main.export_responses') }}" class="btn btn-sm btn-success"
                             onclick="this.href = this.href + window.location.search;">Export CSV</a>
                     </div>
