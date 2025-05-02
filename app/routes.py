@@ -1122,72 +1122,19 @@ def llm_response():
 
 @bp.route('/view_responses', methods=['GET', 'POST'])
 def view_responses():
-    # Existing POST method handling stays the same
+    # Handle POST requests as before
     if request.method == 'POST':
         # Your existing POST handling code
         return redirect(url_for('main.view_responses', **request.args))
+    
+    # Clear flags processing
+    if 'clear_stories' in request.args and 'story_ids' in session:
+        session.pop('story_ids')
         
-    # Initialize variables
-    story_ids = []
+    if 'clear_responses' in request.args and 'response_ids' in session:
+        session.pop('response_ids')
     
-    # GET request - handle filtering
-    provider = request.args.get('provider', '')
-    model = request.args.get('model', '')
-    flagged_only = 'flagged_only' in request.args
-    question_id = request.args.get('question_id', '')
-    story_id = request.args.get('story_id', '')
-    
-    # NEW: Handle source parameter and display context information
-    source = request.args.get('source', '')
-    source_id = None
-    source_info = None
-    
-    if source == 'prompt':
-        prompt_id = request.args.get('prompt_id')
-        if prompt_id:
-            source_id = prompt_id
-            # Get the prompt to display information
-            prompt = db.session.query(Prompt).get(int(prompt_id))
-            if prompt:
-                source_info = f"Prompt #{prompt_id} ({prompt.model.name})"
-    elif source == 'story':
-        story_count = request.args.get('story_count', '1')
-        story_id_param = request.args.get('story_id')
-        
-        # For multiple stories
-        if story_count and int(story_count) > 1:
-            source_info = f"{story_count} Selected Stories"
-        # For single story
-        elif story_id_param:
-            source_id = story_id_param
-            # Get the story to display information
-            story = db.session.query(Story).get(int(story_id_param))
-            if story:
-                # Create a preview of story content (truncated if needed)
-                content_preview = story.content[:50] + '...' if len(story.content) > 50 else story.content
-                source_info = f"Story #{story_id_param} ({content_preview})"
-    
-    # Handle "clear responses" parameter to reset response_ids in session
-    if 'clear_responses' in request.args:
-        if 'response_ids' in session:
-            session.pop('response_ids')
-    
-    # Handle "clear stories" parameter
-    if 'clear_stories' in request.args:
-        if 'story_ids' in session:
-            session.pop('story_ids')
-    
-    # Date range filtering
-    start_date = request.args.get('start_date', '')
-    end_date = request.args.get('end_date', '')
-    
-    # Sorting option
-    sort = request.args.get('sort', 'date_desc')
-    
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 20, type=int)
-    
-    # Build query with the existing joins
+    # Build the base query
     query = db.session.query(Response).\
         join(Prompt, Response.prompt_id == Prompt.prompt_id).\
         join(Model, Prompt.model_id == Model.model_id).\
@@ -1195,10 +1142,53 @@ def view_responses():
         join(Story, Prompt.story_id == Story.story_id).\
         join(Question, Prompt.question_id == Question.question_id)
     
-    # Check for response_ids in session (from view_prompt_responses or view_story_responses)
-    response_ids = session.get('response_ids', [])
+    # Get all filter parameters
+    provider = request.args.get('provider', '')
+    model = request.args.get('model', '')
+    flagged_only = 'flagged_only' in request.args
+    question_id = request.args.get('question_id', '')
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
+    sort = request.args.get('sort', 'date_desc')
     
-    # First apply base filters - these will always be applied
+    # SOURCE-based filtering (primary selection)
+    source = request.args.get('source', '')
+    source_id = None
+    source_info = None
+    
+    # Apply source-based filtering
+    response_ids = session.get('response_ids', [])
+    if response_ids and 'clear_responses' not in request.args:
+        # Filter by specific responses (from prompt or story)
+        int_response_ids = [int(rid) for rid in response_ids]
+        query = query.filter(Response.response_id.in_(int_response_ids))
+        
+        # Handle source information for display
+        if source == 'prompt':
+            prompt_id = request.args.get('prompt_id')
+            if prompt_id:
+                source_id = prompt_id
+                prompt = db.session.query(Prompt).get(int(prompt_id))
+                if prompt:
+                    source_info = f"Prompt #{prompt_id} ({prompt.model.name})"
+        elif source == 'story':
+            story_count = request.args.get('story_count', '1')
+            story_id_param = request.args.get('story_id')
+            
+            if story_count and int(story_count) > 1:
+                source_info = f"{story_count} Selected Stories"
+            elif story_id_param:
+                source_id = story_id_param
+                story = db.session.query(Story).get(int(story_id_param))
+                if story:
+                    content_preview = story.content[:50] + '...' if len(story.content) > 50 else story.content
+                    source_info = f"Story #{story_id_param} ({content_preview})"
+    # Otherwise check for story_ids in session (multiple stories selected)
+    elif session.get('story_ids') and 'clear_stories' not in request.args:
+        story_ids = [int(sid) for sid in session.get('story_ids', [])]
+        query = query.filter(Prompt.story_id.in_(story_ids))
+    
+    # SECONDARY FILTERING - Always apply regardless of source selection
     if provider:
         query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
     if model:
@@ -1208,39 +1198,44 @@ def view_responses():
     if question_id:
         query = query.filter(Prompt.question_id == question_id)
     
-    # If we have response_ids in session and no clear_responses parameter, 
-    # ADDITIONALLY filter the responses based on those IDs
-    if response_ids and 'clear_responses' not in request.args:
-        # Convert the response IDs to integers for the query
-        int_response_ids = [int(rid) for rid in response_ids]
-        query = query.filter(Response.response_id.in_(int_response_ids))
-        
-    # Handle story filtering - either a single story_id from URL or multiple from session
-    if story_id:
-        # Single story filter from URL parameter
-        query = query.filter(Prompt.story_id == int(story_id))
-    elif session.get('story_ids') and 'clear_stories' not in request.args:
-        # Multiple stories from session
-        story_ids = session.get('story_ids', [])
-        if story_ids:
-            # Convert to integers ONLY when querying the database
-            int_story_ids = [int(sid) for sid in story_ids]
-            query = query.filter(Prompt.story_id.in_(int_story_ids))
+    # Apply date filtering
+    if start_date:
+        try:
+            start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(Response.timestamp >= start_date_obj)
+        except ValueError:
+            flash(f"Invalid start date format: {start_date}", "warning")
     
-    # Apply date range filters and sorting as before...
-    # [Your existing code for date filtering and sorting]
-
-    # Paginate results
+    if end_date:
+        try:
+            # Add 1 day to include the end date fully
+            end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            query = query.filter(Response.timestamp < end_date_obj)
+        except ValueError:
+            flash(f"Invalid end date format: {end_date}", "warning")
+    
+    # Apply sorting
+    if sort == 'date_asc':
+        query = query.order_by(Response.timestamp.asc())
+    else:  # Default to date_desc
+        query = query.order_by(Response.timestamp.desc())
+    
+    # Pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # Number of responses per page
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-    responses = pagination.items
+    responses = pagination.items  
     
     # Get data for filter dropdowns
     providers = db.session.query(Provider).all()
     models = db.session.query(Model).all()
     questions = db.session.query(Question).all()
     
-    # Detect if we're using a specific filter
+    # Track if we're filtering by specific responses
     has_response_filter = bool(response_ids and 'clear_responses' not in request.args)
+    
+    # Track if we have secondary filter criteria applied
+    has_secondary_filters = any([provider, model, flagged_only, question_id, start_date, end_date])
     
     return render_template('see_all_responses.html', 
                           responses=responses,
@@ -1249,6 +1244,7 @@ def view_responses():
                           models=models,
                           questions=questions,
                           has_response_filter=has_response_filter,
+                          has_secondary_filters=has_secondary_filters,
                           source=source,
                           source_id=source_id,
                           source_info=source_info,
@@ -1257,7 +1253,7 @@ def view_responses():
                               'model': model,
                               'flagged_only': flagged_only,
                               'question_id': question_id,
-                              'story_id': story_id,
+                              'story_id': request.args.get('story_id', ''),
                               'start_date': start_date,
                               'end_date': end_date,
                               'sort': sort

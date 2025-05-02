@@ -10,63 +10,72 @@
 {% if has_response_filter or session.get('story_ids') %}
 <div class="alert alert-info">
     <div class="d-flex justify-content-between align-items-center">
-        {% if source == 'prompt' %}
-            <span>
-                <i class="bi bi-funnel-fill"></i> 
-                <strong>Prompt Filter Active:</strong> Showing responses for {{ source_info }}
-            </span>
-            <a href="{{ url_for('main.see_all_prompts') }}" class="btn btn-sm btn-outline-secondary me-2">
-                <i class="bi bi-list"></i> Back to Prompts
-            </a>
-        {% elif source == 'story' %}
-            <span>
-                <i class="bi bi-funnel-fill"></i> 
-                <strong>Story Filter Active:</strong> Showing responses for {{ source_info }}
-            </span>
-            <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-sm btn-outline-secondary me-2">
-                <i class="bi bi-list"></i> Back to Stories
-            </a>
-        {% elif session.get('story_ids') %}
-            <span>
-                <i class="bi bi-funnel-fill"></i> 
-                <strong>Story Selection Active:</strong> {{ session.get('story_ids')|length }} stories selected
-            </span>
-            <div>
-                <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-sm btn-outline-secondary me-2">
+        <div>
+            {% if source == 'prompt' %}
+                <span>
+                    <i class="bi bi-funnel-fill"></i> 
+                    <strong>Primary Selection:</strong> Responses for {{ source_info }}
+                </span>
+                <a href="{{ url_for('main.see_all_prompts') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="bi bi-list"></i> Back to Prompts
+                </a>
+            {% elif source == 'story' %}
+                <span>
+                    <i class="bi bi-funnel-fill"></i> 
+                    <strong>Primary Selection:</strong> Responses for {{ source_info }}
+                </span>
+                <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="bi bi-list"></i> Back to Stories
+                </a>
+            {% elif session.get('story_ids') %}
+                <span>
+                    <i class="bi bi-funnel-fill"></i> 
+                    <strong>Primary Selection:</strong> {{ session.get('story_ids')|length }} stories selected
+                </span>
+                <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-sm btn-outline-secondary ms-2">
                     <i class="bi bi-pencil-square"></i> Modify Selection
                 </a>
-                <a href="{{ url_for('main.view_responses', clear_stories=1) }}" class="btn btn-sm btn-outline-danger">
-                    <i class="bi bi-x"></i> Clear Selection
-                </a>
-            </div>
-        {% endif %}
-        
-        {% if has_response_filter %}
-        <a href="{{ url_for('main.view_responses', clear_responses=true) }}" class="btn btn-sm btn-outline-danger">
-            <i class="bi bi-x"></i> Clear Filter
-        </a>
-        {% endif %}
+            {% endif %}
+        </div>
+        <div>
+            <a href="{{ url_for('main.view_responses', clear_stories=true, clear_responses=true) }}" 
+               class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-x"></i> Clear Selection
+            </a>
+        </div>
     </div>
 </div>
 {% endif %}
 
-    <!-- Filters Card -->
-    <div class="card mb-4">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Filter Options</h5>
-        </div>
+<!-- Filters Card - Now renamed to emphasize these are secondary filters -->
+<div class="card mb-4">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Refine Results</h5>
+        {% if request.args.get('provider') or request.args.get('model') or request.args.get('flagged_only') or 
+           request.args.get('question_id') or request.args.get('start_date') or request.args.get('end_date') %}
+            <a href="{{ url_for('main.view_responses', 
+                      source=source, 
+                      prompt_id=request.args.get('prompt_id'),
+                      story_id=request.args.get('story_id'),
+                      story_count=request.args.get('story_count')) }}" 
+               class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-x"></i> Clear Filters (Keep Selection)
+            </a>
+        {% endif %}
+    </div>
         <div class="collapse show" id="filterCollapse">
             <div class="card-body">
                 <form method="GET" action="{{ url_for('main.view_responses') }}" class="row gy-3 gx-4">
                     <!-- First row: Provider, Model, Question -->
-                    
+
                     <div class="col-md-3">
                         <label for="provider" class="form-label">Provider:</label>
                         <div class="w-100"></div>
                         <select class="form-select form-select-sm" id="provider" name="provider">
                             <option value="">All Providers</option>
                             {% for provider in providers %}
-                            <option value="{{ provider.provider_name }}" {% if current_filters.provider==provider.provider_name %}selected{% endif %}>
+                            <option value="{{ provider.provider_name }}" {% if
+                                current_filters.provider==provider.provider_name %}selected{% endif %}>
                                 {{ provider.provider_name }}
                             </option>
                             {% endfor %}
@@ -78,7 +87,8 @@
                         <select class="form-select form-select-sm" id="model" name="model">
                             <option value="">All Models</option>
                             {% for model in models %}
-                            <option value="{{ model.name }}" {% if current_filters.model==model.name %}selected{% endif %}>
+                            <option value="{{ model.name }}" {% if current_filters.model==model.name %}selected{% endif
+                                %}>
                                 {{ model.name }}
                             </option>
                             {% endfor %}
@@ -90,13 +100,14 @@
                         <select class="form-select form-select-sm" id="question_id" name="question_id">
                             <option value="">All Questions</option>
                             {% for question in questions %}
-                            <option value="{{ question.question_id }}" {% if current_filters.question_id|string==question.question_id|string %}selected{% endif %}>
+                            <option value="{{ question.question_id }}" {% if
+                                current_filters.question_id|string==question.question_id|string %}selected{% endif %}>
                                 {{ question.content|truncate(30) }}
                             </option>
                             {% endfor %}
                         </select>
                     </div>
-                    
+
                     <div class="w-100" style="margin-bottom: 1.5rem;"></div>
 
                     <!-- Second row: Dates and Sort -->
@@ -134,7 +145,8 @@
                     <!-- Buttons -->
                     <div class="col-md-12 d-flex justify-content-start mt-3">
                         <button type="submit" class="btn btn-sm btn-primary mr-3">Apply Filters</button>
-                        <a href="{{ url_for('main.view_responses') }}" class="btn btn-sm btn-secondary mr-3">Reset Filters (Keep Story/Prompt Selection)</a>
+                        <a href="{{ url_for('main.view_responses') }}" class="btn btn-sm btn-secondary mr-3">Reset
+                            Filters (Keep Story/Prompt Selection)</a>
                         <a href="{{ url_for('main.export_responses') }}" class="btn btn-sm btn-success"
                             onclick="this.href = this.href + window.location.search;">Export CSV</a>
                     </div>
