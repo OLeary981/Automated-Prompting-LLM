@@ -73,34 +73,7 @@ def save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id,
 
     return response_entry.response_id
 
-# def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, temperature, max_tokens, top_p):
-#     # Example implementation of calling the LLM
-#     url = f"https://api.groq.com/models/{model_name}/generate"
-#     payload = {
-#         "story": story,
-#         "question": question,
-#         "temperature": temperature,
-#         "max_tokens": max_tokens,
-#         "top_p": top_p
-#     }
-#     response = requests.post(url, json=payload)
-#     response_content = response.json().get("generated_text", "")
-#     full_response_json = response.json()
 
-#     # Save the prompt and response to the database
-#     save_prompt_and_response(
-#         model_id=model_id,
-#         temperature=temperature,
-#         max_tokens=max_tokens,
-#         top_p=top_p,
-#         story_id=story_id,
-#         question_id=question_id,
-#         payload_json=json.dumps(payload),
-#         response_content=response_content,
-#         full_response_json=json.dumps(full_response_json)
-#     )
-
-#     return response_content
 
 def call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, rerun_from_prompt_id=None, **parameters):
     """
@@ -160,44 +133,7 @@ def call_llm(provider_name, story, question, story_id, question_id, model_name, 
         else:
             raise ValueError(f"Unknown provider: {provider_name}")
 
-def prepare_and_call_llm(model_id, story_ids, question_id, parameters, progress_callback=None):
-    print("You've reached call LLM let's look at what is in the session")
-    print(model_id, story_ids, question_id, parameters)
-    
-    if not story_ids:
-        return {"error": "No stories selected."}
-    
-    question = get_question_by_id(question_id).content
-    model_name = get_model_name_by_id(model_id)
-    provider_name = get_provider_name_by_model_id(model_id)
-    request_delay = get_request_delay_by_model_id(model_id)  # Delay in seconds
 
-    responses = {}
-    response_ids = []
-    progress = 0
-    total_stories = len(story_ids)
-
-    for i, story_id in enumerate(story_ids):
-        story = get_story_by_id(story_id).content
-        response = call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, **parameters)
-        print(response)
-
-        if response:
-            responses[story_id] = response
-            response_ids.append(response['response_id'])
-        else:
-            responses[story_id] = {"error": "Failed to get response"}
-
-        # Update progress
-        progress = int(((i + 1) / total_stories) * 100)
-        if progress_callback:
-            progress_callback(progress)
-
-        # Delay before the next request (if there are multiple)
-        if i < len(story_ids) - 1:
-            time.sleep(request_delay)
-
-    return responses
 
 def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, **parameters):
     try:
