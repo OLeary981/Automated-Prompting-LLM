@@ -1022,6 +1022,69 @@ def progress_legacy():
     # Redirect to the new progress stream
     return redirect(url_for('main.progress_stream', job_id=job_id))
 
+@bp.route('/rerun_prompts', methods=['POST'])
+def rerun_prompts():
+    """Endpoint to rerun selected prompts"""
+    # Get selected prompt IDs from session
+    prompt_ids = session.get('prompt_ids', [])
+    
+    if not prompt_ids:
+        flash('No prompts selected to rerun.', 'warning')
+        return redirect(url_for('main.see_all_prompts'))
+    
+    # Create a new job for rerunning these prompts
+    job_id = str(uuid.uuid4())
+    
+    try:
+        # Collect all the data needed for rerunning
+        prompts_data = []
+        for prompt_id in prompt_ids:
+            prompt = db.session.query(Prompt).get(int(prompt_id))
+            if prompt:
+                prompts_data.append({
+                    'prompt_id': prompt.prompt_id,
+                    'model_id': prompt.model_id,
+                    'story_id': prompt.story_id,
+                    'question_id': prompt.question_id,
+                    'parameters': {
+                        'temperature': prompt.temperature,
+                        'max_tokens': prompt.max_tokens,
+                        'top_p': prompt.top_p
+                    }
+                })
+        
+        if not prompts_data:
+            flash('No valid prompts found to rerun.', 'warning')
+            return redirect(url_for('main.see_all_prompts'))
+            
+        # Store job info
+        processing_jobs[job_id] = {
+            "status": "initializing",
+            "progress": 0,
+            "total": len(prompts_data),
+            "completed": 0,
+            "results": {},
+            "processing": True,
+            "last_activity": time.time(),
+            "params": {
+                "prompts_data": prompts_data,
+                "is_rerun": True
+            }
+        }
+        
+        # Store job ID in session
+        session['job_id'] = job_id
+        
+        # Clean up old jobs
+        cleanup_old_jobs()
+        
+        return redirect(url_for('main.loading'))
+        
+    except Exception as e:
+        flash(f'Error setting up prompt rerun: {str(e)}', 'danger')
+        return redirect(url_for('main.see_all_prompts'))
+
+
 @bp.route('/llm_response', methods=['GET', 'POST'])
 def llm_response():
     if request.method == 'POST':
@@ -1520,68 +1583,6 @@ def update_prompt_selection():
         'selected_count': len(selected_prompt_ids),
         'selected_ids': selected_prompt_ids
     })
-
-@bp.route('/rerun_prompts', methods=['POST'])
-def rerun_prompts():
-    """Endpoint to rerun selected prompts"""
-    # Get selected prompt IDs from session
-    prompt_ids = session.get('prompt_ids', [])
-    
-    if not prompt_ids:
-        flash('No prompts selected to rerun.', 'warning')
-        return redirect(url_for('main.see_all_prompts'))
-    
-    # Create a new job for rerunning these prompts
-    job_id = str(uuid.uuid4())
-    
-    try:
-        # Collect all the data needed for rerunning
-        prompts_data = []
-        for prompt_id in prompt_ids:
-            prompt = db.session.query(Prompt).get(int(prompt_id))
-            if prompt:
-                prompts_data.append({
-                    'prompt_id': prompt.prompt_id,
-                    'model_id': prompt.model_id,
-                    'story_id': prompt.story_id,
-                    'question_id': prompt.question_id,
-                    'parameters': {
-                        'temperature': prompt.temperature,
-                        'max_tokens': prompt.max_tokens,
-                        'top_p': prompt.top_p
-                    }
-                })
-        
-        if not prompts_data:
-            flash('No valid prompts found to rerun.', 'warning')
-            return redirect(url_for('main.see_all_prompts'))
-            
-        # Store job info
-        processing_jobs[job_id] = {
-            "status": "initializing",
-            "progress": 0,
-            "total": len(prompts_data),
-            "completed": 0,
-            "results": {},
-            "processing": True,
-            "last_activity": time.time(),
-            "params": {
-                "prompts_data": prompts_data,
-                "is_rerun": True
-            }
-        }
-        
-        # Store job ID in session
-        session['job_id'] = job_id
-        
-        # Clean up old jobs
-        cleanup_old_jobs()
-        
-        return redirect(url_for('main.loading'))
-        
-    except Exception as e:
-        flash(f'Error setting up prompt rerun: {str(e)}', 'danger')
-        return redirect(url_for('main.see_all_prompts'))
 
 @bp.route('/view_prompt_responses/<int:prompt_id>')
 def view_prompt_responses(prompt_id):
