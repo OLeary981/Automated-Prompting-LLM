@@ -49,22 +49,34 @@ def get_request_delay_by_model_id(model_id):
     model = db.session.query(Model).get(model_id)
     return model.request_delay
 
-def save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id, question_id, payload_json, response_content, full_response_json):
-    """Save the prompt and response to the database."""
-    prompt = Prompt(
-        model_id=model_id,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        top_p=top_p,
-        story_id=story_id,
-        question_id=question_id,
-        payload=payload_json
-    )
-    db.session.add(prompt)
-    db.session.commit()
+def save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id, question_id, 
+                            payload_json, response_content, full_response_json, prompt_id=None):
+    """
+    Save the prompt and response to the database.
+    If prompt_id is provided, reuse that prompt instead of creating a new one.
+    """
+    print(f"save_prompt_and_response received prompt_id: {prompt_id} (type: {type(prompt_id)})")
 
+    # If no prompt_id is provided, create a new prompt
+    if prompt_id is None:
+        prompt = Prompt(
+            model_id=model_id,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            top_p=top_p,
+            story_id=story_id,
+            question_id=question_id,
+            payload=payload_json
+        )
+        db.session.add(prompt)
+        db.session.commit()
+        prompt_id = prompt.prompt_id
+    else:
+        # Ensure prompt_id is an integer
+        prompt_id = int(prompt_id) if not isinstance(prompt_id, int) else prompt_id
+    # Create a response linked to the prompt (either new or existing)
     response_entry = Response(
-        prompt_id=prompt.prompt_id,
+        prompt_id=prompt_id,
         response_content=response_content,
         full_response=full_response_json
     )
@@ -74,24 +86,22 @@ def save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id,
     return response_entry.response_id
 
 
-
-def call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, rerun_from_prompt_id=None, **parameters):
+def call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, prompt_id=None, **parameters):
     """
     Call the language model with the given parameters.
     
-    If rerun_from_prompt_id is provided, reuses that prompt instead of creating a new one.
+    If prompt_id is provided, reuses that prompt instead of creating a new one.
     """
     # Check if this is a rerun from an existing prompt
-    if rerun_from_prompt_id:
+    print(f"call_llm received prompt_id: {prompt_id} (type: {type(prompt_id)})")
+    if prompt_id:
         # Get the existing prompt
-        prompt = db.session.query(Prompt).filter_by(prompt_id=rerun_from_prompt_id).first()
+        prompt_id = int(prompt_id) if not isinstance(prompt_id, int) else prompt_id
+        prompt = db.session.query(Prompt).filter_by(prompt_id=prompt_id).first()
         if not prompt:
-            raise ValueError(f"Prompt ID {rerun_from_prompt_id} not found")
+            raise ValueError(f"Prompt ID {prompt_id} not found")
         
-        # Extract parameters from the existing prompt
-        existing_temperature = prompt.temperature
-        existing_max_tokens = prompt.max_tokens
-        existing_top_p = prompt.top_p
+       
         
         # Get associated story and question
         story = db.session.query(Story).get(prompt.story_id).content
@@ -102,46 +112,85 @@ def call_llm(provider_name, story, question, story_id, question_id, model_name, 
             return call_LLM_GROQ(
                 story, 
                 question, 
-                prompt.story_id, 
-                prompt.question_id, 
+                story_id, 
+                question_id, 
                 model_name, 
                 model_id,
-                temperature=existing_temperature,
-                max_tokens=existing_max_tokens,
-                top_p=existing_top_p
+                prompt_id=prompt_id,  # Pass prompt_id for reuse
+                temperature=prompt.temperature,
+                max_tokens=prompt.max_tokens,
+                top_p=prompt.top_p
             )
         elif provider_name == "hf":
             return call_LLM_HF(
                 story, 
                 question, 
-                prompt.story_id, 
-                prompt.question_id, 
+                story_id, 
+                question_id, 
                 model_name, 
                 model_id,
-                temperature=existing_temperature,
-                max_tokens=existing_max_tokens,
-                top_p=existing_top_p
+                prompt_id=prompt_id,  # Pass prompt_id for reuse
+                temperature=prompt.temperature,
+                max_tokens=prompt.max_tokens,
+                top_p=prompt.top_p
             )
         else:
             raise ValueError(f"Unknown provider: {provider_name}")
     else:
-        # Standard processing (your existing code)
+        # Standard processing (your existing code) with prompt_id=None
         if provider_name == "groq":
-            return call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, **parameters)
+            return call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, prompt_id=None, **parameters)
         elif provider_name == "hf":
-            return call_LLM_HF(story, question, story_id, question_id, model_name, model_id, **parameters)
+            return call_LLM_HF(story, question, story_id, question_id, model_name, model_id, prompt_id=None, **parameters)
         else:
             raise ValueError(f"Unknown provider: {provider_name}")
 
+# def prepare_and_call_llm(model_id, story_ids, question_id, parameters, progress_callback=None):
+#     print("You've reached call LLM let's look at what is in the session")
+#     print(model_id, story_ids, question_id, parameters)
+    
+#     if not story_ids:
+#         return {"error": "No stories selected."}
+    
+#     question = get_question_by_id(question_id).content
+#     model_name = get_model_name_by_id(model_id)
+#     provider_name = get_provider_name_by_model_id(model_id)
+#     request_delay = get_request_delay_by_model_id(model_id)  # Delay in seconds
 
+#     responses = {}
+#     response_ids = []
+#     progress = 0
+#     total_stories = len(story_ids)
 
-def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, **parameters):
+#     for i, story_id in enumerate(story_ids):
+#         story = get_story_by_id(story_id).content
+#         response = call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, **parameters)
+#         print(response)
+
+#         if response:
+#             responses[story_id] = response
+#             response_ids.append(response['response_id'])
+#         else:
+#             responses[story_id] = {"error": "Failed to get response"}
+
+#         # Update progress
+#         progress = int(((i + 1) / total_stories) * 100)
+#         if progress_callback:
+#             progress_callback(progress)
+
+#         # Delay before the next request (if there are multiple)
+#         if i < len(story_ids) - 1:
+#             time.sleep(request_delay)
+
+#     return responses
+
+def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, prompt_id=None, **parameters):
     try:
+        print(f"call_LLM_GROQ received prompt_id: {prompt_id} (type: {type(prompt_id)})")
         # Set default values if parameters are not provided
         temperature = float(parameters.get('temperature', 0.5))
         max_tokens = int(parameters.get('max_tokens', 1024))
         top_p = float(parameters.get('top_p', 0.65))
-        # print("About to call LLM_Groq")
 
         # Prepare the payload with all parameters
         payload = {
@@ -170,19 +219,25 @@ def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, 
         # Extract the response content from the completion object
         response_content = completion.choices[0].message.content
 
-        # Print the response to the console
-        # print("Response from Groq LLM:")
-        # print(response_content)
-
         # Serialize the full response to JSON
         full_response_json = json.dumps(completion, default=lambda o: o.__dict__)
 
         # Insert prompt details into the prompt_tests table
         payload_json = json.dumps(payload)
 
-        # Insert the response into the responses table
-        response_id = save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id, question_id, payload_json, response_content, full_response_json)
-        
+        # Insert the response into the responses table, passing prompt_id
+        response_id = save_prompt_and_response(
+            model_id=model_id, 
+            temperature=temperature, 
+            max_tokens=max_tokens, 
+            top_p=top_p, 
+            story_id=story_id, 
+            question_id=question_id, 
+            payload_json=payload_json, 
+            response_content=response_content, 
+            full_response_json=full_response_json,
+            prompt_id=prompt_id  # Pass the prompt_id
+        )
 
         return {"response_id": response_id, "response": response_content}
 
@@ -199,8 +254,7 @@ def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, 
         print(e)
         return None
 
-
-def call_LLM_HF(story, question, story_id, question_id, model_name, model_id, **parameters):
+def call_LLM_HF(story, question, story_id, question_id, model_name, model_id, prompt_id=None, **parameters):
     try:
         # Set default values if parameters are not provided
         temperature = float(parameters.get('temperature', 0.5))
@@ -235,7 +289,7 @@ def call_LLM_HF(story, question, story_id, question_id, model_name, model_id, **
         response_content = response_json.get("generated_text", "")
         full_response_json = json.dumps(response_json)
 
-        # Save the prompt and response to the database
+        # Save the prompt and response to the database, passing prompt_id
         response_id = save_prompt_and_response(
             model_id=model_id,
             temperature=temperature,
@@ -245,7 +299,8 @@ def call_LLM_HF(story, question, story_id, question_id, model_name, model_id, **
             question_id=question_id,
             payload_json=json.dumps(payload),
             response_content=response_content,
-            full_response_json=full_response_json
+            full_response_json=full_response_json,
+            prompt_id=prompt_id  # Pass the prompt_id
         )
 
         # Return both the response and its ID consistently - SAME FORMAT as Groq

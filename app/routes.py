@@ -628,26 +628,20 @@ async def process_llm_requests(job_id, model_id=None, story_ids=None, question_i
     with app.app_context():
         job = processing_jobs[job_id]
         
-        # Check if this is a rerun job
-        is_rerun = False
-        prompts_data = None
-        
-        if 'params' in job and job['params'].get('is_rerun'):
-            is_rerun = True
-            prompts_data = job['params'].get('prompts_data', [])
-            job["total"] = len(prompts_data)
-        else:
-            # Standard processing
-            job["total"] = len(story_ids)
-        
+        # Initialize job status
         job["status"] = "running"
         job["completed"] = 0
         job["results"] = {}
         
         try:
-            if is_rerun:
-                # Process each prompt
+            # Check if this is a rerun job
+            is_rerun = job.get("params", {}).get("is_rerun", False)
+            prompts_data = job.get("params", {}).get("prompts_data", [])
+            
+            if is_rerun and prompts_data:
+                # Process each prompt for rerun
                 for i, prompt_data in enumerate(prompts_data):
+                    
                     # Check if job has been cancelled
                     if job_id not in processing_jobs:
                         return
@@ -658,8 +652,7 @@ async def process_llm_requests(job_id, model_id=None, story_ids=None, question_i
                     story_id = prompt_data['story_id']
                     question_id = prompt_data['question_id']
                     parameters = prompt_data['parameters']
-                    
-                    # Call the LLM service for this prompt
+                    print(f"Reusing prompt_id: {prompt_id} (type: {type(prompt_id)})")
                     try:
                         # Get the story, question, and model details
                         story = llm_service.get_story_by_id(story_id)
@@ -675,6 +668,7 @@ async def process_llm_requests(job_id, model_id=None, story_ids=None, question_i
                         # Make the actual API call (non-async)
                         def call_llm_with_context():
                             with app.app_context():
+                                print(f"In async line 671 {prompt_id} (type: {type(prompt_id)})")
                                 return llm_service.call_llm(
                                     provider_name, 
                                     story.content, 
@@ -682,9 +676,11 @@ async def process_llm_requests(job_id, model_id=None, story_ids=None, question_i
                                     story_id, 
                                     question_id, 
                                     model_name, 
-                                    model_id, 
-                                    rerun_from_prompt_id=prompt_id,
-                                    **parameters
+                                    model_id,
+                                    prompt_id=prompt_id,  # Important: Use prompt_id correctly
+                                    temperature=parameters['temperature'],  # Pass parameters explicitly
+                                    max_tokens=parameters['max_tokens'],
+                                    top_p=parameters['top_p']
                                 )
                         
                         loop = asyncio.get_running_loop()
@@ -766,6 +762,15 @@ async def process_llm_requests(job_id, model_id=None, story_ids=None, question_i
                     job["progress"] = progress
                     job["last_activity"] = time.time()
             
+            # Extract all response IDs from results and store in a consistent place
+            response_ids = []
+            for result_data in job["results"].values():
+                if isinstance(result_data, dict) and "response_id" in result_data:
+                    response_ids.append(str(result_data["response_id"]))
+
+            # Store response IDs in the job in a standard way
+            job["response_ids"] = response_ids
+
             # Mark job as completed
             job["status"] = "completed"
             job["progress"] = 100
@@ -812,35 +817,43 @@ def cleanup_old_jobs():
 # Routes for the progress tracking system
 @bp.route('/loading')
 def loading():
-    # Generate unique job ID for this processing request
-    job_id = str(uuid.uuid4())
+    job_id = session.get('job_id')
     
-    # Extract necessary session data
-    model_id = session.get('model_id')
-    story_ids = session.get('story_ids', [])
-    question_id = session.get('question_id')
-    parameters = session.get('parameters', {})
-    
-    # Store job ID in session
-    session['job_id'] = job_id
-    
-    # Initialize job tracking
-    processing_jobs[job_id] = {
-        "status": "initializing",
-        "progress": 0,
-        "total": len(story_ids),
-        "completed": 0,
-        "results": {},
-        "processing": True,
-        "last_activity": time.time(),
-        # Store parameters for reference
-        "params": {
-            "model_id": model_id,
-            "story_ids": story_ids,
-            "question_id": question_id,
-            "parameters": parameters
+    # If no job ID in session (or it's invalid), generate a new one
+    if not job_id or job_id not in processing_jobs:
+        job_id = str(uuid.uuid4())
+        
+        # Extract necessary session data
+        model_id = session.get('model_id')
+        story_ids = session.get('story_ids', [])
+        question_id = session.get('question_id')
+        parameters = session.get('parameters', {})
+        
+        # Initialize job tracking for new jobs only
+        processing_jobs[job_id] = {
+            "status": "initializing",
+            "progress": 0,
+            "total": len(story_ids),
+            "completed": 0,
+            "results": {},
+            "processing": True,
+            "last_activity": time.time(),
+            # Store parameters for reference
+            "params": {
+                "model_id": model_id,
+                "story_ids": story_ids,
+                "question_id": question_id,
+                "parameters": parameters
+            }
         }
-    }
+    else:
+        # Job already exists (e.g., from rerun_prompts)
+        # Just update the last activity timestamp
+        processing_jobs[job_id]["last_activity"] = time.time()
+        print(f"Using existing job: {job_id} with params: {processing_jobs[job_id].get('params', {})}")
+    
+    # Store job ID in session (this is fine for both cases)
+    session['job_id'] = job_id
     
     # Clean up old jobs
     cleanup_old_jobs()    
@@ -1026,21 +1039,56 @@ def progress_legacy():
 def rerun_prompts():
     """Endpoint to rerun selected prompts"""
     # Get selected prompt IDs from session
+    print("==== RERUN PROMPTS CALLED ====")
+    
+    # Get selected prompt IDs from session
     prompt_ids = session.get('prompt_ids', [])
+    print(f"Prompt IDs in session: {prompt_ids}")
     
     if not prompt_ids:
+        print("No prompts selected to rerun.")
         flash('No prompts selected to rerun.', 'warning')
         return redirect(url_for('main.see_all_prompts'))
     
     # Create a new job for rerunning these prompts
     job_id = str(uuid.uuid4())
+    print(f"Created rerun job ID: {job_id}")
     
     try:
+        int_prompt_ids = [int(pid) for pid in prompt_ids]
+        
+        # Clear any existing response IDs to avoid showing old responses
+        if 'response_ids' in session:
+            session.pop('response_ids')
+            
         # Collect all the data needed for rerunning
         prompts_data = []
-        for prompt_id in prompt_ids:
-            prompt = db.session.query(Prompt).get(int(prompt_id))
+        
+        # Process only the first prompt to get model/question data (all prompts must share this)
+        first_prompt = db.session.query(Prompt).get(int_prompt_ids[0])
+        if not first_prompt:
+            flash('Selected prompt not found.', 'warning')
+            return redirect(url_for('main.see_all_prompts'))
+
+        # Get model and provider info for display context
+        model = db.session.query(Model).get(first_prompt.model_id)
+        if model:
+            session['model_id'] = model.model_id
+            session['model'] = model.name
+            session['provider'] = model.provider.provider_name
+        
+        # Set question ID for context
+        session['question_id'] = first_prompt.question_id
+        
+        # Collect all story IDs
+        story_ids = []
+        
+        for prompt_id in int_prompt_ids:
+            prompt = db.session.query(Prompt).get(prompt_id)
             if prompt:
+                if prompt.story_id not in story_ids:
+                    story_ids.append(str(prompt.story_id))
+                
                 prompts_data.append({
                     'prompt_id': prompt.prompt_id,
                     'model_id': prompt.model_id,
@@ -1053,20 +1101,30 @@ def rerun_prompts():
                     }
                 })
         
-        if not prompts_data:
-            flash('No valid prompts found to rerun.', 'warning')
-            return redirect(url_for('main.see_all_prompts'))
-            
-        # Store job info
+        # Set story IDs for context
+        session['story_ids'] = story_ids
+        
+        # Store job info in a way that matches standard jobs
         processing_jobs[job_id] = {
             "status": "initializing",
             "progress": 0,
             "total": len(prompts_data),
             "completed": 0,
             "results": {},
+            "response_ids": [],
             "processing": True,
             "last_activity": time.time(),
             "params": {
+                # Match standard job structure but add rerun info
+                "model_id": first_prompt.model_id,
+                "story_ids": story_ids,
+                "question_id": first_prompt.question_id,
+                "parameters": {
+                    'temperature': first_prompt.temperature,
+                    'max_tokens': first_prompt.max_tokens,
+                    'top_p': first_prompt.top_p
+                },
+                # Additional rerun-specific info
                 "prompts_data": prompts_data,
                 "is_rerun": True
             }
@@ -1083,105 +1141,103 @@ def rerun_prompts():
     except Exception as e:
         flash(f'Error setting up prompt rerun: {str(e)}', 'danger')
         return redirect(url_for('main.see_all_prompts'))
-
-
+    
 @bp.route('/llm_response', methods=['GET', 'POST'])
 def llm_response():
     if request.method == 'POST':
-        print("POST request received on llm_response")
-        # Process form data
+        # The POST handling is already fine - keep it as is
         response_id = request.form.get('response_id')
-        print(f"Response ID from form: {response_id}")
-        
         if response_id:
             flagged_for_review = f'flagged_for_review_{response_id}' in request.form
             review_notes = request.form.get(f'review_notes_{response_id}', '')
             
-            print(f"Flagged for review: {flagged_for_review}")
-            print(f"Review notes: {review_notes}")
-
             try:
-                # Get the response
                 response = db.session.query(Response).get(response_id)
                 if response:
-                    print(f"Found response {response_id} in database")
-                    # Update the fields
                     response.flagged_for_review = flagged_for_review
                     response.review_notes = review_notes
-                    
-                    # Simpler transaction handling - just commit the change
                     db.session.commit()
-                    
-                    print(f"Successfully updated response {response_id}")
                     flash(f'Response {response_id} updated successfully!', 'success')
                 else:
-                    print(f"Response {response_id} not found in database")
                     flash(f'Error: Response {response_id} not found.', 'danger')
             except Exception as e:
-                print(f"Error updating response: {str(e)}")
-                import traceback
-                traceback.print_exc()
                 db.session.rollback()
                 flash(f'Error updating response: {str(e)}', 'danger')
 
         return redirect(url_for('main.llm_response'))
 
-    # Get job_id from the session
+    # Get response_ids as before
+    response_ids = []
     job_id = session.get('job_id')
     
-    # Try to get response_ids from the job data first
-    response_ids = []
     if job_id and job_id in processing_jobs:
-        # Get from job data
         job = processing_jobs[job_id]
-        response_ids = job.get("response_ids", [])
+        for result_data in job["results"].values():
+            if isinstance(result_data, dict) and "response_id" in result_data:
+                response_ids.append(str(result_data["response_id"]))
         
-        # If we found response IDs, store them in the session for future use
-        # (especially after the job is cleaned up)
+        job["response_ids"] = response_ids
         if response_ids:
             session['response_ids'] = response_ids
     
-    # If no response_ids found in job data, try session as fallback
     if not response_ids:
         response_ids = session.get('response_ids', [])
     
-    print(f"Retrieved response_ids: {response_ids}")
+    # Detect if we're dealing with a batch rerun
+    is_batch_rerun = False
     
-    # Fetch stories
-    story_ids = session.get('story_ids', [])
-    stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
+    # Fetch responses with their related data
+    response_list = []
+    unique_models = set()
+    unique_providers = set()
+    unique_questions = set()
     
-    # Fetch responses
-    responses = []
     for response_id in response_ids:
         response = db.session.query(Response).get(response_id)
         if response:
-            responses.append(response)
+            # Get the prompt associated with this response
+            prompt = response.prompt
+            story = prompt.story
+            question = prompt.question
+            model = prompt.model
+            
+            # Track unique values to determine if we have a batch with different configs
+            unique_models.add(model.name)
+            unique_providers.add(model.provider.provider_name)
+            unique_questions.add(question.content)
+            
+            # Create a response data object with all needed information
+            response_data = {
+                'response_id': response.response_id,
+                'response_content': response.response_content,
+                'flagged_for_review': response.flagged_for_review,
+                'review_notes': response.review_notes,
+                'story': story,
+                'question': question.content,
+                'model': model.name,
+                'provider': model.provider.provider_name,
+                'temperature': prompt.temperature,
+                'max_tokens': prompt.max_tokens,
+                'top_p': prompt.top_p
+            }
+            
+            response_list.append(response_data)
     
-    print(f"Found {len(responses)} responses")
+    # Set batch_rerun flag if we have multiple different models, providers, or questions
+    is_batch_rerun = (len(unique_models) > 1 or len(unique_providers) > 1 or len(unique_questions) > 1)
     
-    # If we have no responses but have story_ids, perhaps the responses weren't stored properly
-    if not responses and story_ids:
-        flash('No responses found for your stories. There might have been an issue with the LLM processing.', 'warning')
-    
-    response_details = []
-    for response in responses:
-        response_details.append({
-            'response_id': response.response_id,
-            'response_content': response.response_content,
-            'flagged_for_review': response.flagged_for_review,
-            'review_notes': response.review_notes
-        })
-
-    # Retrieve model, provider, and question
+    # Get common values for the case where we're not in batch mode
+    model = session.get('model') if not is_batch_rerun else None
+    provider = session.get('provider') if not is_batch_rerun else None
     question_id = session.get('question_id')
-    question = db.session.query(Question).get(question_id).content if question_id else None
+    question = db.session.query(Question).get(question_id).content if question_id and not is_batch_rerun else None
 
     return render_template('llm_response.html', 
-                          combined_data=zip(stories, response_details),
-                          model=session.get('model'), 
-                          provider=session.get('provider'), 
-                          question=question)
+                         response_list=response_list,
+                         is_batch_rerun=is_batch_rerun,
+                         model=model, 
+                         provider=provider, 
+                         question=question)
 
 @bp.route('/view_responses', methods=['GET', 'POST'])
 def view_responses():
@@ -1545,6 +1601,34 @@ def see_all_prompts():
 
 @bp.route('/update_prompt_selection', methods=['POST'])
 def update_prompt_selection():
+    data = request.get_json()
+    
+    # Get the current selection from session
+    selected_prompt_ids = session.get('prompt_ids', [])
+    
+    # Clear all selected prompts
+    if data.get('action') == 'clear_all':
+        selected_prompt_ids = []
+    
+    # Select multiple prompts at once
+    elif data.get('action') == 'select_multiple':
+        prompt_ids = data.get('prompt_ids', [])
+        for prompt_id in prompt_ids:
+            if prompt_id not in selected_prompt_ids:
+                selected_prompt_ids.append(prompt_id)
+    
+    # Invert selection
+    elif data.get('action') == 'invert_selection':
+        select_ids = data.get('select_ids', [])
+        deselect_ids = data.get('deselect_ids', [])
+        
+        # Add new selections
+        for pid in select_ids:
+            if pid not in selected_prompt_ids:
+                selected_prompt_ids.append(pid)
+                
+        # Remove deselections
+        selected_prompt_ids = [pid for pid in selected_prompt_ids if pid not in deselect_ids]
     """AJAX endpoint to update prompt selection in session"""
     if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({'success': False, 'message': 'Invalid request'}), 400

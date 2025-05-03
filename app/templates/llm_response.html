@@ -1,44 +1,71 @@
 {% extends "base.html" %}
 
-{% block title %}LLM Response{% endblock %}
+{% block title %}LLM Responses{% endblock %}
 
 {% block content %}
 <div class="container">
     <h1>LLM Responses</h1>
 
-    <!-- Display model, provider, and question at the top -->
-    <div class="card mt-4 mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span>Model and Provider</span>
-            <a href="{{ url_for('main.select_model') }}" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-arrow-repeat"></i> Try with Different Model
-            </a>
+    {% if is_batch_rerun %}
+        <div class="alert alert-info">
+            <strong>Batch Rerun:</strong> Showing results from multiple prompts with different configurations.
         </div>
-        <div class="card-body">
-            <p><strong>Model:</strong> {{ model }}</p>
-            <p><strong>Provider:</strong> {{ provider }}</p>
-            <p><strong>Question:</strong> {{ question }}</p>
+    {% else %}
+        <!-- Display unified model, provider, and question at the top -->
+        <div class="card mt-4 mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Model and Provider</span>
+                <a href="{{ url_for('main.select_model') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-arrow-repeat"></i> Try with Different Model
+                </a>
+            </div>
+            <div class="card-body">
+                <p><strong>Model:</strong> {{ model }}</p>
+                <p><strong>Provider:</strong> {{ provider }}</p>
+                <p><strong>Question:</strong> {{ question }}</p>
+            </div>
         </div>
-    </div>
+    {% endif %}
 
     <!-- Card-Based Responses -->
     <div class="row">
-        {% for story, response_detail in combined_data %}
+        {% for response_data in response_list %}
         <div class="col-lg-6 mb-4">
-            <!-- Change border-danger to a custom border style for flagged items -->
-            <div class="card h-100 {% if response_detail.flagged_for_review %}border border-danger{% endif %}">
-                <!-- Replace bg-danger bg-opacity-10 with a Bootstrap 4 compatible light red background -->
-                <div class="card-header d-flex justify-content-between align-items-center {% if response_detail.flagged_for_review %}bg-light text-danger{% endif %}">
+            <div class="card h-100 {% if response_data.flagged_for_review %}border border-danger{% endif %}">
+                <div class="card-header d-flex justify-content-between align-items-center {% if response_data.flagged_for_review %}bg-light text-danger{% endif %}">
                     <div>
-                        <strong>Story ID:</strong> {{ story.story_id }}
+                        <strong>Story ID:</strong> {{ response_data.story.story_id }}
                     </div>
                     <div>
-                        {% if response_detail.flagged_for_review %}
-                            <!-- Replace bg-danger with badge-danger for Bootstrap 4 -->
+                        {% if response_data.flagged_for_review %}
                             <span class="badge badge-danger">Flagged</span>
                         {% endif %}
                     </div>
                 </div>
+                
+                {% if is_batch_rerun %}
+                <!-- Per-response configuration details (shown only in batch rerun mode) -->
+                <div class="card-text p-2 bg-light border-bottom">
+                    <div class="row small">
+                        <div class="col-md-4"><strong>Model:</strong> {{ response_data.model }}</div>
+                        <div class="col-md-4"><strong>Provider:</strong> {{ response_data.provider }}</div>
+                        <div class="col-md-4">
+                            <span class="badge badge-info">
+                                <i class="bi bi-thermometer"></i> {{ response_data.temperature }}
+                            </span>
+                            <span class="badge badge-secondary">
+                                <i class="bi bi-123"></i> {{ response_data.max_tokens }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row small">
+                        <div class="col-md-12">
+                            <strong>Question:</strong> {{ response_data.question }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
                 <div class="card-body">
                     <div class="row mb-3">
                         <div class="col-md-12">
@@ -46,7 +73,7 @@
                             <div class="card">
                                 <div class="card-body p-2 bg-light">
                                     <div style="max-height: 150px; overflow-y: auto;">
-                                        {{ story.content }}
+                                        {{ response_data.story.content }}
                                     </div>
                                 </div>
                             </div>
@@ -59,7 +86,7 @@
                             <div class="card">
                                 <div class="card-body p-2">
                                     <div style="height: 250px; overflow-y: auto;">
-                                        {{ response_detail.response_content }}
+                                        {{ response_data.response_content }}
                                     </div>
                                 </div>
                             </div>
@@ -67,20 +94,20 @@
                     </div>
                     
                     <form method="POST" action="{{ url_for('main.llm_response') }}">
-                        <input type="hidden" id="flag_hidden_{{ response_detail.response_id }}" 
-                               name="flagged_for_review_{{ response_detail.response_id }}" 
-                               value="{% if response_detail.flagged_for_review %}true{% else %}false{% endif %}">
-                        <input type="hidden" name="response_id" value="{{ response_detail.response_id }}">
+                        <input type="hidden" id="flag_hidden_{{ response_data.response_id }}" 
+                               name="flagged_for_review_{{ response_data.response_id }}" 
+                               value="{% if response_data.flagged_for_review %}true{% else %}false{% endif %}">
+                        <input type="hidden" name="response_id" value="{{ response_data.response_id }}">
                         
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <div class="form-check mb-2">
-                                    <input type="checkbox" id="flag_{{ response_detail.response_id }}" 
-                                           name="flag_{{ response_detail.response_id }}" 
+                                    <input type="checkbox" id="flag_{{ response_data.response_id }}" 
+                                           name="flag_{{ response_data.response_id }}" 
                                            class="form-check-input"
-                                           {% if response_detail.flagged_for_review %}checked{% endif %}
-                                           onchange="document.getElementById('flag_hidden_{{ response_detail.response_id }}').value = this.checked">
-                                    <label class="form-check-label" for="flag_{{ response_detail.response_id }}">
+                                           {% if response_data.flagged_for_review %}checked{% endif %}
+                                           onchange="document.getElementById('flag_hidden_{{ response_data.response_id }}').value = this.checked">
+                                    <label class="form-check-label" for="flag_{{ response_data.response_id }}">
                                         Flag for review
                                     </label>
                                 </div>
@@ -89,13 +116,13 @@
                         
                         <div class="row">
                             <div class="col-md-12">
-                                <label for="notes_{{ response_detail.response_id }}" class="form-label">Review Notes:</label>
-                                <textarea name="review_notes_{{ response_detail.response_id }}" 
-                                          id="notes_{{ response_detail.response_id }}"
+                                <label for="notes_{{ response_data.response_id }}" class="form-label">Review Notes:</label>
+                                <textarea name="review_notes_{{ response_data.response_id }}" 
+                                          id="notes_{{ response_data.response_id }}"
                                           class="form-control review-notes-area" 
                                           rows="2"
                                           spellcheck="true"
-                                          lang="en-GB">{{ response_detail.review_notes or '' }}</textarea>
+                                          lang="en-GB">{{ response_data.review_notes or '' }}</textarea>
                                 <button type="submit" class="btn btn-primary mt-2 w-100">Save</button>
                             </div>
                         </div>
