@@ -1,6 +1,6 @@
 import datetime
 from flask import Blueprint, flash, render_template, request, redirect, url_for, session, jsonify, Response as FlaskResponse, send_file
-from .. import db, create_app
+from . import db, create_app
 from .services import story_service, question_service, story_builder_service, llm_service, category_service
 from .models import Template, Story, Question, Model, Provider, Response, StoryCategory, Prompt, Field
 import time
@@ -12,9 +12,70 @@ import uuid
 import csv
 import io
 
+#Another silly change to check new branch 01/05/25
+
+# Create a blueprint for the routes
+bp = Blueprint('main', __name__)
+processing_jobs = {}
+_event_loop = None
+_event_loop_lock = threading.Lock()
+
+
+@bp.route('/select_model', methods=['GET', 'POST'])
+def select_model():
+    """Part of the process for sending a call to the LLM API.
+    Requires a story and question to have been selected, will redirect otherwise. 
+    This function retrieves model details from the database for users to select. 
+    When chosen, model details are added to the session
+    Route then redirects to the next step (parameter selection)
+
+    Returns:
+        redirect: To select parametesr 
+    """    
+    # Check prerequisites on GET request only
+    if request.method == 'GET':
+        if not session.get('story_ids'):
+            flash('To continue, please select one or more stories first.', 'info')
+            return redirect(url_for('main.see_all_stories'))
+        
+        if not session.get('question_id'):
+            flash('Please select a question to ask about your stories.', 'info')
+            return redirect(url_for('main.see_all_questions'))
+        
+        # Get models list - use llm_service to be consistent
+        models = db.session.query(Model).join(Provider).all()
+        return render_template('select_model.html', models=models)
+    
+    # Handle POST request
+    model_id = request.form.get('model_id')
+    if not model_id:
+        flash('Please select a model.', 'warning')
+        return redirect(url_for('main.select_model'))
+        
+    # Get model using llm_service
+    model = llm_service.get_model_by_id(model_id)
+    if not model:
+        flash('Selected model not found.', 'danger')
+        return redirect(url_for('main.select_model'))
+    
+    # Store model info in session
+    session['model_id'] = model_id
+    session['model'] = model.name
+    session['provider'] = model.provider.provider_name
+    
+    return redirect(url_for('main.select_parameters'))
 
 @bp.route('/select_parameters', methods=['GET', 'POST'])
 def select_parameters():
+    """Handle parameter selection for LLM processing.
+    
+    GET: Displays parameter selection form with either saved values or defaults.
+    POST: Stores selected parameters in session and redirects to loading page.
+    
+    Returns:
+        GET: render_template with parameter form
+        POST: redirect to loading page
+    """
     if request.method == 'POST':
         # Store the selected parameters in the session
         parameters = {param: request.form.get(param) for param in request.form}
@@ -25,7 +86,16 @@ def select_parameters():
     
     else:
         model_id = session.get('model_id')
+        if not model_id:
+            flash('Please select a model first.', 'warning')
+            return redirect(url_for('main.select_model'))
+
+        # Get model details from database (needed for parameters)
         model = llm_service.get_model_by_id(model_id)
+        if not model:
+            flash('Selected model not found. Please select a different model.', 'danger')
+            return redirect(url_for('main.select_model'))
+
         parameters = model.parameters
         saved_parameters = session.get('parameters', {})
         
@@ -157,7 +227,7 @@ async def process_llm_requests(job_id, model_id=None, story_ids=None, question_i
                                     question_id, 
                                     model_name, 
                                     model_id, 
-                                    rerun_from_prompt_id=prompt_id,
+                                    prompt_id=prompt_id,
                                     **parameters
                                 )
                         
@@ -608,7 +678,11 @@ def llm_response():
     if job_id and job_id in processing_jobs:
         # Get from job data
         job = processing_jobs[job_id]
-        response_ids = job.get("response_ids", [])
+        for result_data in job["results"].values():
+            if isinstance(result_data, dict) and "response_id" in result_data:
+                response_ids.append(str(result_data["response_id"]))
+        
+        job["response_ids"] = response_ids
         
         # If we found response IDs, store them in the session for future use
         # (especially after the job is cleaned up)
@@ -656,3 +730,466 @@ def llm_response():
                           model=session.get('model'), 
                           provider=session.get('provider'), 
                           question=question)
+
+@bp.route('/view_responses', methods=['GET', 'POST'])
+def view_responses():
+    # Handle POST requests as before
+    if request.method == 'POST':
+        # Your existing POST handling code
+        return redirect(url_for('main.view_responses', **request.args))
+    
+    # Clear flags processing
+    if 'clear_stories' in request.args and 'story_ids' in session:
+        session.pop('story_ids')
+        
+    if 'clear_responses' in request.args and 'response_ids' in session:
+        session.pop('response_ids')
+    
+    # Build the base query
+    query = db.session.query(Response).\
+        join(Prompt, Response.prompt_id == Prompt.prompt_id).\
+        join(Model, Prompt.model_id == Model.model_id).\
+        join(Provider, Model.provider_id == Provider.provider_id).\
+        join(Story, Prompt.story_id == Story.story_id).\
+        join(Question, Prompt.question_id == Question.question_id)
+    
+    # Get all filter parameters
+    provider = request.args.get('provider', '')
+    model = request.args.get('model', '')
+    flagged_only = 'flagged_only' in request.args
+    question_id = request.args.get('question_id', '')
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
+    sort = request.args.get('sort', 'date_desc')
+    
+    # SOURCE-based filtering (primary selection)
+    source = request.args.get('source', '')
+    source_id = None
+    source_info = None
+    
+    # Apply source-based filtering
+    response_ids = session.get('response_ids', [])
+    if response_ids and 'clear_responses' not in request.args:
+        # Filter by specific responses (from prompt or story)
+        int_response_ids = [int(rid) for rid in response_ids]
+        query = query.filter(Response.response_id.in_(int_response_ids))
+        
+        # Handle source information for display
+        if source == 'prompt':
+            prompt_id = request.args.get('prompt_id')
+            if prompt_id:
+                source_id = prompt_id
+                prompt = db.session.query(Prompt).get(int(prompt_id))
+                if prompt:
+                    source_info = f"Prompt #{prompt_id} ({prompt.model.name})"
+        elif source == 'story':
+            story_count = request.args.get('story_count', '1')
+            story_id_param = request.args.get('story_id')
+            
+            if story_count and int(story_count) > 1:
+                source_info = f"{story_count} Selected Stories"
+            elif story_id_param:
+                source_id = story_id_param
+                story = db.session.query(Story).get(int(story_id_param))
+                if story:
+                    content_preview = story.content[:50] + '...' if len(story.content) > 50 else story.content
+                    source_info = f"Story #{story_id_param} ({content_preview})"
+    # Otherwise check for story_ids in session (multiple stories selected)
+    elif session.get('story_ids') and 'clear_stories' not in request.args:
+        story_ids = [int(sid) for sid in session.get('story_ids', [])]
+        query = query.filter(Prompt.story_id.in_(story_ids))
+    
+    # SECONDARY FILTERING - Always apply regardless of source selection
+    if provider:
+        query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
+    if model:
+        query = query.filter(Model.name.ilike(f'%{model}%'))
+    if flagged_only:
+        query = query.filter(Response.flagged_for_review.is_(True))
+    if question_id:
+        query = query.filter(Prompt.question_id == question_id)
+    
+    # Apply date filtering
+    if start_date:
+        try:
+            start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(Response.timestamp >= start_date_obj)
+        except ValueError:
+            flash(f"Invalid start date format: {start_date}", "warning")
+    
+    if end_date:
+        try:
+            # Add 1 day to include the end date fully
+            end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            query = query.filter(Response.timestamp < end_date_obj)
+        except ValueError:
+            flash(f"Invalid end date format: {end_date}", "warning")
+    
+    # Apply sorting
+    if sort == 'date_asc':
+        query = query.order_by(Response.timestamp.asc())
+    else:  # Default to date_desc
+        query = query.order_by(Response.timestamp.desc())
+    
+    # Pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # Number of responses per page
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    responses = pagination.items  
+    
+    # Get data for filter dropdowns
+    providers = db.session.query(Provider).all()
+    models = db.session.query(Model).all()
+    questions = db.session.query(Question).all()
+    
+    # Track if we're filtering by specific responses
+    has_response_filter = bool(response_ids and 'clear_responses' not in request.args)
+    
+    # Track if we have secondary filter criteria applied
+    has_secondary_filters = any([provider, model, flagged_only, question_id, start_date, end_date])
+    
+    return render_template('see_all_responses.html', 
+                          responses=responses,
+                          pagination=pagination,
+                          providers=providers,
+                          models=models,
+                          questions=questions,
+                          has_response_filter=has_response_filter,
+                          has_secondary_filters=has_secondary_filters,
+                          source=source,
+                          source_id=source_id,
+                          source_info=source_info,
+                          current_filters={
+                              'provider': provider,
+                              'model': model,
+                              'flagged_only': flagged_only,
+                              'question_id': question_id,
+                              'story_id': request.args.get('story_id', ''),
+                              'start_date': start_date,
+                              'end_date': end_date,
+                              'sort': sort
+                          })
+    
+
+@bp.route('/update_response_flag', methods=['POST'])
+def update_response_flag():
+    """AJAX endpoint to quickly toggle a response's flag status"""
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': False, 'message': 'Invalid request'}), 400
+    
+    data = request.get_json()
+    response_id = data.get('response_id')
+    flagged = data.get('flagged', False)
+    
+    try:
+        response = db.session.query(Response).get(response_id)
+        if not response:
+            return jsonify({'success': False, 'message': 'Response not found'}), 404
+        
+        response.flagged_for_review = flagged
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'response_id': response_id,
+            'flagged': response.flagged_for_review
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+    
+@bp.route('/export_responses', methods=['GET'])
+def export_responses():
+    provider = request.args.get('provider', '')
+    model = request.args.get('model', '')
+    flagged_only = 'flagged_only' in request.args
+    question_id = request.args.get('question_id', '')
+    story_id = request.args.get('story_id', '')
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
+    sort = request.args.get('sort', 'date_desc')
+    
+    # Build query with the existing joins - EXACTLY as in view_responses
+    query = db.session.query(Response).\
+        join(Prompt, Response.prompt_id == Prompt.prompt_id).\
+        join(Model, Prompt.model_id == Model.model_id).\
+        join(Provider, Model.provider_id == Provider.provider_id).\
+        join(Story, Prompt.story_id == Story.story_id).\
+        join(Question, Prompt.question_id == Question.question_id)
+    
+    # Apply regular filters
+    if provider:
+        query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
+    if model:
+        query = query.filter(Model.name.ilike(f'%{model}%'))
+    if flagged_only:
+        query = query.filter(Response.flagged_for_review == True)
+    if question_id:
+        query = query.filter(Prompt.question_id == question_id)
+    if story_id:
+        query = query.filter(Prompt.story_id == story_id)
+    
+    # Apply date range filters
+    if start_date:
+        try:
+            start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(Response.timestamp >= start_date_obj)
+        except ValueError:
+            flash(f"Invalid start date format: {start_date}", "warning")
+    
+    if end_date:
+        try:
+            # Add one day to include the end date fully
+            end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            query = query.filter(Response.timestamp < end_date_obj)
+        except ValueError:
+            flash(f"Invalid end date format: {end_date}", "warning")
+    
+    # Apply sorting - though it doesn't matter much for export
+    if sort == 'date_asc':
+        query = query.order_by(Response.timestamp.asc())
+    else:  # Default to date_desc
+        query = query.order_by(Response.timestamp.desc())
+    # Get all matching responses
+    responses = query.all()
+    
+    # Create a memory file for the CSV data
+    mem_file = io.StringIO()
+    csv_writer = csv.writer(mem_file, quoting=csv.QUOTE_MINIMAL)
+    
+    # Write header row
+    csv_writer.writerow(['ID', 'Date', 'Time', 'Provider', 'Model', 
+                         'Temperature', 'Max Tokens', 'Top P',
+                         'Story ID', 'Story', 'Question ID', 'Question', 
+                         'Response', 'Flagged', 'Review Notes'])
+    
+    # Write data rows
+    for response in responses:
+        csv_writer.writerow([
+            response.response_id,
+            response.timestamp.strftime('%d/%m/%Y'),
+            response.timestamp.strftime('%H:%M'),
+            response.prompt.model.provider.provider_name,
+            response.prompt.model.name,
+            response.prompt.temperature,
+            response.prompt.max_tokens,
+            response.prompt.top_p,
+            response.prompt.story_id,
+            response.prompt.story.content,
+            response.prompt.question_id,
+            response.prompt.question.content,
+            response.response_content,
+            'Yes' if response.flagged_for_review else 'No',
+            response.review_notes or ''
+        ])
+    
+    # Move cursor to beginning of file
+    mem_file.seek(0)
+    
+    # Add an export button to your template
+    return send_file(
+        io.BytesIO(mem_file.getvalue().encode('utf-8')),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name=f'responses_export_{datetime.datetime.now().strftime("%Y%m%d")}.csv'
+    )
+
+
+@bp.route('/see_all_prompts', methods=['GET', 'POST'])
+def see_all_prompts():
+    if request.method == 'POST':
+        # Process form data for prompt updates if needed
+        # (Similar to view_responses POST handler but for prompts)
+        return redirect(url_for('main.see_all_prompts', **request.args))
+        
+    # Initialize prompt_ids for selection
+    selected_prompt_ids = session.get('prompt_ids', [])
+    
+    # GET request - handle filtering
+    provider = request.args.get('provider', '')
+    model = request.args.get('model', '')
+    question_id = request.args.get('question_id', '')
+    story_id = request.args.get('story_id', '')
+    
+    # Date range filtering
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
+    
+    # Sorting option
+    sort = request.args.get('sort', 'date_desc')
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    
+    # Build query with joins
+    query = db.session.query(
+        Prompt, 
+        db.func.max(Response.timestamp).label('last_used')
+    ).\
+        join(Model, Prompt.model_id == Model.model_id).\
+        join(Provider, Model.provider_id == Provider.provider_id).\
+        join(Story, Prompt.story_id == Story.story_id).\
+        join(Question, Prompt.question_id == Question.question_id).\
+        outerjoin(Response, Prompt.prompt_id == Response.prompt_id).\
+        group_by(Prompt.prompt_id)
+    
+    # Apply regular filters
+    if provider:
+        query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
+    if model:
+        query = query.filter(Model.name.ilike(f'%{model}%'))
+    if question_id:
+        query = query.filter(Prompt.question_id == question_id)
+    if story_id:
+        query = query.filter(Prompt.story_id == story_id)
+    
+    # Apply date range filters
+    if start_date:
+        try:
+            start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(Response.timestamp >= start_date_obj)
+        except ValueError:
+            flash(f"Invalid start date format: {start_date}", "warning")
+    
+    if end_date:
+        try:
+            # Add one day to include the end date fully
+            end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            query = query.filter(Response.timestamp < end_date_obj)
+        except ValueError:
+            flash(f"Invalid end date format: {end_date}", "warning")
+    
+    # Apply sorting
+    if sort == 'date_asc':
+        query = query.order_by(db.func.max(Response.timestamp).asc())
+    else:  # Default to date_desc
+        query = query.order_by(db.func.max(Response.timestamp).desc())
+    
+    # Paginate results
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    prompt_data = pagination.items
+    
+    # Get data for filter dropdowns
+    providers = db.session.query(Provider).all()
+    models = db.session.query(Model).all()
+    questions = db.session.query(Question).all()
+    
+    return render_template('see_all_prompts.html', 
+                          prompts=prompt_data,
+                          pagination=pagination,
+                          providers=providers,
+                          models=models,
+                          questions=questions,
+                          selected_prompt_ids=selected_prompt_ids,
+                          current_filters={
+                              'provider': provider,
+                              'model': model,
+                              'question_id': question_id,
+                              'story_id': story_id,
+                              'start_date': start_date,
+                              'end_date': end_date,
+                              'sort': sort
+                          })
+
+@bp.route('/update_prompt_selection', methods=['POST'])
+def update_prompt_selection():
+    """AJAX endpoint to update prompt selection in session"""
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': False, 'message': 'Invalid request'}), 400
+    
+    data = request.get_json()
+    
+    # Get the current selection from session
+    selected_prompt_ids = session.get('prompt_ids', [])
+    
+    # Clear all selected prompts
+    if data.get('action') == 'clear_all':
+        selected_prompt_ids = []
+    
+    # Select multiple prompts at once (for batch operations)
+    elif data.get('action') == 'select_multiple':
+        prompt_ids = data.get('prompt_ids', [])
+        for prompt_id in prompt_ids:
+            if prompt_id not in selected_prompt_ids:
+                selected_prompt_ids.append(prompt_id)
+    
+    # Handle individual toggle
+    elif 'prompt_id' in data:
+        prompt_id = str(data['prompt_id'])
+        is_selected = data.get('selected', False)
+        
+        if is_selected and prompt_id not in selected_prompt_ids:
+            selected_prompt_ids.append(prompt_id)
+        elif not is_selected and prompt_id in selected_prompt_ids:
+            selected_prompt_ids.remove(prompt_id)
+    
+    # Store updated selection in session
+    session['prompt_ids'] = selected_prompt_ids
+    
+    return jsonify({
+        'success': True,
+        'selected_count': len(selected_prompt_ids),
+        'selected_ids': selected_prompt_ids
+    })
+
+@bp.route('/view_prompt_responses/<int:prompt_id>')
+def view_prompt_responses(prompt_id):
+    """View all responses for a specific prompt"""
+    # Get all responses for this prompt
+    responses = db.session.query(Response).filter(Response.prompt_id == prompt_id).all()
+    
+    if not responses:
+        flash(f'No responses found for prompt ID {prompt_id}', 'info')
+        return redirect(url_for('main.see_all_prompts'))
+    
+    # Clear any existing response filters first
+    if 'response_ids' in session:
+        session.pop('response_ids')
+    
+    # Store response IDs as strings in session
+    session['response_ids'] = [str(r.response_id) for r in responses]
+    
+    # Add a query parameter to indicate source
+    return redirect(url_for('main.view_responses', source='prompt', prompt_id=prompt_id))
+
+@bp.route('/view_story_responses')
+def view_story_responses():
+    """View all responses related to stories selected in session"""
+    
+    # Get story IDs from session
+    story_ids = session.get('story_ids', [])
+    
+    if not story_ids:
+        flash('No stories selected. Please select at least one story.', 'warning')
+        return redirect(url_for('main.see_all_stories'))
+    
+    # Convert story IDs to integers for the database query
+    int_story_ids = [int(sid) for sid in story_ids]
+    
+    # Get all responses for these stories
+    responses = db.session.query(Response).\
+        join(Prompt, Response.prompt_id == Prompt.prompt_id).\
+        filter(Prompt.story_id.in_(int_story_ids)).all()
+    
+    if not responses:
+        flash('No responses found for the selected stories', 'info')
+        return redirect(url_for('main.see_all_stories'))
+    
+    # Clear any existing response filters first
+    if 'response_ids' in session:
+        session.pop('response_ids')
+    
+    # Store response IDs as strings in session
+    session['response_ids'] = [str(r.response_id) for r in responses]
+    
+    # Generate appropriate message based on count
+    story_count = len(story_ids)
+  
+    
+    # Use a single redirect approach
+    return redirect(url_for('main.view_responses', 
+                           source='story', 
+                           story_count=story_count,
+                           story_id=int_story_ids[0] if story_count == 1 else None))
+
+
