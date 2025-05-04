@@ -8,57 +8,125 @@
         <h1>Response Database</h1>
     </div>
 
-    <!-- Story Selection Card -->
-    {% if session.get('story_ids') %}
-    <div class="card mb-4">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">Story Selection</h5>
-        </div>
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="badge bg-info fs-6 me-2">{{ session.get('story_ids')|length }} stories selected</span>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Quick Navigation</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
                     <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-outline-primary">
-                        <i class="bi bi-pencil-square"></i> Modify Selection
+                        <i class="bi bi-book"></i> Select Stories
                     </a>
+                    <a href="{{ url_for('main.see_all_prompts') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-chat-left-text"></i> Select Prompts
+                    </a>
+                    <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-file-earmark-text"></i> Select Templates
+                    </a>
+                    
+                    
+                    {% if session.get('story_ids') %}
+                    <a href="{{ url_for('main.view_story_responses') }}" class="btn btn-success">
+                        <i class="bi bi-eye"></i> View Selected Story Responses 
+                        <span class="badge bg-light text-success">{{ session.get('story_ids')|length }}</span>
+                    </a>
+                    {% endif %}
+                    
+                    {% if session.get('prompt_ids') %}
+                    <a href="{{ url_for('main.batch_view_prompt_responses') }}" class="btn btn-success">
+                        <i class="bi bi-eye"></i> View Selected Prompt Responses
+                        <span class="badge bg-light text-success">{{ session.get('prompt_ids')|length }}</span>
+                    </a>
+                    {% endif %}
                 </div>
-                <a href="{{ url_for('main.view_responses', 
-                           clear_stories=1,
-                           provider=current_filters.provider, 
-                           model=current_filters.model, 
-                           flagged_only='true' if current_filters.flagged_only else None, 
-                           question_id=current_filters.question_id,
-                           start_date=current_filters.start_date, 
-                           end_date=current_filters.end_date, 
-                           sort=current_filters.sort) }}" class="btn btn-outline-danger">
-                    <i class="bi bi-x"></i> Clear Story Selection
-                </a>
             </div>
         </div>
     </div>
-    {% else %}
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="d-flex align-items-center">
-                <span class="me-3">No stories currently selected for filtering.</span>
-                <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-outline-primary">
-                    <i class="bi bi-pencil-square"></i> Select Stories
-                </a>
-            </div>
-        </div>
-    </div>
-    {% endif %}
+</div>
 
-    <!-- Filters Card -->
-    <div class="card mb-4">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Filter Options</h5>
+
+{% if has_response_filter or session.get('story_ids') or session.get('template_ids') %}
+<div class="alert alert-info alert-persistent">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            {% if source == 'prompt' %}
+                <span>
+                    <i class="bi bi-funnel-fill"></i> 
+                    <strong>Primary Selection:</strong> Responses for {{ source_info }}
+                </span>
+                <a href="{{ url_for('main.see_all_prompts') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="bi bi-list"></i> Back to Prompts
+                </a>
+            {% elif source == 'story' %}
+                <span>
+                    <i class="bi bi-funnel-fill"></i> 
+                    <strong>Primary Selection:</strong> Responses for {{ source_info }}
+                </span>
+                <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="bi bi-list"></i> Back to Stories
+                </a>
+            {% elif source == 'template' %}
+                <span>
+                    <i class="bi bi-funnel-fill"></i> 
+                    <strong>Primary Selection:</strong> Responses for {{ source_info }}
+                </span>
+                <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="bi bi-list"></i> Back to Templates
+                </a>
+            {% elif session.get('story_ids') %}
+                <span>
+                    <i class="bi bi-funnel-fill"></i> 
+                    <strong>Primary Selection:</strong> {{ session.get('story_ids')|length }} stories selected
+                </span>
+                <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="bi bi-pencil-square"></i> Modify Selection
+                </a>
+            {% elif session.get('template_ids') %}
+                <span>
+                    <i class="bi bi-funnel-fill"></i> 
+                    <strong>Primary Selection:</strong> {{ session.get('template_ids')|length }} templates selected
+                </span>
+                <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="bi bi-pencil-square"></i> Modify Selection
+                </a>
+            {% endif %}
         </div>
+        <div>
+            <a href="{{ url_for('main.view_responses', clear_stories=true, clear_responses=true, clear_templates=true) }}" 
+               class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-x"></i> Clear Selection
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Filters Card - Now renamed to emphasize these are secondary filters -->
+<div class="card mb-4">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Refine Results</h5>
+        {% if request.args.get('provider') or request.args.get('model') or request.args.get('flagged_only') or 
+           request.args.get('question_id') or request.args.get('start_date') or request.args.get('end_date') %}
+            <a href="{{ url_for('main.view_responses', 
+                      source=source, 
+                      prompt_id=request.args.get('prompt_id'),
+                      story_id=request.args.get('story_id'),
+                      story_count=request.args.get('story_count')) }}" 
+               class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-x"></i> Clear Filters (Keep Selection)
+            </a>
+        {% endif %}
+    </div>
         <div class="collapse show" id="filterCollapse">
             <div class="card-body">
                 <form method="GET" action="{{ url_for('main.view_responses') }}" class="row gy-3 gx-4">
+                    <!-- First row: Provider, Model, Question -->
+
                     <div class="col-md-3">
                         <label for="provider" class="form-label">Provider:</label>
+                        <div class="w-100"></div>
                         <select class="form-select form-select-sm" id="provider" name="provider">
                             <option value="">All Providers</option>
                             {% for provider in providers %}
@@ -71,6 +139,7 @@
                     </div>
                     <div class="col-md-3">
                         <label for="model" class="form-label">Model:</label>
+                        <div class="w-100"></div>
                         <select class="form-select form-select-sm" id="model" name="model">
                             <option value="">All Models</option>
                             {% for model in models %}
@@ -81,8 +150,9 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <label for="question_id" class="form-label">Question:</label>
+                        <div class="w-100"></div>
                         <select class="form-select form-select-sm" id="question_id" name="question_id">
                             <option value="">All Questions</option>
                             {% for question in questions %}
@@ -93,19 +163,25 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <!-- Date Filters -->
+
+                    <div class="w-100" style="margin-bottom: 1.5rem;"></div>
+
+                    <!-- Second row: Dates and Sort -->
                     <div class="col-md-3">
                         <label for="start_date" class="form-label">From Date:</label>
+                        <div class="w-100"></div>
                         <input type="date" class="form-control form-control-sm" id="start_date" name="start_date"
                             value="{{ current_filters.start_date }}">
                     </div>
                     <div class="col-md-3">
                         <label for="end_date" class="form-label">To Date:</label>
+                        <div class="w-100"></div>
                         <input type="date" class="form-control form-control-sm" id="end_date" name="end_date"
                             value="{{ current_filters.end_date }}">
                     </div>
                     <div class="col-md-3">
                         <label for="sort" class="form-label">Sort Order:</label>
+                        <div class="w-100"></div>
                         <select class="form-select form-select-sm" id="sort" name="sort">
                             <option value="date_desc" {% if current_filters.sort=='date_desc' %}selected{% endif %}>
                                 Newest First</option>
@@ -121,10 +197,12 @@
                             <label class="form-check-label" for="flagged_only">Show only flagged responses</label>
                         </div>
                     </div>
+
                     <!-- Buttons -->
                     <div class="col-md-12 d-flex justify-content-start mt-3">
-                        <button type="submit" class="btn btn-sm btn-primary me-3">Apply Filters</button>
-                        <a href="{{ url_for('main.view_responses') }}" class="btn btn-sm btn-secondary me-3">Reset</a>
+                        <button type="submit" class="btn btn-sm btn-primary mr-3">Apply Filters</button>
+                        <a href="{{ url_for('main.view_responses') }}" class="btn btn-sm btn-secondary mr-3">Reset
+                            Filters (Keep Story/Prompt Selection)</a>
                         <a href="{{ url_for('main.export_responses') }}" class="btn btn-sm btn-success"
                             onclick="this.href = this.href + window.location.search;">Export CSV</a>
                     </div>
