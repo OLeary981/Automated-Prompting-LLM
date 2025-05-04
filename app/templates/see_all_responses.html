@@ -49,7 +49,7 @@
 </div>
 
 
-{% if has_response_filter or session.get('story_ids') %}
+{% if has_response_filter or session.get('story_ids') or session.get('template_ids') %}
 <div class="alert alert-info">
     <div class="d-flex justify-content-between align-items-center">
         <div>
@@ -69,6 +69,14 @@
                 <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-sm btn-outline-secondary ms-2">
                     <i class="bi bi-list"></i> Back to Stories
                 </a>
+            {% elif source == 'template' %}
+                <span>
+                    <i class="bi bi-funnel-fill"></i> 
+                    <strong>Primary Selection:</strong> Responses for {{ source_info }}
+                </span>
+                <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="bi bi-list"></i> Back to Templates
+                </a>
             {% elif session.get('story_ids') %}
                 <span>
                     <i class="bi bi-funnel-fill"></i> 
@@ -77,10 +85,18 @@
                 <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-sm btn-outline-secondary ms-2">
                     <i class="bi bi-pencil-square"></i> Modify Selection
                 </a>
+            {% elif session.get('template_ids') %}
+                <span>
+                    <i class="bi bi-funnel-fill"></i> 
+                    <strong>Primary Selection:</strong> {{ session.get('template_ids')|length }} templates selected
+                </span>
+                <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="bi bi-pencil-square"></i> Modify Selection
+                </a>
             {% endif %}
         </div>
         <div>
-            <a href="{{ url_for('main.view_responses', clear_stories=true, clear_responses=true) }}" 
+            <a href="{{ url_for('main.view_responses', clear_stories=true, clear_responses=true, clear_templates=true) }}" 
                class="btn btn-sm btn-outline-danger">
                 <i class="bi bi-x"></i> Clear Selection
             </a>
