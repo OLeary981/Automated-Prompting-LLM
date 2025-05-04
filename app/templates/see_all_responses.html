@@ -25,9 +25,7 @@
                     <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-outline-primary">
                         <i class="bi bi-file-earmark-text"></i> Select Templates
                     </a>
-                    <a href="{{ url_for('main.see_all_questions') }}" class="btn btn-outline-primary">
-                        <i class="bi bi-question-circle"></i> Select Questions
-                    </a>
+                    
                     
                     {% if session.get('story_ids') %}
                     <a href="{{ url_for('main.view_story_responses') }}" class="btn btn-success">
@@ -50,7 +48,7 @@
 
 
 {% if has_response_filter or session.get('story_ids') or session.get('template_ids') %}
-<div class="alert alert-info">
+<div class="alert alert-info alert-persistent">
     <div class="d-flex justify-content-between align-items-center">
         <div>
             {% if source == 'prompt' %}
