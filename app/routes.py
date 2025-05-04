@@ -215,11 +215,15 @@ def see_all_templates():
     fields = db.session.query(Field.field).order_by(Field.field).all()
     template_fields = [field[0] for field in fields]  # Extract field names from result tuples
     
+    # Get currently selected template IDs from session
+    selected_template_ids = session.get('template_ids', [])
+    
     return render_template('see_all_templates.html', 
                           templates=templates, 
                           pagination=pagination, 
                           sort_by=sort_by,
-                          template_fields=template_fields)
+                          template_fields=template_fields,
+                          selected_template_ids=selected_template_ids)
 
 @bp.route('/add_template', methods=['POST'])
 def add_template():
@@ -229,6 +233,44 @@ def add_template():
         db.session.add(new_template)
         db.session.commit()
     return redirect(url_for('main.see_all_templates'))
+
+@bp.route('/update_template_selection', methods=['POST'])
+def update_template_selection():
+    """AJAX endpoint to update template selection in session"""
+    data = request.get_json()
+    
+    # Get the current selection from session
+    selected_template_ids = session.get('template_ids', [])
+    
+    # Clear all selected templates
+    if data.get('action') == 'clear_all':
+        selected_template_ids = []
+    
+    # Select multiple templates at once (for batch operations)
+    elif data.get('action') == 'select_multiple':
+        template_ids = data.get('template_ids', [])
+        for template_id in template_ids:
+            if template_id not in selected_template_ids:
+                selected_template_ids.append(template_id)
+    
+    # Handle individual toggle
+    elif 'template_id' in data:
+        template_id = str(data['template_id'])
+        is_selected = data.get('selected', False)
+        
+        if is_selected and template_id not in selected_template_ids:
+            selected_template_ids.append(template_id)
+        elif not is_selected and template_id in selected_template_ids:
+            selected_template_ids.remove(template_id)
+    
+    # Store updated selection in session
+    session['template_ids'] = selected_template_ids
+    
+    return jsonify({
+        'success': True,
+        'selected_count': len(selected_template_ids),
+        'selected_ids': selected_template_ids
+    })
 
 @bp.route('/generate_stories', methods=['GET', 'POST'])
 def generate_stories():
@@ -1260,6 +1302,9 @@ def view_responses():
     if 'clear_responses' in request.args and 'response_ids' in session:
         session.pop('response_ids')
     
+    if 'clear_templates' in request.args and 'template_ids' in session:
+        session.pop('template_ids')
+
     # Build the base query
     query = db.session.query(Response).\
         join(Prompt, Response.prompt_id == Prompt.prompt_id).\
@@ -1275,7 +1320,7 @@ def view_responses():
     question_id = request.args.get('question_id', '')
     start_date = request.args.get('start_date', '')
     end_date = request.args.get('end_date', '')
-    sort = request.args.get('sort', 'date_desc')
+    sort = request.args.get('sort', 'date_desc')   
     
     # SOURCE-based filtering (primary selection)
     source = request.args.get('source', '')
@@ -1309,11 +1354,40 @@ def view_responses():
                 if story:
                     content_preview = story.content[:50] + '...' if len(story.content) > 50 else story.content
                     source_info = f"Story #{story_id_param} ({content_preview})"
+        elif source == 'template':
+            template_count = request.args.get('template_count', '1')
+            template_id_param = request.args.get('template_id')
+            
+            if template_count and int(template_count) > 1:
+                source_info = f"{template_count} Selected Templates"
+            elif template_id_param:
+                source_id = template_id_param
+                template = db.session.query(Template).get(int(template_id_param))
+                if template:
+                    content_preview = template.content[:50] + '...' if len(template.content) > 50 else template.content
+                    source_info = f"Template #{template_id_param} ({content_preview})"
     # Otherwise check for story_ids in session (multiple stories selected)
     elif session.get('story_ids') and 'clear_stories' not in request.args:
         story_ids = [int(sid) for sid in session.get('story_ids', [])]
         query = query.filter(Prompt.story_id.in_(story_ids))
-    
+    # Add this check for template_ids in session
+    elif session.get('template_ids') and 'clear_templates' not in request.args:
+        template_ids = [int(tid) for tid in session.get('template_ids', [])]
+        # First, get stories that use these templates
+        story_subquery = db.session.query(Story.story_id).filter(Story.template_id.in_(template_ids))
+        # Then filter prompts by those stories
+        query = query.filter(Prompt.story_id.in_(story_subquery))
+        # Set source info for display
+        template_count = len(template_ids)
+        if template_count == 1:
+            template = db.session.query(Template).get(template_ids[0])
+            if template:
+                content_preview = template.content[:50] + '...' if len(template.content) > 50 else template.content
+                source_info = f"Template #{template_ids[0]} ({content_preview})"
+            else:
+                source_info = f"Template #{template_ids[0]}"
+        else:
+            source_info = f"{template_count} Selected Templates"
     # SECONDARY FILTERING - Always apply regardless of source selection
     if provider:
         query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
@@ -1735,6 +1809,59 @@ def view_story_responses():
                            story_count=story_count,
                            story_id=int_story_ids[0] if story_count == 1 else None))
 
+@bp.route('/view_template_responses')
+def view_template_responses():
+    """View all responses related to templates selected in session"""
+    
+    # Get template IDs from session
+    template_ids = session.get('template_ids', [])
+    
+    if not template_ids:
+        flash('No templates selected. Please select at least one template.', 'warning')
+        return redirect(url_for('main.see_all_templates'))
+    
+    # Convert template IDs to integers for the database query
+    int_template_ids = [int(tid) for tid in template_ids]
+    
+    # Get all responses for these templates
+    responses = db.session.query(Response).\
+        join(Prompt, Response.prompt_id == Prompt.prompt_id).\
+        join(Story, Prompt.story_id == Story.story_id).\
+        filter(Story.template_id.in_(int_template_ids)).all()
+    
+    if not responses:
+        flash('No responses found for the selected templates', 'info')
+        return redirect(url_for('main.see_all_templates'))
+    
+    # Clear any existing response filters first
+    if 'response_ids' in session:
+        session.pop('response_ids')
+    
+    # Store response IDs as strings in session
+    session['response_ids'] = [str(r.response_id) for r in responses]
+    
+    # Generate appropriate message based on count
+    template_count = len(template_ids)
+    
+    #Content for info message in green box at top of Response Database
+    if template_count == 1:
+            # Get the template content for a single template
+            template = db.session.query(Template).get(int_template_ids[0])
+            if template:
+                content_preview = (template.content[:40] + '...') if len(template.content) > 40 else template.content
+                source_info = f"Template #{int_template_ids[0]} ({content_preview})"
+            else:
+                source_info = f"Template #{int_template_ids[0]}"
+    else:
+            # For multiple templates, show the count
+        source_info = f"{template_count} Selected Templates"
+
+    # Use a single redirect approach
+    return redirect(url_for('main.view_responses', 
+                           source='template',
+                           source_info = source_info, 
+                           template_count=template_count,
+                           template_id=int_template_ids[0] if template_count == 1 else None))
 
 @bp.route('/clear_session', methods=['GET'])
 def clear_session():
