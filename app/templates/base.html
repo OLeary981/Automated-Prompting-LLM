@@ -112,7 +112,11 @@
               <input type="checkbox" class="form-check-input" id="keepQuestion" checked>
               <label class="form-check-label" for="keepQuestion">
                 <strong>Current question</strong>
-                <small class="text-muted d-block">The question you're currently working with</small>
+                {% if session.get('question_content') %}
+                <small class="text-muted d-block">{{ session.get('question_content')|truncate(60) }}</small>
+                {% else %}
+                <small class="text-muted d-block">Question #{{ session.get('question_id') }}</small>
+                {% endif %}
               </label>
             </div>
             {% endif %}
@@ -121,6 +125,7 @@
           </form>
         </div>
         <div class="modal-footer">
+          <button type="button" class="btn btn-danger mr-auto" id="clearAllButton">Clear All</button>
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
           <button type="button" class="btn btn-primary" id="continueNavigation">Continue</button>
         </div>
@@ -159,7 +164,7 @@
         // Don't show when clicking on the currently active nav item
         if (link.parentElement.classList.contains('active')) return true;
 
-        // Only trigger on external navigation (not within the app)
+        // Only trigger on external navigation (not within the page)
         if (link.getAttribute('data-toggle') === 'modal') return true;
 
         return false;
@@ -180,6 +185,17 @@
           // Show modal
           $('#sessionPreservationModal').modal('show');
         });
+      });
+
+      document.getElementById('clearAllButton').addEventListener('click', function () {
+        const targetUrl = document.getElementById('continueUrl').value;
+        // Use the clear_all parameter instead of individual clear parameters
+        const clearUrl = "{{ url_for('main.clear_session') }}?redirect_to=" +
+          encodeURIComponent(targetUrl) + "&clear_all";
+
+        // Close modal and navigate
+        $('#sessionPreservationModal').modal('hide');
+        window.location.href = clearUrl;
       });
 
       // Handle the continue button click
@@ -213,11 +229,15 @@
         }
         {% endif %}
 
+
+
         // Close modal and navigate to our clear_session route with redirection
         $('#sessionPreservationModal').modal('hide');
         window.location.href = clearUrl;
       });
     });
+
+
   </script>
   {% endif %}
 </body>

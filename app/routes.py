@@ -521,6 +521,8 @@ def update_question_selection():
     if data.get('clear'):
         if 'question_id' in session:
             session.pop('question_id')
+        if 'question_content' in session:
+            session.pop('question_content')
         return jsonify({'success': True})
     
     # Otherwise update the question selection
@@ -529,7 +531,11 @@ def update_question_selection():
         # Verify the question exists
         question = db.session.query(Question).get(question_id)
         if question:
+            # Store both ID and content in session
             session['question_id'] = question_id
+            session['question_content'] = question.content            
+            print(f"Question stored in session - ID: {question_id}, Content: '{question.content[:30]}...'")
+            
             return jsonify({
                 'success': True,
                 'question_id': question_id,
@@ -538,6 +544,7 @@ def update_question_selection():
         return jsonify({'success': False, 'message': 'Question not found'}), 404
     
     return jsonify({'success': False, 'message': 'No question_id provided'}), 400
+    
 
 @bp.route('/select_parameters', methods=['GET', 'POST'])
 def select_parameters():
@@ -1795,6 +1802,8 @@ def clear_session():
             
         if clear_question and 'question_id' in session:
             session.pop('question_id')
+        if 'question_content' in session:
+            session.pop('question_content')
             items_cleared.append('question')
             
         # Only show a flash message if something was cleared
