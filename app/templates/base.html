@@ -142,7 +142,7 @@
   <script>
     // Automatically close alerts after 4 seconds
     window.setTimeout(function () {
-      $(".alert").alert('close');
+      $(".alert:not(.alert-persistent)").alert('close');
     }, 3000);
   </script>
   {% endblock %}

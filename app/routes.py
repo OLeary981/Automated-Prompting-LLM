@@ -83,6 +83,19 @@ def see_all_stories():
     category_filter = request.args.get('category_filter', '')
     sort_by = request.args.get('sort_by', 'desc')  # Default to descending (newest first)
     
+    # Check if we're filtering by templates (save source for template use)
+    source = request.args.get('source')
+    
+    # Store template filter information consistently in session FIRST
+    if source == 'templates':
+        session['stories_source'] = 'templates'
+        # Also set template_count if provided
+        if request.args.get('template_count'):
+            session['template_count'] = request.args.get('template_count')
+    
+    # THEN check if we're filtering by templates
+    is_template_filtered = session.get('stories_source') == 'templates' and session.get('template_ids')
+    
     # Get the current page from the request, default to page 1
     page = request.args.get('page', 1, type=int)
     per_page = 20  # Number of stories per page
@@ -91,6 +104,11 @@ def see_all_stories():
     query = db.session.query(Story).options(
         db.joinedload(Story.story_categories).joinedload(StoryCategory.category)
     )
+
+    # Filter by templates if needed
+    if is_template_filtered:
+        template_ids = [int(tid) for tid in session.get('template_ids', [])]
+        query = query.filter(Story.template_id.in_(template_ids))
 
     # Apply search filter if provided
     if search_text:
@@ -121,15 +139,63 @@ def see_all_stories():
     # Get currently selected story IDs from session
     selected_story_ids = session.get('story_ids', [])
 
-    # Render the template with stories and pagination data
+    # Get the template count for display (either from request or session)
+    template_count = session.get('template_count')
+    
+    # Render with explicit source parameters
     return render_template(
         'see_all_stories.html',
         stories=stories,
         categories=categories,
         pagination=pagination,
         sort_by=sort_by,
-        selected_story_ids=selected_story_ids
+        selected_story_ids=selected_story_ids,
+        is_template_filtered=is_template_filtered,
+        template_count=template_count,
+        source=session.get('stories_source')  # Use session value for consistency
     )
+       
+
+@bp.route('/view_template_stories')
+def view_template_stories():
+    """View all stories related to templates selected in session"""
+    
+    # Get template IDs from session
+    template_ids = session.get('template_ids', [])
+    
+    if not template_ids:
+        flash('No templates selected. Please select at least one template.', 'warning')
+        return redirect(url_for('main.see_all_templates'))
+    
+    # Convert template IDs to integers for the database query
+    int_template_ids = [int(tid) for tid in template_ids]
+    
+    # Get story count for these templates before redirecting
+    stories_count = db.session.query(Story).filter(Story.template_id.in_(int_template_ids)).count()
+    
+    if stories_count == 0:
+        flash('No stories found for the selected templates', 'info')
+        return redirect(url_for('main.see_all_templates'))
+    
+    # Clear any previous story selection
+    if 'story_ids' in session:
+        session.pop('story_ids')
+        
+    # Store story info in session
+    session['stories_source'] = 'templates'
+    session['template_count'] = len(template_ids)
+    
+    # Generate template information for the flash message
+    template_text = "1 template" if len(template_ids) == 1 else f"{len(template_ids)} templates"
+    
+    # Flash a message showing the filter is active
+    flash(f'Showing {stories_count} stories from {template_text}', 'info')
+    
+    # Redirect to see_all_stories with a source parameter
+    return redirect(url_for('main.see_all_stories', 
+                          source='templates',
+                          template_count=len(template_ids)))
+
 
 @bp.route('/update_story_selection', methods=['POST'])
 def update_story_selection():
@@ -1902,7 +1968,17 @@ def clear_session():
     else:
         # Selective clearing of session data
         items_cleared = []
-        
+        stories_source = request.args.get('stories_source') == 'true'
+        clear_templates = request.args.get('clear_templates') == 'true'
+
+        if stories_source and 'stories_source' in session:
+            session.pop('stories_source')
+            session.pop('template_count', None)  # Also clear template_count
+            items_cleared.append('template filter')
+
+        if clear_templates and 'template_ids' in session:
+            session.pop('template_ids')
+            items_cleared.append('template selection')
         # Clear model and provider if requested
         if clear_model:
             model_cleared = False
@@ -1937,6 +2013,8 @@ def clear_session():
         if items_cleared:
             flash(f'Cleared {", ".join(items_cleared)} from session', 'info')
         
+       
+
         print("Session after selective clearing:", dict(session))
     
     # Get the redirect URL - either specified or default to index

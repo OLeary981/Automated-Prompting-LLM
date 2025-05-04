@@ -21,17 +21,17 @@
                 <label>Available Fields:</label>
                 <div class="field-buttons">
                     {% if template_fields %}
-                        {% for field in template_fields %}
-                            <button type="button" class="btn btn-sm btn-outline-secondary me-2 mb-2 field-btn" 
-                                    data-field="{{ field }}">{{ field }}</button>
-                        {% endfor %}
+                    {% for field in template_fields %}
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-2 mb-2 field-btn"
+                        data-field="{{ field }}">{{ field }}</button>
+                    {% endfor %}
                     {% else %}
-                        <p class="text-muted">No fields found in the database</p>
+                    <p class="text-muted">No fields found in the database</p>
                     {% endif %}
                 </div>
                 <small class="form-text text-muted">Click any field to add it to your template.</small>
             </div>
-            
+
             <form action="{{ url_for('main.add_template') }}" method="POST">
                 <div class="form-group">
                     <label for="template_content">Template Content</label>
@@ -51,7 +51,8 @@
             <h5 class="mb-0">Template Selection</h5>
             <div>
                 <span class="badge bg-primary me-2">{{ templates|length }} templates visible</span>
-                <span class="badge bg-success" id="selected-count-badge">{{ selected_template_ids|length|default(0) }} templates selected</span>
+                <span class="badge bg-success" id="selected-count-badge">{{ selected_template_ids|length|default(0) }}
+                    templates selected</span>
             </div>
         </div>
         <div class="card-body">
@@ -75,11 +76,21 @@
                     </button>
                 </div>
             </div>
-            
+
+
             <div class="d-grid gap-2">
-                <button id="view-responses-btn" class="btn btn-info btn-lg {% if not selected_template_ids %}disabled{% endif %}" 
-                        onclick="viewSelectedResponses()">
-                    View Responses for <span id="selected-count">{{ selected_template_ids|length|default(0) }}</span> Selected Templates
+                <button id="view-responses-btn"
+                    class="btn btn-info btn-lg {% if not selected_template_ids %}disabled{% endif %}"
+                    onclick="viewSelectedResponses()">
+                    View Responses for <span id="selected-count-responses">{{ selected_template_ids|length|default(0)
+                        }}</span>
+                    Selected Templates
+                </button>
+                <button id="view-stories-btn"
+                    class="btn btn-primary btn-lg {% if not selected_template_ids %}disabled{% endif %}"
+                    onclick="viewSelectedTemplateStories()">
+                    View Stories for <span id="selected-count-stories">{{ selected_template_ids|length|default(0)
+                        }}</span> Selected Templates
                 </button>
             </div>
         </div>
@@ -114,95 +125,111 @@
         {% if pagination %}
         {{ pagination.page * pagination.per_page - pagination.per_page + 1 }} –
         {% if pagination.page * pagination.per_page < pagination.total %} {{ pagination.page * pagination.per_page }} {%
-            else %} {{ pagination.total }} {% endif %} of {{ pagination.total }} {% else %} {{ templates|length }} {% endif
-            %} templates </p>
+            else %} {{ pagination.total }} {% endif %} of {{ pagination.total }} {% else %} {{ templates|length }} {%
+            endif %} templates </p>
 
-    <!-- Templates Table -->
-    <table class="table table-striped table-bordered table-hover table-sm">
-        <thead>
-            <tr>
-                <th style="width: 50px;">Select</th>
-                <th>ID</th>
-                <th>Template</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for template in templates %}
-            <tr>
-                <td class="text-center">
-                    <input type="checkbox" class="template-checkbox" data-id="{{ template.template_id }}"
-                        {% if selected_template_ids and template.template_id|string in selected_template_ids %}checked{% endif %}>
-                </td>
-                <td>{{ template.template_id }}</td>
-                <td>{{ template.content }}</td>
-                <td>
-                    <form method="POST" action="{{ url_for('main.generate_stories') }}" class="d-inline">
-                        <input type="hidden" name="template_id" value="{{ template.template_id }}">
-                        <button type="submit" class="btn btn-sm btn-primary">Generate Stories</button>
-                    </form>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="4" class="text-center">No templates found matching your criteria</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            <!-- Templates Table -->
+            <table class="table table-striped table-bordered table-hover table-sm">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">Select</th>
+                        <th>ID</th>
+                        <th>Template</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in templates %}
+                    <tr>
+                        <td class="text-center">
+                            <input type="checkbox" class="template-checkbox" data-id="{{ template.template_id }}" {% if
+                                selected_template_ids and template.template_id|string in selected_template_ids
+                                %}checked{% endif %}>
+                        </td>
+                        <td>{{ template.template_id }}</td>
+                        <td>{{ template.content }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('main.generate_stories') }}" class="d-inline">
+                                <input type="hidden" name="template_id" value="{{ template.template_id }}">
+                                <button type="submit" class="btn btn-sm btn-primary">Generate Stories</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center">No templates found matching your criteria</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
-    <!-- Pagination -->
-    {% if pagination %}
-    <nav aria-label="Page navigation">
-        <ul class="pagination">
-            {% if pagination.has_prev %}
-            <li class="page-item">
-                <a class="page-link"
-                    href="{{ url_for('main.see_all_templates', page=pagination.prev_num, search_text=request.args.get('search_text', ''), sort_by=sort_by) }}">Previous</a>
-            </li>
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            <!-- Pagination -->
+            {% if pagination %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="{{ url_for('main.see_all_templates', page=pagination.prev_num, search_text=request.args.get('search_text', ''), sort_by=sort_by) }}">Previous</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                    {% endif %}
+
+                    {% for page_num in pagination.iter_pages() %}
+                    {% if page_num %}
+                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                        <a class="page-link"
+                            href="{{ url_for('main.see_all_templates', page=page_num, search_text=request.args.get('search_text', ''), sort_by=sort_by) }}">{{
+                            page_num }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="{{ url_for('main.see_all_templates', page=pagination.next_num, search_text=request.args.get('search_text', ''), sort_by=sort_by) }}">Next</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
             {% endif %}
-
-            {% for page_num in pagination.iter_pages() %}
-            {% if page_num %}
-            <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
-                <a class="page-link"
-                    href="{{ url_for('main.see_all_templates', page=page_num, search_text=request.args.get('search_text', ''), sort_by=sort_by) }}">{{
-                    page_num }}</a>
-            </li>
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">...</span></li>
-            {% endif %}
-            {% endfor %}
-
-            {% if pagination.has_next %}
-            <li class="page-item">
-                <a class="page-link"
-                    href="{{ url_for('main.see_all_templates', page=pagination.next_num, search_text=request.args.get('search_text', ''), sort_by=sort_by) }}">Next</a>
-            </li>
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">Next</span></li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
-</div> 
+</div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Track selected templates
         const checkboxes = document.querySelectorAll('.template-checkbox');
-        const selectedCount = document.getElementById('selected-count');
-        const selectedCountBadge = document.getElementById('selected-count-badge');
-        const viewResponsesButton = document.getElementById('view-responses-btn');
-        
+
+        // Helper function to update all count displays
+        function updateCountDisplays(count) {
+            // Update both count displays
+            document.getElementById('selected-count-responses').textContent = count;
+            document.getElementById('selected-count-stories').textContent = count;
+            document.getElementById('selected-count-badge').textContent = count + " templates selected";
+            
+            // Update button states
+            const buttons = ['view-responses-btn', 'view-stories-btn'];
+            buttons.forEach(btnId => {
+                if (count > 0) {
+                    document.getElementById(btnId).classList.remove('disabled');
+                } else {
+                    document.getElementById(btnId).classList.add('disabled');
+                }
+            });
+        }
+
         // Add event listeners to all checkboxes
         checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
+            checkbox.addEventListener('change', function () {
                 const templateId = this.getAttribute('data-id');
                 const isChecked = this.checked;
-                
+
                 // Send AJAX request to update session
                 fetch('{{ url_for("main.update_template_selection") }}', {
                     method: 'POST',
@@ -217,16 +244,8 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    // Always update the count displays
-                    selectedCount.textContent = data.selected_count;
-                    selectedCountBadge.textContent = data.selected_count + " templates selected";
-                    
-                    // Enable/disable the view responses button based on selection
-                    if (data.selected_count > 0) {
-                        viewResponsesButton.classList.remove('disabled');
-                    } else {
-                        viewResponsesButton.classList.add('disabled');
-                    }
+                    // Update all count displays
+                    updateCountDisplays(data.selected_count);
                 })
                 .catch(error => {
                     console.error('Error updating selection:', error);
@@ -236,38 +255,38 @@
 
         // Initialize field buttons
         document.querySelectorAll('.field-btn').forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function () {
                 const fieldName = this.getAttribute('data-field');
                 insertFieldAtCursor(document.getElementById('template_content'), fieldName);
             });
         });
-        
+
         // Function to insert field at cursor position
         function insertFieldAtCursor(textarea, fieldName) {
             const startPos = textarea.selectionStart;
             const endPos = textarea.selectionEnd;
             const textToInsert = `{${fieldName}}`;
-            
+
             // Insert the field at cursor position
-            textarea.value = 
-                textarea.value.substring(0, startPos) + 
-                textToInsert + 
+            textarea.value =
+                textarea.value.substring(0, startPos) +
+                textToInsert +
                 textarea.value.substring(endPos);
-                
+
             // Set cursor position after inserted field
             textarea.focus();
             textarea.selectionStart = startPos + textToInsert.length;
             textarea.selectionEnd = startPos + textToInsert.length;
-            
+
             // Trigger input event for validation (if you have template validation)
             textarea.dispatchEvent(new Event('input', { bubbles: true }));
         }
     });
-    
+
     // Select all visible templates
     function selectAllVisible() {
         const checkboxes = document.querySelectorAll('.template-checkbox');
-        
+
         // First collect all template IDs that need to be selected
         const templateIdsToSelect = [];
         checkboxes.forEach(checkbox => {
@@ -277,7 +296,7 @@
                 checkbox.checked = true;  // Update visual state
             }
         });
-        
+
         // If there are templates to select, make a single batch request
         if (templateIdsToSelect.length > 0) {
             fetch('{{ url_for("main.update_template_selection") }}', {
@@ -293,14 +312,8 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Update counts
-                document.getElementById('selected-count').textContent = data.selected_count;
-                document.getElementById('selected-count-badge').textContent = data.selected_count + " templates selected";
-                
-                // Enable view responses button
-                if (data.selected_count > 0) {
-                    document.getElementById('view-responses-btn').classList.remove('disabled');
-                }
+                // Update all count displays
+                updateCountDisplays(data.selected_count);
             })
             .catch(error => console.error('Error selecting templates:', error));
         }
@@ -309,7 +322,7 @@
     // Deselect all visible templates
     function deselectAllVisible() {
         const checkboxes = document.querySelectorAll('.template-checkbox');
-        
+
         // First collect all template IDs that need to be deselected
         const templateIdsToDeselect = [];
         checkboxes.forEach(checkbox => {
@@ -319,7 +332,7 @@
                 checkbox.checked = false;  // Update visual state
             }
         });
-        
+
         // If there are templates to deselect, make a single batch request
         if (templateIdsToDeselect.length > 0) {
             fetch('{{ url_for("main.update_template_selection") }}', {
@@ -335,14 +348,8 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Update counts
-                document.getElementById('selected-count').textContent = data.selected_count;
-                document.getElementById('selected-count-badge').textContent = data.selected_count + " templates selected";
-                
-                // Disable view responses button if no templates selected
-                if (data.selected_count === 0) {
-                    document.getElementById('view-responses-btn').classList.add('disabled');
-                }
+                // Update all count displays
+                updateCountDisplays(data.selected_count);
             })
             .catch(error => console.error('Error deselecting templates:', error));
         }
@@ -351,11 +358,11 @@
     // Invert selection of visible templates
     function invertVisibleSelection() {
         const checkboxes = document.querySelectorAll('.template-checkbox');
-        
+
         // Collect template IDs to select and deselect
         const templateIdsToSelect = [];
         const templateIdsToDeselect = [];
-        
+
         checkboxes.forEach(checkbox => {
             const templateId = checkbox.getAttribute('data-id');
             if (checkbox.checked) {
@@ -366,7 +373,7 @@
                 checkbox.checked = true;   // Update visual state
             }
         });
-        
+
         // If there are changes to make, send a batch request
         if (templateIdsToSelect.length > 0 || templateIdsToDeselect.length > 0) {
             fetch('{{ url_for("main.update_template_selection") }}', {
@@ -383,19 +390,29 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Update counts
-                document.getElementById('selected-count').textContent = data.selected_count;
-                document.getElementById('selected-count-badge').textContent = data.selected_count + " templates selected";
-                
-                // Enable/disable view responses button
-                if (data.selected_count > 0) {
-                    document.getElementById('view-responses-btn').classList.remove('disabled');
-                } else {
-                    document.getElementById('view-responses-btn').classList.add('disabled');
-                }
+                // Update all count displays
+                updateCountDisplays(data.selected_count);
             })
             .catch(error => console.error('Error inverting template selection:', error));
         }
+    }
+
+    // Helper function to update all count displays (defined outside DOMContentLoaded for global access)
+    function updateCountDisplays(count) {
+        // Update both count displays
+        document.getElementById('selected-count-responses').textContent = count;
+        document.getElementById('selected-count-stories').textContent = count;
+        document.getElementById('selected-count-badge').textContent = count + " templates selected";
+        
+        // Update button states
+        const buttons = ['view-responses-btn', 'view-stories-btn'];
+        buttons.forEach(btnId => {
+            if (count > 0) {
+                document.getElementById(btnId).classList.remove('disabled');
+            } else {
+                document.getElementById(btnId).classList.add('disabled');
+            }
+        });
     }
 
     // Clear all selected templates
@@ -417,14 +434,10 @@
             document.querySelectorAll('.template-checkbox').forEach(checkbox => {
                 checkbox.checked = false;
             });
-            
+
             // Update count displays to zero
-            document.getElementById('selected-count').textContent = "0";
-            document.getElementById('selected-count-badge').textContent = "0 templates selected";
-            
-            // Disable the view responses button
-            document.getElementById('view-responses-btn').classList.add('disabled');
-            
+            updateCountDisplays(0);
+
             // Provide user feedback
             alert('All template selections have been cleared from all pages.');
         })
@@ -436,11 +449,23 @@
     // Function to view responses for selected templates
     function viewSelectedResponses() {
         // Get the selected template IDs from the session (they're already there)
-        const selectedCount = parseInt(document.getElementById('selected-count').textContent);
-        
+        const selectedCount = parseInt(document.getElementById('selected-count-responses').textContent);
+
         if (selectedCount > 0) {
             // Redirect to view_responses with template_ids filter
             window.location.href = '{{ url_for("main.view_template_responses") }}'
+        } else {
+            alert('Please select at least one template first.');
+        }
+    }
+
+    function viewSelectedTemplateStories() {
+        // Get the selected template IDs from the session
+        const selectedCount = parseInt(document.getElementById('selected-count-stories').textContent);
+
+        if (selectedCount > 0) {
+            // Redirect to view_template_stories route
+            window.location.href = '{{ url_for("main.view_template_stories") }}'
         } else {
             alert('Please select at least one template first.');
         }
