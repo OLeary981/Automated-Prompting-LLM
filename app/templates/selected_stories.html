@@ -17,7 +17,7 @@
         <div class="card-body">
             <p class="lead">These stories will be processed by the LLM with your selected question.</p>
             <div class="d-flex justify-content-between">
-                <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-outline-primary">
+                <a href="{{ url_for('stories.list') }}" class="btn btn-outline-primary">
                     <i class="bi bi-plus-circle"></i> Select More Stories
                 </a>
                 
@@ -52,7 +52,7 @@
                         <td>{{ story.story_id }}</td>
                         <td>{{ story.content }}</td>
                         <td class="text-center">
-                            <form method="POST" action="{{ url_for('main.select_story') }}" class="d-inline">
+                            <form method="POST" action="{{ url_for('stories.select') }}" class="d-inline">
                                 <button type="submit" name="deselect_story_id" value="{{ story.story_id }}" 
                                         class="btn btn-sm btn-outline-danger">
                                     <i class="bi bi-x-circle"></i> Deselect
@@ -68,7 +68,7 @@
     {% else %}
     <div class="alert alert-info">
         <i class="bi bi-info-circle me-2"></i> No stories have been selected yet. 
-        <a href="{{ url_for('main.see_all_stories') }}" class="alert-link">Go to All Stories</a> to select some.
+        <a href="{{ url_for('stories.list') }}" class="alert-link">Go to All Stories</a> to select some.
     </div>
     {% endif %}
     
@@ -93,7 +93,7 @@
 <script>
     function clearAllAndRedirect() {
     // Send request to clear all selected stories
-    fetch('{{ url_for("main.update_story_selection") }}', {
+    fetch('{{ url_for("stories.update_selection") }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -107,7 +107,7 @@
     .then(data => {
         if (data.success) {
             // After successfully clearing, redirect to the stories page
-            window.location.href = '{{ url_for("main.see_all_stories") }}';
+            window.location.href = '{{ url_for("stories.list") }}';
         }
     })
     .catch(error => {

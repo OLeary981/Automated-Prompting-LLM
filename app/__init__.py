@@ -32,7 +32,7 @@ def create_app(config=None):
         return {}
 
     # Register routes
-    from . import routes
-    app.register_blueprint(routes.bp)
+    from .blueprints import register_blueprints
+    register_blueprints(app)
 
     return app

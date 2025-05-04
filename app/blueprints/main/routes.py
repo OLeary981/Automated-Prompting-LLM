@@ -25,36 +25,7 @@ _event_loop_lock = threading.Lock()
 def index():
     return render_template('index.html')
 
-# @bp.route('/add_story', methods=['GET', 'POST'])
-# def add_story():
-#     if request.method == 'POST':
-#         content = request.form.get('story_content')
-#         new_category = request.form.get('new_category')
-#         selected_categories = request.form.getlist('categories')
-        
-#         # Convert selected categories to integers
-#         category_ids = [int(cat_id) for cat_id in selected_categories if cat_id]
-        
-#         if content:
-#             try:
-#                 # Process new category if provided
-#                 if new_category and new_category.strip():
-#                     new_category_id = category_service.add_category(new_category.strip())
-#                     if new_category_id not in category_ids:
-#                         category_ids.append(new_category_id)
-                
-#                 # Add story with categories
-#                 story_id = story_service.add_story(content, category_ids)
-#                 flash('Story added successfully!', 'success')
-#                 print(f"Story ID: {story_id}")
-#             except Exception as e:
-#                 flash(f'Error adding story: {str(e)}', 'danger')
-#                 print(f"An error occurred: {e}")
-#         return redirect(url_for('stories.list'))
-    
-#     # Get all existing categories for the form
-#     categories = category_service.get_all_categories()
-#     return render_template('add_story.html', categories=categories)
+
 
 @main_bp.route('/manage_categories', methods=['GET', 'POST'])
 def manage_categories():
@@ -76,98 +47,11 @@ def manage_categories():
     
     categories = category_service.get_all_categories()
     return render_template('manage_categories.html', categories=categories)
+   
 
-# @bp.route('/see_all_stories')
-# def see_all_stories():
-#     # Get the search and filter parameters
-#     search_text = request.args.get('search_text', '')
-#     category_filter = request.args.get('category_filter', '')
-#     sort_by = request.args.get('sort_by', 'desc')  # Default to descending (newest first)
-    
-#     # Get the current page from the request, default to page 1
-#     page = request.args.get('page', 1, type=int)
-#     per_page = 20  # Number of stories per page
 
-#     # Start building the query
-#     query = db.session.query(Story).options(
-#         db.joinedload(Story.story_categories).joinedload(StoryCategory.category)
-#     )
 
-#     # Apply search filter if provided
-#     if search_text:
-#         query = query.filter(Story.content.ilike(f'%{search_text}%'))
-    
-#     # Apply category filter if provided
-#     if category_filter:
-#         try:
-#             category_id = int(category_filter)
-#             query = query.join(StoryCategory).filter(StoryCategory.category_id == category_id)
-#         except (ValueError, TypeError):
-#             # Handle invalid category_filter value
-#             flash('Invalid category filter', 'warning')
-    
-#     # Apply sorting based on the `id`
-#     if sort_by == 'asc':
-#         query = query.order_by(Story.story_id.asc())  # Oldest to most recent (lower ID first)
-#     else:
-#         query = query.order_by(Story.story_id.desc())  # Most recent to oldest (higher ID first)
 
-#     # Apply pagination
-#     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-#     stories = pagination.items
-
-#     # Get all categories for the dropdown
-#     categories = category_service.get_all_categories()
-    
-#     # Get currently selected story IDs from session
-#     selected_story_ids = session.get('story_ids', [])
-
-#     # Render the template with stories and pagination data
-#     return render_template(
-#         'see_all_stories.html',
-#         stories=stories,
-#         categories=categories,
-#         pagination=pagination,
-#         sort_by=sort_by,
-#         selected_story_ids=selected_story_ids
-#     )
-
-# @bp.route('/update_story_selection', methods=['POST'])
-# def update_story_selection():
-#     data = request.get_json()
-    
-#     # Get the current selection from session
-#     selected_story_ids = session.get('story_ids', [])
-    
-#     # Clear all selected stories
-#     if data.get('action') == 'clear_all':
-#         selected_story_ids = []
-    
-#     # Select multiple stories at once (for batch operations)
-#     elif data.get('action') == 'select_multiple':
-#         story_ids = data.get('story_ids', [])
-#         for story_id in story_ids:
-#             if story_id not in selected_story_ids:
-#                 selected_story_ids.append(story_id)
-    
-#     # Handle individual toggle
-#     elif 'story_id' in data:
-#         story_id = str(data['story_id'])
-#         is_selected = data.get('selected', False)
-        
-#         if is_selected and story_id not in selected_story_ids:
-#             selected_story_ids.append(story_id)
-#         elif not is_selected and story_id in selected_story_ids:
-#             selected_story_ids.remove(story_id)
-    
-#     # Store updated selection in session
-#     session['story_ids'] = selected_story_ids
-    
-#     return jsonify({
-#         'success': True,
-#         'selected_count': len(selected_story_ids),
-#         'selected_ids': selected_story_ids
-#     })
 
 @main_bp.route('/see_all_questions')
 def see_all_questions():
@@ -216,11 +100,15 @@ def see_all_templates():
     fields = db.session.query(Field.field).order_by(Field.field).all()
     template_fields = [field[0] for field in fields]  # Extract field names from result tuples
     
+    # Get currently selected template IDs from session
+    selected_template_ids = session.get('template_ids', [])
+    
     return render_template('see_all_templates.html', 
                           templates=templates, 
                           pagination=pagination, 
                           sort_by=sort_by,
-                          template_fields=template_fields)
+                          template_fields=template_fields,
+                          selected_template_ids=selected_template_ids)
 
 @main_bp.route('/add_template', methods=['POST'])
 def add_template():
@@ -230,6 +118,44 @@ def add_template():
         db.session.add(new_template)
         db.session.commit()
     return redirect(url_for('main.see_all_templates'))
+
+@main_bp.route('/update_template_selection', methods=['POST'])
+def update_template_selection():
+    """AJAX endpoint to update template selection in session"""
+    data = request.get_json()
+    
+    # Get the current selection from session
+    selected_template_ids = session.get('template_ids', [])
+    
+    # Clear all selected templates
+    if data.get('action') == 'clear_all':
+        selected_template_ids = []
+    
+    # Select multiple templates at once (for batch operations)
+    elif data.get('action') == 'select_multiple':
+        template_ids = data.get('template_ids', [])
+        for template_id in template_ids:
+            if template_id not in selected_template_ids:
+                selected_template_ids.append(template_id)
+    
+    # Handle individual toggle
+    elif 'template_id' in data:
+        template_id = str(data['template_id'])
+        is_selected = data.get('selected', False)
+        
+        if is_selected and template_id not in selected_template_ids:
+            selected_template_ids.append(template_id)
+        elif not is_selected and template_id in selected_template_ids:
+            selected_template_ids.remove(template_id)
+    
+    # Store updated selection in session
+    session['template_ids'] = selected_template_ids
+    
+    return jsonify({
+        'success': True,
+        'selected_count': len(selected_template_ids),
+        'selected_ids': selected_template_ids
+    })
 
 @main_bp.route('/generate_stories', methods=['GET', 'POST'])
 def generate_stories():
@@ -400,7 +326,17 @@ def delete_word():
     return jsonify({'success': False, 'message': 'Invalid data provided.'}), 400
 
 @main_bp.route('/select_model', methods=['GET', 'POST'])
-def select_model():
+def select_model():    
+    # Check for story IDs in session
+    if not session.get('story_ids') and request.method == 'GET':
+        flash('To continue, please select one or more stories first.', 'info')
+        return redirect(url_for('main.see_all_stories'))
+    
+    # Check for question_id in session
+    if not session.get('question_id') and request.method == 'GET':
+        flash('Please select a question to ask about your stories.', 'info')
+        return redirect(url_for('main.see_all_questions'))
+
     if request.method == 'POST':
         model_id = request.form.get('model_id')
         model = db.session.query(Model).filter_by(model_id=model_id).first()
@@ -415,82 +351,9 @@ def select_model():
         models = db.session.query(Model).join(Provider).all()
         return render_template('select_model.html', models=models)
 
-# @bp.route('/select_story', methods=['GET', 'POST'])
-# def select_story():
-#     if request.method == 'POST':
-#         if 'deselect_story_id' in request.form:
-#             # Deselect the story
-#             story_id = request.form.get('deselect_story_id')
-#             story_ids = session.get('story_ids', [])
-#             if story_id in story_ids:
-#                 story_ids.remove(story_id)
-#             session['story_ids'] = story_ids
-#             print(session)
-#         else:
-#             # Select the story
-#             story_id = request.form.get('story_id')
-#             story = db.session.query(Story).filter_by(story_id=story_id).first()
-#             if story:
-#                 story_ids = session.get('story_ids', [])
-#                 if story_id not in story_ids:
-#                     story_ids.append(story_id)
-#                 session['story_ids'] = story_ids
-#                 print(session)
-#         return redirect(url_for('main.select_story'))
-#     else:
-#         # GET request - check for mode parameter
-#         # mode = request.args.get('mode') - commented out as not used at the moment (testing if all still ok)
-#         story_ids = session.get('story_ids', [])
-        
-#         # If mode=add or no stories selected, show the selection page
-#         # if mode == 'add' or not story_ids:
-#         if not story_ids:
-#             return redirect(url_for('stories.list'))
-#         else:
-#             # Otherwise show the selected stories
-#             selected_stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
-#             all_stories = story_service.get_all_stories()
-#             return render_template('selected_stories.html', selected_stories=selected_stories, all_stories=all_stories)
 
-# @bp.route('/select_all_filtered', methods=['POST'])
-# def select_all_filtered():
-#     # Check if the request is AJAX
-#     if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-#         return jsonify({'error': 'Invalid request'}), 400
-    
-#     # Get filter parameters from the request
-#     data = request.get_json()
-#     search_text = data.get('search_text', '')
-#     category_filter = data.get('category_filter', '')
-    
-#     # Build the query (similar to see_all_stories but get only IDs)
-#     query = db.session.query(Story.story_id)
-    
-#     # Apply search filter if provided
-#     if search_text:
-#         query = query.filter(Story.content.ilike(f'%{search_text}%'))
-    
-#     # Apply category filter if provided
-#     if category_filter and category_filter.strip():
-#         try:
-#             category_id = int(category_filter)
-#             query = query.join(StoryCategory).filter(StoryCategory.category_id == category_id)
-#         except (ValueError, TypeError):
-#             # Invalid category_filter, ignore it
-#             pass
-    
-#     # Get all story IDs that match the filters
-#     story_ids = [str(row.story_id) for row in query.all()]
-    
-#     # Update session with these IDs
-#     session['story_ids'] = story_ids
-    
-#     # Return the number of stories selected
-#     return jsonify({
-#         'success': True,
-#         'selected_count': len(story_ids),
-#         'selected_ids': story_ids
-#     })
+
+
 
 @main_bp.route('/select_question', methods=['GET', 'POST'])
 def select_question():
@@ -502,8 +365,40 @@ def select_question():
         return redirect(url_for('main.select_model'))  # Next step
     else:
         questions = llm_service.get_all_questions()
-        return render_template('select_question.html', questions=questions)
+        return render_template('see_all_questions.html', questions=questions)
 
+@main_bp.route('/update_question_selection', methods=['POST'])
+def update_question_selection():
+    data = request.get_json()
+    
+    # Check if we're clearing the selection
+    if data.get('clear'):
+        if 'question_id' in session:
+            session.pop('question_id')
+        if 'question_content' in session:
+            session.pop('question_content')
+        return jsonify({'success': True})
+    
+    # Otherwise update the question selection
+    question_id = data.get('question_id')
+    if question_id:
+        # Verify the question exists
+        question = db.session.query(Question).get(question_id)
+        if question:
+            # Store both ID and content in session
+            session['question_id'] = question_id
+            session['question_content'] = question.content            
+            print(f"Question stored in session - ID: {question_id}, Content: '{question.content[:30]}...'")
+            
+            return jsonify({
+                'success': True,
+                'question_id': question_id,
+                'content': question.content
+            })
+        return jsonify({'success': False, 'message': 'Question not found'}), 404
+    
+    return jsonify({'success': False, 'message': 'No question_id provided'}), 400
+    
 
 @main_bp.route('/select_parameters', methods=['GET', 'POST'])
 def select_parameters():
@@ -519,7 +414,37 @@ def select_parameters():
         model_id = session.get('model_id')
         model = llm_service.get_model_by_id(model_id)
         parameters = model.parameters
-        print("Time to select parameters")
+        saved_parameters = session.get('parameters', {})
+        
+        # Check if we have saved parameters that match the current model's parameters
+        # If so, use them instead of defaults
+        if saved_parameters:
+            print("Found saved parameters in session:", saved_parameters)
+            # Create a new parameters dict with saved values where available
+            for param_name, param_details in parameters.items():
+                if param_name in saved_parameters:
+                    # Convert the saved value to the appropriate type
+                    saved_value = saved_parameters[param_name]
+                    if param_details['type'] == 'float':
+                        try:
+                            saved_value = float(saved_value)
+                            # Check if saved value is within allowed range
+                            if saved_value >= param_details['min_value'] and saved_value <= param_details['max_value']:
+                                param_details['default'] = saved_value
+                        except (ValueError, TypeError):
+                            # Invalid saved value, stick with the default
+                            pass
+                    elif param_details['type'] == 'int':
+                        try:
+                            saved_value = int(saved_value)
+                            # Check if saved value is within allowed range
+                            if saved_value >= param_details['min_value'] and saved_value <= param_details['max_value']:
+                                param_details['default'] = saved_value
+                        except (ValueError, TypeError):
+                            # Invalid saved value, stick with the default
+                            pass
+        
+        print("Using parameters:", parameters)
         return render_template('select_parameters.html', parameters=parameters)
 
 def run_async_loop():
@@ -559,80 +484,154 @@ def can_start_new_job():
     return active_jobs < 5
 
 # Main processing function that will run in the background asyncio loop
-async def process_llm_requests(job_id, model_id, story_ids, question_id, parameters):
+async def process_llm_requests(job_id, model_id=None, story_ids=None, question_id=None, parameters=None):
     app = create_app()
     with app.app_context():
         job = processing_jobs[job_id]
+        
+        # Initialize job status
         job["status"] = "running"
-        job["total"] = len(story_ids)
         job["completed"] = 0
         job["results"] = {}
         
         try:
-            # Process each story
-            for i, story_id in enumerate(story_ids):
-                # Check if job has been cancelled
-                if job_id not in processing_jobs:
-                    return
-                
-                # Call the LLM service for this story
-                story = llm_service.get_story_by_id(story_id)
-                question = llm_service.get_question_by_id(question_id)
-                provider_name = llm_service.get_provider_name_by_model_id(model_id)
-                model_name = llm_service.get_model_name_by_id(model_id)
-                
-                # Simulate API rate limiting delay
-                request_delay = llm_service.get_request_delay_by_model_id(model_id)
-                if i > 0 and request_delay > 0:
-                    await asyncio.sleep(request_delay)
-                
-                # Make the actual API call (non-async)
-                # We run this in a thread pool since it's a blocking operation
-                try:
-                    def call_llm_with_context():
-                        # This ensures we have an app context in this thread
-                        with app.app_context():
-                            return llm_service.call_llm(
-                                provider_name, 
-                                story.content, 
-                                question.content, 
-                                story_id, 
-                                question_id, 
-                                model_name, 
-                                model_id, 
-                                **parameters
-                            )
-
-                    loop = asyncio.get_running_loop()
-                    # THIS IS THE CRITICAL CHANGE - use the function, not lambda
-                    response = await loop.run_in_executor(
-                        None,
-                        call_llm_with_context
-                    )
+            # Check if this is a rerun job
+            is_rerun = job.get("params", {}).get("is_rerun", False)
+            prompts_data = job.get("params", {}).get("prompts_data", [])
+            
+            if is_rerun and prompts_data:
+                # Process each prompt for rerun
+                for i, prompt_data in enumerate(prompts_data):
                     
-                    # Update job state
-                    job["completed"] += 1
-                    if response:
-                        # Check if response is a dictionary with response_id
-                        if isinstance(response, dict) and "response_id" in response:
-                            job["results"][story_id] = {'response_id': response["response_id"]}
-                        # Check if response is an object with response_id attribute
-                        elif hasattr(response, 'response_id'):
-                            job["results"][story_id] = {'response_id': response.response_id}
-                        else:
-                            print(f"Warning: Unexpected response format: {type(response)}")
-                            job["results"][story_id] = {'error': 'Invalid response format'}
-                except Exception as e:
-                    print(f"Error processing story {story_id}: {str(e)}")
-                    import traceback
-                    traceback.print_exc()
-                    job["results"][story_id] = {'error': str(e)}
-                
-                # Calculate and update progress percentage
-                progress = int((job["completed"] / job["total"]) * 100)
-                job["progress"] = progress
-                job["last_activity"] = time.time()
-                
+                    # Check if job has been cancelled
+                    if job_id not in processing_jobs:
+                        return
+                    
+                    # Get the prompt data
+                    prompt_id = prompt_data['prompt_id']
+                    model_id = prompt_data['model_id']
+                    story_id = prompt_data['story_id']
+                    question_id = prompt_data['question_id']
+                    parameters = prompt_data['parameters']
+                    print(f"Reusing prompt_id: {prompt_id} (type: {type(prompt_id)})")
+                    try:
+                        # Get the story, question, and model details
+                        story = llm_service.get_story_by_id(story_id)
+                        question = llm_service.get_question_by_id(question_id)
+                        provider_name = llm_service.get_provider_name_by_model_id(model_id)
+                        model_name = llm_service.get_model_name_by_id(model_id)
+                        
+                        # Simulate API rate limiting delay
+                        request_delay = llm_service.get_request_delay_by_model_id(model_id)
+                        if i > 0 and request_delay > 0:
+                            await asyncio.sleep(request_delay)
+                        
+                        # Make the actual API call (non-async)
+                        def call_llm_with_context():
+                            with app.app_context():
+                                print(f"In async line 671 {prompt_id} (type: {type(prompt_id)})")
+                                return llm_service.call_llm(
+                                    provider_name, 
+                                    story.content, 
+                                    question.content, 
+                                    story_id, 
+                                    question_id, 
+                                    model_name, 
+                                    model_id,
+                                    prompt_id=prompt_id,  # Important: Use prompt_id correctly
+                                    temperature=parameters['temperature'],  # Pass parameters explicitly
+                                    max_tokens=parameters['max_tokens'],
+                                    top_p=parameters['top_p']
+                                )
+                        
+                        loop = asyncio.get_running_loop()
+                        response = await loop.run_in_executor(None, call_llm_with_context)
+                        
+                        # Update job state
+                        job["completed"] += 1
+                        if response:
+                            if isinstance(response, dict) and "response_id" in response:
+                                job["results"][prompt_id] = {'response_id': response["response_id"]}
+                            elif hasattr(response, 'response_id'):
+                                job["results"][prompt_id] = {'response_id': response.response_id}
+                            else:
+                                print(f"Warning: Unexpected response format: {type(response)}")
+                                job["results"][prompt_id] = {'error': 'Invalid response format'}
+                    except Exception as e:
+                        print(f"Error processing prompt {prompt_id}: {str(e)}")
+                        import traceback
+                        traceback.print_exc()
+                        job["results"][prompt_id] = {'error': str(e)}
+                    
+                    # Calculate and update progress percentage
+                    progress = int((job["completed"] / job["total"]) * 100)
+                    job["progress"] = progress
+                    job["last_activity"] = time.time()
+            else:
+                # Original story-by-story processing
+                for i, story_id in enumerate(story_ids):
+                    if job_id not in processing_jobs:
+                        return
+                        
+                    try:
+                        # Get story content
+                        story = llm_service.get_story_by_id(story_id)
+                        question = llm_service.get_question_by_id(question_id)
+                        provider_name = llm_service.get_provider_name_by_model_id(model_id)
+                        model_name = llm_service.get_model_name_by_id(model_id)
+                        
+                        # Simulate API rate limiting delay
+                        request_delay = llm_service.get_request_delay_by_model_id(model_id)
+                        if i > 0 and request_delay > 0:
+                            await asyncio.sleep(request_delay)
+                        
+                        # Make the actual API call (non-async)
+                        def call_llm_with_context():
+                            with app.app_context():
+                                return llm_service.call_llm(
+                                    provider_name, 
+                                    story.content, 
+                                    question.content, 
+                                    story_id, 
+                                    question_id, 
+                                    model_name, 
+                                    model_id,
+                                    **parameters
+                                )
+                        
+                        loop = asyncio.get_running_loop()
+                        response = await loop.run_in_executor(None, call_llm_with_context)
+                        
+                        # Update job state
+                        job["completed"] += 1
+                        if response:
+                            if isinstance(response, dict) and "response_id" in response:
+                                job["results"][story_id] = {'response_id': response["response_id"]}
+                            elif hasattr(response, 'response_id'):
+                                job["results"][story_id] = {'response_id': response.response_id}
+                            else:
+                                print(f"Warning: Unexpected response format: {type(response)}")
+                                job["results"][story_id] = {'error': 'Invalid response format'}
+                    except Exception as e:
+                        print(f"Error processing story {story_id}: {str(e)}")
+                        import traceback
+                        traceback.print_exc()
+                        job["results"][story_id] = {'error': str(e)}
+                    
+                    # Calculate and update progress percentage
+                    progress = int((job["completed"] / job["total"]) * 100)
+                    job["progress"] = progress
+                    job["last_activity"] = time.time()
+            
+            # Extract all response IDs from results and store in a consistent place
+            response_ids = []
+            for result_data in job["results"].values():
+                if isinstance(result_data, dict) and "response_id" in result_data:
+                    response_ids.append(str(result_data["response_id"]))
+
+            # Store response IDs in the job in a standard way
+            job["response_ids"] = response_ids
+
             # Mark job as completed
             job["status"] = "completed"
             job["progress"] = 100
@@ -654,7 +653,6 @@ async def process_llm_requests(job_id, model_id, story_ids, question_id, paramet
             if job_id in processing_jobs:
                 # Don't delete yet, just mark status
                 job["processing"] = False
-
 
 def cleanup_old_jobs():
     """Clean up old jobs that are no longer needed to prevent memory leaks"""
@@ -680,35 +678,43 @@ def cleanup_old_jobs():
 # Routes for the progress tracking system
 @main_bp.route('/loading')
 def loading():
-    # Generate unique job ID for this processing request
-    job_id = str(uuid.uuid4())
+    job_id = session.get('job_id')
     
-    # Extract necessary session data
-    model_id = session.get('model_id')
-    story_ids = session.get('story_ids', [])
-    question_id = session.get('question_id')
-    parameters = session.get('parameters', {})
-    
-    # Store job ID in session
-    session['job_id'] = job_id
-    
-    # Initialize job tracking
-    processing_jobs[job_id] = {
-        "status": "initializing",
-        "progress": 0,
-        "total": len(story_ids),
-        "completed": 0,
-        "results": {},
-        "processing": True,
-        "last_activity": time.time(),
-        # Store parameters for reference
-        "params": {
-            "model_id": model_id,
-            "story_ids": story_ids,
-            "question_id": question_id,
-            "parameters": parameters
+    # If no job ID in session (or it's invalid), generate a new one
+    if not job_id or job_id not in processing_jobs:
+        job_id = str(uuid.uuid4())
+        
+        # Extract necessary session data
+        model_id = session.get('model_id')
+        story_ids = session.get('story_ids', [])
+        question_id = session.get('question_id')
+        parameters = session.get('parameters', {})
+        
+        # Initialize job tracking for new jobs only
+        processing_jobs[job_id] = {
+            "status": "initializing",
+            "progress": 0,
+            "total": len(story_ids),
+            "completed": 0,
+            "results": {},
+            "processing": True,
+            "last_activity": time.time(),
+            # Store parameters for reference
+            "params": {
+                "model_id": model_id,
+                "story_ids": story_ids,
+                "question_id": question_id,
+                "parameters": parameters
+            }
         }
-    }
+    else:
+        # Job already exists (e.g., from rerun_prompts)
+        # Just update the last activity timestamp
+        processing_jobs[job_id]["last_activity"] = time.time()
+        print(f"Using existing job: {job_id} with params: {processing_jobs[job_id].get('params', {})}")
+    
+    # Store job ID in session (this is fine for both cases)
+    session['job_id'] = job_id
     
     # Clean up old jobs
     cleanup_old_jobs()    
@@ -890,157 +896,228 @@ def progress_legacy():
     # Redirect to the new progress stream
     return redirect(url_for('main.progress_stream', job_id=job_id))
 
+@main_bp.route('/rerun_prompts', methods=['POST'])
+def rerun_prompts():
+    """Endpoint to rerun selected prompts"""
+    # Get selected prompt IDs from session
+    print("==== RERUN PROMPTS CALLED ====")
+    
+    # Get selected prompt IDs from session
+    prompt_ids = session.get('prompt_ids', [])
+    print(f"Prompt IDs in session: {prompt_ids}")
+    
+    if not prompt_ids:
+        print("No prompts selected to rerun.")
+        flash('No prompts selected to rerun.', 'warning')
+        return redirect(url_for('main.see_all_prompts'))
+    
+    # Create a new job for rerunning these prompts
+    job_id = str(uuid.uuid4())
+    print(f"Created rerun job ID: {job_id}")
+    
+    try:
+        int_prompt_ids = [int(pid) for pid in prompt_ids]
+        
+        # Clear any existing response IDs to avoid showing old responses
+        if 'response_ids' in session:
+            session.pop('response_ids')
+            
+        # Collect all the data needed for rerunning
+        prompts_data = []
+        
+        # Process only the first prompt to get model/question data (all prompts must share this)
+        first_prompt = db.session.query(Prompt).get(int_prompt_ids[0])
+        if not first_prompt:
+            flash('Selected prompt not found.', 'warning')
+            return redirect(url_for('main.see_all_prompts'))
+
+        # Get model and provider info for display context
+        model = db.session.query(Model).get(first_prompt.model_id)
+        if model:
+            session['model_id'] = model.model_id
+            session['model'] = model.name
+            session['provider'] = model.provider.provider_name
+        
+        # Set question ID for context
+        session['question_id'] = first_prompt.question_id
+        
+        # Collect all story IDs
+        story_ids = []
+        
+        for prompt_id in int_prompt_ids:
+            prompt = db.session.query(Prompt).get(prompt_id)
+            if prompt:
+                if prompt.story_id not in story_ids:
+                    story_ids.append(str(prompt.story_id))
+                
+                prompts_data.append({
+                    'prompt_id': prompt.prompt_id,
+                    'model_id': prompt.model_id,
+                    'story_id': prompt.story_id,
+                    'question_id': prompt.question_id,
+                    'parameters': {
+                        'temperature': prompt.temperature,
+                        'max_tokens': prompt.max_tokens,
+                        'top_p': prompt.top_p
+                    }
+                })
+        
+        # Set story IDs for context
+        session['story_ids'] = story_ids
+        
+        # Store job info in a way that matches standard jobs
+        processing_jobs[job_id] = {
+            "status": "initializing",
+            "progress": 0,
+            "total": len(prompts_data),
+            "completed": 0,
+            "results": {},
+            "response_ids": [],
+            "processing": True,
+            "last_activity": time.time(),
+            "params": {
+                # Match standard job structure but add rerun info
+                "model_id": first_prompt.model_id,
+                "story_ids": story_ids,
+                "question_id": first_prompt.question_id,
+                "parameters": {
+                    'temperature': first_prompt.temperature,
+                    'max_tokens': first_prompt.max_tokens,
+                    'top_p': first_prompt.top_p
+                },
+                # Additional rerun-specific info
+                "prompts_data": prompts_data,
+                "is_rerun": True
+            }
+        }
+        
+        # Store job ID in session
+        session['job_id'] = job_id
+        
+        # Clean up old jobs
+        cleanup_old_jobs()
+        
+        return redirect(url_for('main.loading'))
+        
+    except Exception as e:
+        flash(f'Error setting up prompt rerun: {str(e)}', 'danger')
+        return redirect(url_for('main.see_all_prompts'))
+    
 @main_bp.route('/llm_response', methods=['GET', 'POST'])
 def llm_response():
     if request.method == 'POST':
-        print("POST request received on llm_response")
-        # Process form data
+        # The POST handling is already fine - keep it as is
         response_id = request.form.get('response_id')
-        print(f"Response ID from form: {response_id}")
-        
         if response_id:
             flagged_for_review = f'flagged_for_review_{response_id}' in request.form
             review_notes = request.form.get(f'review_notes_{response_id}', '')
             
-            print(f"Flagged for review: {flagged_for_review}")
-            print(f"Review notes: {review_notes}")
-
             try:
-                # Get the response
                 response = db.session.query(Response).get(response_id)
                 if response:
-                    print(f"Found response {response_id} in database")
-                    # Update the fields
                     response.flagged_for_review = flagged_for_review
                     response.review_notes = review_notes
-                    
-                    # Simpler transaction handling - just commit the change
                     db.session.commit()
-                    
-                    print(f"Successfully updated response {response_id}")
                     flash(f'Response {response_id} updated successfully!', 'success')
                 else:
-                    print(f"Response {response_id} not found in database")
                     flash(f'Error: Response {response_id} not found.', 'danger')
             except Exception as e:
-                print(f"Error updating response: {str(e)}")
-                import traceback
-                traceback.print_exc()
                 db.session.rollback()
                 flash(f'Error updating response: {str(e)}', 'danger')
 
         return redirect(url_for('main.llm_response'))
 
-    # Get job_id from the session
+    # Get response_ids as before
+    response_ids = []
     job_id = session.get('job_id')
     
-    # Try to get response_ids from the job data first
-    response_ids = []
     if job_id and job_id in processing_jobs:
-        # Get from job data
         job = processing_jobs[job_id]
-        response_ids = job.get("response_ids", [])
+        for result_data in job["results"].values():
+            if isinstance(result_data, dict) and "response_id" in result_data:
+                response_ids.append(str(result_data["response_id"]))
         
-        # If we found response IDs, store them in the session for future use
-        # (especially after the job is cleaned up)
+        job["response_ids"] = response_ids
         if response_ids:
             session['response_ids'] = response_ids
     
-    # If no response_ids found in job data, try session as fallback
     if not response_ids:
         response_ids = session.get('response_ids', [])
     
-    print(f"Retrieved response_ids: {response_ids}")
+    # Detect if we're dealing with a batch rerun
+    is_batch_rerun = False
     
-    # Fetch stories
-    story_ids = session.get('story_ids', [])
-    stories = [db.session.query(Story).get(story_id) for story_id in story_ids]
+    # Fetch responses with their related data
+    response_list = []
+    unique_models = set()
+    unique_providers = set()
+    unique_questions = set()
     
-    # Fetch responses
-    responses = []
     for response_id in response_ids:
         response = db.session.query(Response).get(response_id)
         if response:
-            responses.append(response)
+            # Get the prompt associated with this response
+            prompt = response.prompt
+            story = prompt.story
+            question = prompt.question
+            model = prompt.model
+            
+            # Track unique values to determine if we have a batch with different configs
+            unique_models.add(model.name)
+            unique_providers.add(model.provider.provider_name)
+            unique_questions.add(question.content)
+            
+            # Create a response data object with all needed information
+            response_data = {
+                'response_id': response.response_id,
+                'response_content': response.response_content,
+                'flagged_for_review': response.flagged_for_review,
+                'review_notes': response.review_notes,
+                'story': story,
+                'question': question.content,
+                'model': model.name,
+                'provider': model.provider.provider_name,
+                'temperature': prompt.temperature,
+                'max_tokens': prompt.max_tokens,
+                'top_p': prompt.top_p
+            }
+            
+            response_list.append(response_data)
     
-    print(f"Found {len(responses)} responses")
+    # Set batch_rerun flag if we have multiple different models, providers, or questions
+    is_batch_rerun = (len(unique_models) > 1 or len(unique_providers) > 1 or len(unique_questions) > 1)
     
-    # If we have no responses but have story_ids, perhaps the responses weren't stored properly
-    if not responses and story_ids:
-        flash('No responses found for your stories. There might have been an issue with the LLM processing.', 'warning')
-    
-    response_details = []
-    for response in responses:
-        response_details.append({
-            'response_id': response.response_id,
-            'response_content': response.response_content,
-            'flagged_for_review': response.flagged_for_review,
-            'review_notes': response.review_notes
-        })
-
-    # Retrieve model, provider, and question
+    # Get common values for the case where we're not in batch mode
+    model = session.get('model') if not is_batch_rerun else None
+    provider = session.get('provider') if not is_batch_rerun else None
     question_id = session.get('question_id')
-    question = db.session.query(Question).get(question_id).content if question_id else None
+    question = db.session.query(Question).get(question_id).content if question_id and not is_batch_rerun else None
 
     return render_template('llm_response.html', 
-                          combined_data=zip(stories, response_details),
-                          model=session.get('model'), 
-                          provider=session.get('provider'), 
-                          question=question)
+                         response_list=response_list,
+                         is_batch_rerun=is_batch_rerun,
+                         model=model, 
+                         provider=provider, 
+                         question=question)
 
 @main_bp.route('/view_responses', methods=['GET', 'POST'])
 def view_responses():
+    # Handle POST requests as before
     if request.method == 'POST':
-        # Process form data for response updates
-        response_id = request.form.get('response_id')
-        
-        if response_id:
-            # Check if the response exists
-            response = db.session.query(Response).get(response_id)
-            if response:
-                # Update flag status - checked boxes return 'on', unchecked return None
-                flagged_for_review = f'flagged_for_review_{response_id}' in request.form
-                review_notes = request.form.get(f'review_notes_{response_id}', '')
-                
-                # Apply changes
-                response.flagged_for_review = flagged_for_review
-                response.review_notes = review_notes
-                db.session.commit()
-                
-                flash('Response updated successfully!', 'success')
-            else:
-                flash('Error: Response not found.', 'danger')
-                
-        # Redirect back to the same page (with filters preserved)
+        # Your existing POST handling code
         return redirect(url_for('main.view_responses', **request.args))
+    
+    # Clear flags processing
+    if 'clear_stories' in request.args and 'story_ids' in session:
+        session.pop('story_ids')
         
-    # Initialize story_ids to avoid UnboundLocalError
-    story_ids = []
+    if 'clear_responses' in request.args and 'response_ids' in session:
+        session.pop('response_ids')
     
-    # GET request - handle filtering
-    provider = request.args.get('provider', '')
-    model = request.args.get('model', '')
-    flagged_only = 'flagged_only' in request.args
-    question_id = request.args.get('question_id', '')
-    story_id = request.args.get('story_id', '')
-    
-    
-    # Handle "clear stories" parameter
-    if 'clear_stories' in request.args:
-        if 'story_ids' in session:
-            session.pop('story_ids')
-    
-    # Date range filtering
-    start_date = request.args.get('start_date', '')
-    end_date = request.args.get('end_date', '')
-    
-    # Sorting option
-    sort = request.args.get('sort', 'date_desc')
-    
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 20, type=int)
-    
-    # Build query with the existing joins
+    if 'clear_templates' in request.args and 'template_ids' in session:
+        session.pop('template_ids')
+
+    # Build the base query
     query = db.session.query(Response).\
         join(Prompt, Response.prompt_id == Prompt.prompt_id).\
         join(Model, Prompt.model_id == Model.model_id).\
@@ -1048,7 +1125,82 @@ def view_responses():
         join(Story, Prompt.story_id == Story.story_id).\
         join(Question, Prompt.question_id == Question.question_id)
     
-    # Apply regular filters
+    # Get all filter parameters
+    provider = request.args.get('provider', '')
+    model = request.args.get('model', '')
+    flagged_only = 'flagged_only' in request.args
+    question_id = request.args.get('question_id', '')
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
+    sort = request.args.get('sort', 'date_desc')   
+    
+    # SOURCE-based filtering (primary selection)
+    source = request.args.get('source', '')
+    source_id = None
+    source_info = None
+    
+    # Apply source-based filtering
+    response_ids = session.get('response_ids', [])
+    if response_ids and 'clear_responses' not in request.args:
+        # Filter by specific responses (from prompt or story)
+        int_response_ids = [int(rid) for rid in response_ids]
+        query = query.filter(Response.response_id.in_(int_response_ids))
+        
+        # Handle source information for display
+        if source == 'prompt':
+            prompt_id = request.args.get('prompt_id')
+            if prompt_id:
+                source_id = prompt_id
+                prompt = db.session.query(Prompt).get(int(prompt_id))
+                if prompt:
+                    source_info = f"Prompt #{prompt_id} ({prompt.model.name})"
+        elif source == 'story':
+            story_count = request.args.get('story_count', '1')
+            story_id_param = request.args.get('story_id')
+            
+            if story_count and int(story_count) > 1:
+                source_info = f"{story_count} Selected Stories"
+            elif story_id_param:
+                source_id = story_id_param
+                story = db.session.query(Story).get(int(story_id_param))
+                if story:
+                    content_preview = story.content[:50] + '...' if len(story.content) > 50 else story.content
+                    source_info = f"Story #{story_id_param} ({content_preview})"
+        elif source == 'template':
+            template_count = request.args.get('template_count', '1')
+            template_id_param = request.args.get('template_id')
+            
+            if template_count and int(template_count) > 1:
+                source_info = f"{template_count} Selected Templates"
+            elif template_id_param:
+                source_id = template_id_param
+                template = db.session.query(Template).get(int(template_id_param))
+                if template:
+                    content_preview = template.content[:50] + '...' if len(template.content) > 50 else template.content
+                    source_info = f"Template #{template_id_param} ({content_preview})"
+    # Otherwise check for story_ids in session (multiple stories selected)
+    elif session.get('story_ids') and 'clear_stories' not in request.args:
+        story_ids = [int(sid) for sid in session.get('story_ids', [])]
+        query = query.filter(Prompt.story_id.in_(story_ids))
+    # Add this check for template_ids in session
+    elif session.get('template_ids') and 'clear_templates' not in request.args:
+        template_ids = [int(tid) for tid in session.get('template_ids', [])]
+        # First, get stories that use these templates
+        story_subquery = db.session.query(Story.story_id).filter(Story.template_id.in_(template_ids))
+        # Then filter prompts by those stories
+        query = query.filter(Prompt.story_id.in_(story_subquery))
+        # Set source info for display
+        template_count = len(template_ids)
+        if template_count == 1:
+            template = db.session.query(Template).get(template_ids[0])
+            if template:
+                content_preview = template.content[:50] + '...' if len(template.content) > 50 else template.content
+                source_info = f"Template #{template_ids[0]} ({content_preview})"
+            else:
+                source_info = f"Template #{template_ids[0]}"
+        else:
+            source_info = f"{template_count} Selected Templates"
+    # SECONDARY FILTERING - Always apply regardless of source selection
     if provider:
         query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
     if model:
@@ -1058,20 +1210,7 @@ def view_responses():
     if question_id:
         query = query.filter(Prompt.question_id == question_id)
     
-    # Handle story filtering - either a single story_id from URL or multiple from session
-    if story_id:
-        # Single story filter from URL parameter
-        query = query.filter(Prompt.story_id == story_id)
-    elif session.get('story_ids'):
-        # Multiple stories from session
-        story_ids = session.get('story_ids', [])
-        if story_ids:
-            # Convert to integers ONLY when querying the database
-            int_story_ids = [int(sid) for sid in story_ids]
-            query = query.filter(Prompt.story_id.in_(int_story_ids))
-            flash(f'Showing responses for {len(story_ids)} selected stories', 'info')
-    
-    # Apply date range filters
+    # Apply date filtering
     if start_date:
         try:
             start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
@@ -1081,7 +1220,7 @@ def view_responses():
     
     if end_date:
         try:
-            # Add one day to include the end date fully
+            # Add 1 day to include the end date fully
             end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
             query = query.filter(Response.timestamp < end_date_obj)
         except ValueError:
@@ -1093,14 +1232,22 @@ def view_responses():
     else:  # Default to date_desc
         query = query.order_by(Response.timestamp.desc())
     
-    # Paginate results
+    # Pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # Number of responses per page
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-    responses = pagination.items
+    responses = pagination.items  
     
     # Get data for filter dropdowns
     providers = db.session.query(Provider).all()
     models = db.session.query(Model).all()
     questions = db.session.query(Question).all()
+    
+    # Track if we're filtering by specific responses
+    has_response_filter = bool(response_ids and 'clear_responses' not in request.args)
+    
+    # Track if we have secondary filter criteria applied
+    has_secondary_filters = any([provider, model, flagged_only, question_id, start_date, end_date])
     
     return render_template('see_all_responses.html', 
                           responses=responses,
@@ -1108,16 +1255,22 @@ def view_responses():
                           providers=providers,
                           models=models,
                           questions=questions,
+                          has_response_filter=has_response_filter,
+                          has_secondary_filters=has_secondary_filters,
+                          source=source,
+                          source_id=source_id,
+                          source_info=source_info,
                           current_filters={
                               'provider': provider,
                               'model': model,
                               'flagged_only': flagged_only,
                               'question_id': question_id,
-                              'story_id': story_id,
+                              'story_id': request.args.get('story_id', ''),
                               'start_date': start_date,
                               'end_date': end_date,
                               'sort': sort
                           })
+    
 
 @main_bp.route('/update_response_flag', methods=['POST'])
 def update_response_flag():
@@ -1146,8 +1299,6 @@ def update_response_flag():
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
     
-
-
 @main_bp.route('/export_responses', methods=['GET'])
 def export_responses():
     provider = request.args.get('provider', '')
@@ -1245,36 +1396,373 @@ def export_responses():
     )
 
 
+@main_bp.route('/see_all_prompts', methods=['GET', 'POST'])
+def see_all_prompts():
+    if request.method == 'POST':
+        # Process form data for prompt updates if needed
+        # (Similar to view_responses POST handler but for prompts)
+        return redirect(url_for('main.see_all_prompts', **request.args))
+        
+    # Initialize prompt_ids for selection
+    selected_prompt_ids = session.get('prompt_ids', [])
+    
+    # GET request - handle filtering
+    provider = request.args.get('provider', '')
+    model = request.args.get('model', '')
+    question_id = request.args.get('question_id', '')
+    story_id = request.args.get('story_id', '')
+    
+    # Date range filtering
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
+    
+    # Sorting option
+    sort = request.args.get('sort', 'date_desc')
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    
+    # Build query with joins
+    query = db.session.query(
+        Prompt, 
+        db.func.max(Response.timestamp).label('last_used')
+    ).\
+        join(Model, Prompt.model_id == Model.model_id).\
+        join(Provider, Model.provider_id == Provider.provider_id).\
+        join(Story, Prompt.story_id == Story.story_id).\
+        join(Question, Prompt.question_id == Question.question_id).\
+        outerjoin(Response, Prompt.prompt_id == Response.prompt_id).\
+        group_by(Prompt.prompt_id)
+    
+    # Apply regular filters
+    if provider:
+        query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
+    if model:
+        query = query.filter(Model.name.ilike(f'%{model}%'))
+    if question_id:
+        query = query.filter(Prompt.question_id == question_id)
+    if story_id:
+        query = query.filter(Prompt.story_id == story_id)
+    
+    # Apply date range filters
+    if start_date:
+        try:
+            start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(Response.timestamp >= start_date_obj)
+        except ValueError:
+            flash(f"Invalid start date format: {start_date}", "warning")
+    
+    if end_date:
+        try:
+            # Add one day to include the end date fully
+            end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            query = query.filter(Response.timestamp < end_date_obj)
+        except ValueError:
+            flash(f"Invalid end date format: {end_date}", "warning")
+    
+    # Apply sorting
+    if sort == 'date_asc':
+        query = query.order_by(db.func.max(Response.timestamp).asc())
+    else:  # Default to date_desc
+        query = query.order_by(db.func.max(Response.timestamp).desc())
+    
+    # Paginate results
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    prompt_data = pagination.items
+    
+    # Get data for filter dropdowns
+    providers = db.session.query(Provider).all()
+    models = db.session.query(Model).all()
+    questions = db.session.query(Question).all()
+    
+    return render_template('see_all_prompts.html', 
+                          prompts=prompt_data,
+                          pagination=pagination,
+                          providers=providers,
+                          models=models,
+                          questions=questions,
+                          selected_prompt_ids=selected_prompt_ids,
+                          current_filters={
+                              'provider': provider,
+                              'model': model,
+                              'question_id': question_id,
+                              'story_id': story_id,
+                              'start_date': start_date,
+                              'end_date': end_date,
+                              'sort': sort
+                          })
+
+@main_bp.route('/update_prompt_selection', methods=['POST'])
+def update_prompt_selection():
+    data = request.get_json()
+    
+    # Get the current selection from session
+    selected_prompt_ids = session.get('prompt_ids', [])
+    
+    # Clear all selected prompts
+    if data.get('action') == 'clear_all':
+        selected_prompt_ids = []
+    
+    # Select multiple prompts at once
+    elif data.get('action') == 'select_multiple':
+        prompt_ids = data.get('prompt_ids', [])
+        for prompt_id in prompt_ids:
+            if prompt_id not in selected_prompt_ids:
+                selected_prompt_ids.append(prompt_id)
+    
+    # Invert selection
+    elif data.get('action') == 'invert_selection':
+        select_ids = data.get('select_ids', [])
+        deselect_ids = data.get('deselect_ids', [])
+        
+        # Add new selections
+        for pid in select_ids:
+            if pid not in selected_prompt_ids:
+                selected_prompt_ids.append(pid)
+                
+        # Remove deselections
+        selected_prompt_ids = [pid for pid in selected_prompt_ids if pid not in deselect_ids]
+    """AJAX endpoint to update prompt selection in session"""
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': False, 'message': 'Invalid request'}), 400
+    
+    data = request.get_json()
+    
+    # Get the current selection from session
+    selected_prompt_ids = session.get('prompt_ids', [])
+    
+    # Clear all selected prompts
+    if data.get('action') == 'clear_all':
+        selected_prompt_ids = []
+    
+    # Select multiple prompts at once (for batch operations)
+    elif data.get('action') == 'select_multiple':
+        prompt_ids = data.get('prompt_ids', [])
+        for prompt_id in prompt_ids:
+            if prompt_id not in selected_prompt_ids:
+                selected_prompt_ids.append(prompt_id)
+    
+    # Handle individual toggle
+    elif 'prompt_id' in data:
+        prompt_id = str(data['prompt_id'])
+        is_selected = data.get('selected', False)
+        
+        if is_selected and prompt_id not in selected_prompt_ids:
+            selected_prompt_ids.append(prompt_id)
+        elif not is_selected and prompt_id in selected_prompt_ids:
+            selected_prompt_ids.remove(prompt_id)
+    
+    # Store updated selection in session
+    session['prompt_ids'] = selected_prompt_ids
+    
+    return jsonify({
+        'success': True,
+        'selected_count': len(selected_prompt_ids),
+        'selected_ids': selected_prompt_ids
+    })
+
+@main_bp.route('/view_prompt_responses/<int:prompt_id>')
+def view_prompt_responses(prompt_id):
+    """View all responses for a specific prompt"""
+    # Get all responses for this prompt
+    responses = db.session.query(Response).filter(Response.prompt_id == prompt_id).all()
+    
+    if not responses:
+        flash(f'No responses found for prompt ID {prompt_id}', 'info')
+        return redirect(url_for('main.see_all_prompts'))
+    
+    # Clear any existing response filters first
+    if 'response_ids' in session:
+        session.pop('response_ids')
+    
+    # Store response IDs as strings in session
+    session['response_ids'] = [str(r.response_id) for r in responses]
+    
+    # Add a query parameter to indicate source
+    return redirect(url_for('main.view_responses', source='prompt', prompt_id=prompt_id))
+
+@main_bp.route('/view_story_responses')
+def view_story_responses():
+    """View all responses related to stories selected in session"""
+    
+    # Get story IDs from session
+    story_ids = session.get('story_ids', [])
+    
+    if not story_ids:
+        flash('No stories selected. Please select at least one story.', 'warning')
+        return redirect(url_for('main.see_all_stories'))
+    
+    # Convert story IDs to integers for the database query
+    int_story_ids = [int(sid) for sid in story_ids]
+    
+    # Get all responses for these stories
+    responses = db.session.query(Response).\
+        join(Prompt, Response.prompt_id == Prompt.prompt_id).\
+        filter(Prompt.story_id.in_(int_story_ids)).all()
+    
+    if not responses:
+        flash('No responses found for the selected stories', 'info')
+        return redirect(url_for('main.see_all_stories'))
+    
+    # Clear any existing response filters first
+    if 'response_ids' in session:
+        session.pop('response_ids')
+    
+    # Store response IDs as strings in session
+    session['response_ids'] = [str(r.response_id) for r in responses]
+    
+    # Generate appropriate message based on count
+    story_count = len(story_ids)
+  
+    
+    # Use a single redirect approach
+    return redirect(url_for('main.view_responses', 
+                           source='story', 
+                           story_count=story_count,
+                           story_id=int_story_ids[0] if story_count == 1 else None))
+
+@main_bp.route('/view_template_responses')
+def view_template_responses():
+    """View all responses related to templates selected in session"""
+    
+    # Get template IDs from session
+    template_ids = session.get('template_ids', [])
+    
+    if not template_ids:
+        flash('No templates selected. Please select at least one template.', 'warning')
+        return redirect(url_for('main.see_all_templates'))
+    
+    # Convert template IDs to integers for the database query
+    int_template_ids = [int(tid) for tid in template_ids]
+    
+    # Get all responses for these templates
+    responses = db.session.query(Response).\
+        join(Prompt, Response.prompt_id == Prompt.prompt_id).\
+        join(Story, Prompt.story_id == Story.story_id).\
+        filter(Story.template_id.in_(int_template_ids)).all()
+    
+    if not responses:
+        flash('No responses found for the selected templates', 'info')
+        return redirect(url_for('main.see_all_templates'))
+    
+    # Clear any existing response filters first
+    if 'response_ids' in session:
+        session.pop('response_ids')
+    
+    # Store response IDs as strings in session
+    session['response_ids'] = [str(r.response_id) for r in responses]
+    
+    # Generate appropriate message based on count
+    template_count = len(template_ids)
+    
+    #Content for info message in green box at top of Response Database
+    if template_count == 1:
+            # Get the template content for a single template
+            template = db.session.query(Template).get(int_template_ids[0])
+            if template:
+                content_preview = (template.content[:40] + '...') if len(template.content) > 40 else template.content
+                source_info = f"Template #{int_template_ids[0]} ({content_preview})"
+            else:
+                source_info = f"Template #{int_template_ids[0]}"
+    else:
+            # For multiple templates, show the count
+        source_info = f"{template_count} Selected Templates"
+
+    # Use a single redirect approach
+    return redirect(url_for('main.view_responses', 
+                           source='template',
+                           source_info = source_info, 
+                           template_count=template_count,
+                           template_id=int_template_ids[0] if template_count == 1 else None))
+
 @main_bp.route('/clear_session', methods=['GET'])
 def clear_session():
-    print("Session before clearing:")
-    print(session)
-    print("Clearing session and canceling background tasks")
+    # Get selective clearing parameters
+    clear_model = request.args.get('clear_model') == 'true'
+    clear_parameters = request.args.get('clear_parameters') == 'true'
+    clear_stories = request.args.get('clear_stories') == 'true'
+    clear_question = request.args.get('clear_question') == 'true'
+    clear_all = 'clear_all' in request.args
     
-    # Cancel and clean up any ongoing processing jobs
-    cleared_jobs = 0
-    for job_id, job in list(processing_jobs.items()):
-        try:
-            # Cancel the task if it exists and is not done
-            if "task" in job and hasattr(job["task"], "cancel") and not job["task"].done():
-                print(f"Canceling task for job {job_id}")
-                job["task"].cancel()
-                cleared_jobs += 1
+    print("Session before clearing:", dict(session))
+    
+    if clear_all:
+        # Current behavior - full clearing and job cancellation
+        cleared_jobs = 0
+        for job_id, job in list(processing_jobs.items()):
+            try:
+                # Cancel the task if it exists and is not done
+                if "task" in job and hasattr(job["task"], "cancel") and not job["task"].done():
+                    print(f"Canceling task for job {job_id}")
+                    job["task"].cancel()
+                    cleared_jobs += 1
+                
+                # Mark job as cancelled
+                job["status"] = "cancelled"
+                job["processing"] = False
+            except Exception as e:
+                print(f"Error canceling job {job_id}: {str(e)}")
+        
+        # Clear all processing jobs
+        processing_jobs.clear()
+        
+        # Clear session data
+        session.clear()
+        
+        flash(f'Session data cleared and {cleared_jobs} background tasks cancelled!', 'success')
+        print(f"Cleared {cleared_jobs} tasks from processing_jobs")
+    else:
+        # Selective clearing of session data
+        items_cleared = []
+        stories_source = request.args.get('stories_source') == 'true'
+        clear_templates = request.args.get('clear_templates') == 'true'
+
+        if stories_source and 'stories_source' in session:
+            session.pop('stories_source')
+            session.pop('template_count', None)  # Also clear template_count
+            items_cleared.append('template filter')
+
+        if clear_templates and 'template_ids' in session:
+            session.pop('template_ids')
+            items_cleared.append('template selection')
+        # Clear model and provider if requested
+        if clear_model:
+            model_cleared = False
+            if 'model' in session:
+                session.pop('model')
+                model_cleared = True
+            if 'provider' in session:
+                session.pop('provider')
+                model_cleared = True
+            if 'model_id' in session:
+                session.pop('model_id')
+                model_cleared = True
             
-            # Mark job as cancelled
-            job["status"] = "cancelled"
-            job["processing"] = False
-        except Exception as e:
-            print(f"Error canceling job {job_id}: {str(e)}")
+            if model_cleared:
+                items_cleared.append('model selection')
+        
+        if clear_parameters and 'parameters' in session:
+            session.pop('parameters')
+            items_cleared.append('parameters')
+            
+        if clear_stories and 'story_ids' in session:
+            session.pop('story_ids')
+            items_cleared.append('story selection')
+            
+        if clear_question and 'question_id' in session:
+            session.pop('question_id')
+        if 'question_content' in session:
+            session.pop('question_content')
+            items_cleared.append('question')
+            
+        # Only show a flash message if something was cleared
+        if items_cleared:
+            flash(f'Cleared {", ".join(items_cleared)} from session', 'info')
+        
+       
+
+        print("Session after selective clearing:", dict(session))
     
-    # Clear all processing jobs
-    processing_jobs.clear()
-    
-    # Clear session data
-    session.clear()
-    
-    flash(f'Session data cleared and {cleared_jobs} background tasks cancelled!', 'success')
-    print("Session after clearing:", session)
-    print(f"Cleared {cleared_jobs} tasks from processing_jobs")
-    
-    return redirect(url_for('main.index'))
+    # Get the redirect URL - either specified or default to index
+    redirect_url = request.args.get('redirect_to', url_for('main.index'))
+    return redirect(redirect_url)

@@ -6,7 +6,7 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1>All Stories</h1>
-        <a href="{{ url_for('main.add_story') }}" class="btn btn-primary">
+        <a href="{{ url_for('stories.add') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Add New Story
         </a>
     </div>
@@ -33,7 +33,7 @@
       stories_source=true, 
       template_count=true,
       clear_templates=true,
-      redirect_to=url_for('main.see_all_stories')) }}" class="btn btn-sm btn-outline-danger ms-2">
+      redirect_to=url_for('stories.list')) }}" class="btn btn-sm btn-outline-danger ms-2">
                 <i class="bi bi-x"></i> Clear Filter
             </a>
         </div>
@@ -44,7 +44,7 @@
     <!-- Search Form -->
 <div class="card mb-4">
     <div class="card-body">
-        <form method="GET" action="{{ url_for('main.see_all_stories') }}" class="row g-3">
+        <form method="GET" action="{{ url_for('stories.list') }}" class="row g-3">
             {% if session.get('stories_source') == 'templates' %}
     <input type="hidden" name="source" value="{{ session.get('stories_source') }}">
     <input type="hidden" name="template_count" value="{{ session.get('template_count', 1) }}">
@@ -76,7 +76,7 @@
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary me-2">Update</button>
-                <a href="{{ url_for('main.see_all_stories', source=session.get('stories_source'), template_count=session.get('template_count')) }}" class="btn btn-secondary">Reset</a>
+                <a href="{{ url_for('stories.list', source=session.get('stories_source'), template_count=session.get('template_count')) }}" class="btn btn-secondary">Reset</a>
             </div>
         </form>
     </div>
@@ -178,7 +178,7 @@
                 <ul class="pagination">
                     {% if pagination.has_prev %}
                     <li class="page-item">
-                        <a class="page-link" href="{{ url_for('main.see_all_stories', 
+                        <a class="page-link" href="{{ url_for('stories.list', 
                             page=pagination.prev_num, 
                             search_text=request.args.get('search_text', ''), 
                             category_filter=request.args.get('category_filter', ''), 
@@ -195,7 +195,7 @@
                     {% for page_num in pagination.iter_pages() %}
                     {% if page_num %}
                     <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
-                        <a class="page-link" href="{{ url_for('main.see_all_stories', 
+                        <a class="page-link" href="{{ url_for('stories.list', 
                             page=page_num, 
                             search_text=request.args.get('search_text', ''), 
                             category_filter=request.args.get('category_filter', ''), 
@@ -212,7 +212,7 @@
 
                     {% if pagination.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="{{ url_for('main.see_all_stories', 
+                        <a class="page-link" href="{{ url_for('stories.list', 
                             page=pagination.next_num, 
                             search_text=request.args.get('search_text', ''), 
                             category_filter=request.args.get('category_filter', ''), 
@@ -235,7 +235,7 @@
         // Fix the Reset button to preserve template filter
         const resetButton = document.querySelector('a.btn.btn-secondary');
         if (resetButton && '{{ session.get("stories_source") }}' === 'templates') {
-            resetButton.href = '{{ url_for("main.see_all_stories", source="templates", template_count=session.get("template_count", 1)) }}';
+            resetButton.href = '{{ url_for("stories.list", source="templates", template_count=session.get("template_count", 1)) }}';
         }
         
         // Track selected stories
@@ -252,7 +252,7 @@
                 const isChecked = this.checked;
 
                 // Send AJAX request to update session
-                fetch('{{ url_for("main.update_story_selection") }}', {
+                fetch('{{ url_for("stories.update_selection") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -301,7 +301,7 @@
 
         // If there are stories to select, make a single batch request
         if (storyIdsToSelect.length > 0) {
-            fetch('{{ url_for("main.update_story_selection") }}', {
+            fetch('{{ url_for("stories.update_selection") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -344,7 +344,7 @@
 
         // If there are stories to deselect, make a single batch request
         if (storyIdsToDeselect.length > 0) {
-            fetch('{{ url_for("main.update_story_selection") }}', {
+            fetch('{{ url_for("stories.update_selection") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -392,7 +392,7 @@
 
         // If there are changes to make, send a batch request
         if (storyIdsToSelect.length > 0 || storyIdsToDeselect.length > 0) {
-            fetch('{{ url_for("main.update_story_selection") }}', {
+            fetch('{{ url_for("stories.update_selection") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -437,7 +437,7 @@
         document.body.style.cursor = 'wait';
 
         // Send request to select all filtered stories
-        fetch('{{ url_for("main.select_all_filtered") }}', {
+        fetch('{{ url_for("stories.select_all_filtered") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -483,7 +483,7 @@
     // Clear all selected stories
     function clearSelection() {
         // Send request to clear all selected stories
-        fetch('{{ url_for("main.update_story_selection") }}', {
+        fetch('{{ url_for("stories.update_selection") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -523,7 +523,7 @@
 
         if (selectedCount > 0) {
             // Preserve template filter context in the URL if it exists
-            let url = '{{ url_for("main.select_story") }}';
+            let url = '{{ url_for("stories.select") }}';
             if ('{{ session.get("stories_source") }}' === 'templates') {
                 url += '?source=templates&template_count={{ session.get("template_count", 1) }}';
             }
