@@ -1,5 +1,5 @@
 from .. import db
-from ..models import Category, StoryCategory
+from app.models import Category, StoryCategory
 
 def get_all_categories():
     """Get all categories from the database"""

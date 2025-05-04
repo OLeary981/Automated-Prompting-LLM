@@ -6,7 +6,7 @@
 <div class="container">
     <h1>Add a New Story</h1>
     
-    <form method="POST" action="{{ url_for('main.add_story') }}">
+    <form method="POST" action="{{ url_for('stories.add') }}">
         <div class="form-group">
             <label for="story_content">Story Content</label>
             <textarea class="form-control" id="story_content" name="story_content" rows="6" required spellcheck="true" lang="en-GB"></textarea>

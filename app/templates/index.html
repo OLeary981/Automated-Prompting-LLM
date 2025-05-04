@@ -4,19 +4,19 @@
 
 {% block content %}
 
-
-
-<div class="card mt-4">
-    <div class="card-header">
-        Work with Stories
+    
+     
+    <div class="card mt-4">
+        <div class="card-header">
+            Work with Stories
+        </div>
+        <div class="card-body">
+            <a href="{{ url_for('stories.add') }}" class="btn btn-primary">Add Story</a>
+            <a href="{{ url_for('main.manage_categories') }}" class="btn btn-info">Manage Categories</a>
+            <a href="{{ url_for('stories.list') }}" class="btn btn-secondary">See All Stories</a>
+            <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-success">Build Stories from Template</a>
+        </div>
     </div>
-    <div class="card-body">
-        <a href="{{ url_for('main.add_story') }}" class="btn btn-primary">Add Story</a>
-        <a href="{{ url_for('main.manage_categories') }}" class="btn btn-info">Manage Categories</a>
-        <a href="{{ url_for('main.see_all_stories') }}" class="btn btn-secondary">See All Stories</a>
-        <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-success">Build Stories from Template</a>
-    </div>
-</div>
 
 <div class="card mt-4">
     <div class="card-header">
@@ -27,14 +27,14 @@
     </div>
 </div>
 
-<div class="card mt-4">
-    <div class="card-header">
-        Send Prompts to LLM
+    <div class="card mt-4">
+        <div class="card-header">
+            Send Prompts to LLM
+        </div>
+        <div class="card-body">
+            <a href="{{ url_for('stories.select') }}" class="btn btn-info">Build and Send a Prompt to an LLM</a>
+        </div>
     </div>
-    <div class="card-body">
-        <a href="{{ url_for('main.select_story') }}" class="btn btn-info">Build and Send a Prompt to an LLM</a>
-    </div>
-</div>
 
 <div class="card mt-4">
     <div class="card-header">

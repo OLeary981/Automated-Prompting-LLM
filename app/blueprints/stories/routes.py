@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, render_template, request, redirect, url_for, session, jsonify
+from flask import flash, render_template, request, redirect, url_for, session, jsonify
 from ... import db
 from ...services import story_service,  category_service
 from ...models import  Story,  StoryCategory
@@ -209,3 +209,44 @@ def select_all_filtered():
         'selected_count': len(story_ids),
         'selected_ids': story_ids
     })
+
+
+@stories_bp.route('/view_template_stories')
+def view_template_stories():
+    """View all stories related to templates selected in session"""
+    
+    # Get template IDs from session
+    template_ids = session.get('template_ids', [])
+    
+    if not template_ids:
+        flash('No templates selected. Please select at least one template.', 'warning')
+        return redirect(url_for('main.see_all_templates'))
+    
+    # Convert template IDs to integers for the database query
+    int_template_ids = [int(tid) for tid in template_ids]
+    
+    # Get story count for these templates before redirecting
+    stories_count = db.session.query(Story).filter(Story.template_id.in_(int_template_ids)).count()
+    
+    if stories_count == 0:
+        flash('No stories found for the selected templates', 'info')
+        return redirect(url_for('main.see_all_templates'))
+    
+    # Clear any previous story selection
+    if 'story_ids' in session:
+        session.pop('story_ids')
+        
+    # Store story info in session
+    session['stories_source'] = 'templates'
+    session['template_count'] = len(template_ids)
+    
+    # Generate template information for the flash message
+    template_text = "1 template" if len(template_ids) == 1 else f"{len(template_ids)} templates"
+    
+    # Flash a message showing the filter is active
+    flash(f'Showing {stories_count} stories from {template_text}', 'info')
+    
+    # Redirect to see_all_stories with a source parameter
+    return redirect(url_for('stories.list', 
+                          source='templates',
+                          template_count=len(template_ids)))
