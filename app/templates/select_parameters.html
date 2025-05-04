@@ -4,35 +4,115 @@
 
 {% block head %}
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize all sliders with their current values on page load
+        const sliders = document.querySelectorAll('input[type="range"]');
+        sliders.forEach(function(slider) {
+            updateValue(slider.id, slider.id + '_value');
+        });
+    });
+
     function updateValue(sliderId, valueId) {
         var slider = document.getElementById(sliderId);
         var value = document.getElementById(valueId);
         value.innerHTML = slider.value;
+        
+        // Highlight if the current value is different from the model default
+        var defaultValue = parseFloat(slider.getAttribute('data-default'));
+        var currentValue = parseFloat(slider.value);
+        if (Math.abs(currentValue - defaultValue) > 0.001) {
+            value.classList.add('text-primary');
+            value.classList.add('font-weight-bold');
+        } else {
+            value.classList.remove('text-primary');
+            value.classList.remove('font-weight-bold');
+        }
     }
 </script>
+<style>
+    .parameter-card {
+        transition: all 0.3s;
+        margin-bottom: 20px;
+    }
+    .parameter-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .model-default {
+        display: inline-block;
+        padding: 2px 5px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<h1>Select Parameters</h1>
-<form method="POST">
-    {% for param, details in parameters.items() %}
-        <div class="form-group">
-            <label for="{{ param }}">{{ param | capitalize }}</label>
-            <input type="range" class="form-control-range" id="{{ param }}" name="{{ param }}"
-                   min="{{ details.min_value }}" max="{{ details.max_value }}" 
-                   step="{% if details.type == 'float' %}0.01{% else %}1{% endif %}" 
-                   value="{{ details.default }}"
-                   oninput="updateValue('{{ param }}', '{{ param }}_value')">
-            <div class="d-flex justify-content-between">
-                <small class="form-text text-muted">Min: {{ details.min_value }}</small>
-                <small class="form-text text-muted">Max: {{ details.max_value }}</small>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Model Parameters</h1>
+            
+            {% if session.get('parameters') %}
+            <div class="alert alert-info">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><strong>Note:</strong> Your previously used parameters have been loaded.</span>
+                    <a href="{{ url_for('main.clear_session') }}?clear_parameters=true&redirect_to={{ url_for('main.select_parameters') }}" 
+                       class="btn btn-outline-secondary btn-sm">Reset to defaults</a>
+                </div>
             </div>
-            <small class="form-text text-muted">Default: {{ details.default }}</small>
-            <div>
-                <small class="form-text text-muted">Current Value: <span id="{{ param }}_value">{{ details.default }}</span></small>
-            </div>
+            {% endif %}
+            
+            <form method="POST">
+                <div class="row">
+                {% for param, details in parameters.items() %}
+                    <div class="col-md-6">
+                        <div class="card parameter-card">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">{{ param | capitalize }}</h5>
+                            </div>
+                            <div class="card-body">
+                                <input type="range" class="form-control-range" 
+                                       id="{{ param }}" name="{{ param }}"
+                                       min="{{ details.min_value }}" max="{{ details.max_value }}" 
+                                       step="{% if details.type == 'float' %}0.01{% else %}1{% endif %}" 
+                                       value="{{ details.default }}"
+                                       data-default="{{ details.original_default|default(details.default) }}"
+                                       oninput="updateValue('{{ param }}', '{{ param }}_value')">
+                                
+                                <div class="d-flex justify-content-between mt-2">
+                                    <small class="text-muted">Min: {{ details.min_value }}</small>
+                                    <div>
+                                        <small class="model-default">Model default: {{ details.original_default|default(details.default) }}</small>
+                                    </div>
+                                    <small class="text-muted">Max: {{ details.max_value }}</small>
+                                </div>
+                                
+                                <div class="text-center mt-3">
+                                    <strong>Current Value: <span id="{{ param }}_value">{{ details.default }}</span></strong>
+                                </div>
+                                
+                                {% if details.description %}
+                                <div class="mt-2">
+                                    <small class="text-muted">{{ details.description }}</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4 mb-5">
+                    <a href="{{ url_for('main.select_model') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Model Selection
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-lightning"></i> Send Prompt
+                    </button>
+                </div>
+            </form>
         </div>
-    {% endfor %}
-    <button type="submit" class="btn btn-success">Send Prompt</button>
-</form>
+    </div>
+</div>
 {% endblock %}
