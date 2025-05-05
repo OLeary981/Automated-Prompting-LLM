@@ -200,9 +200,15 @@ def select_all_filtered():
     data = request.get_json()
     search_text = data.get('search_text', '')
     category_filter = data.get('category_filter', '')
+    template_filter = data.get('template_filter', False)
     
     # Build the query (similar to see_all_stories but get only IDs)
     query = db.session.query(Story.story_id)
+    
+    # Apply template filter if active
+    if template_filter and session.get('template_ids'):
+        template_ids = [int(tid) for tid in session.get('template_ids', [])]
+        query = query.filter(Story.template_id.in_(template_ids))
     
     # Apply search filter if provided
     if search_text:
@@ -240,7 +246,7 @@ def view_template_stories():
     
     if not template_ids:
         flash('No templates selected. Please select at least one template.', 'warning')
-        return redirect(url_for('main.see_all_templates'))
+        return redirect(url_for('templates.list'))
     
     # Convert template IDs to integers for the database query
     int_template_ids = [int(tid) for tid in template_ids]
@@ -250,7 +256,7 @@ def view_template_stories():
     
     if stories_count == 0:
         flash('No stories found for the selected templates', 'info')
-        return redirect(url_for('main.see_all_templates'))
+        return redirect(url_for('templates.list'))
     
     # Clear any previous story selection
     if 'story_ids' in session:
