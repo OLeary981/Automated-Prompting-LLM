@@ -1104,8 +1104,32 @@ def llm_response():
 def view_responses():
     # Handle POST requests as before
     if request.method == 'POST':
-        # Your existing POST handling code
+        response_id = request.form.get('response_id')
+        if response_id:
+            try:
+                # Get the response object
+                response = db.session.query(Response).get(response_id)
+                if response:
+                    # Update flagged status
+                    flagged_key = f'flagged_for_review_{response_id}'
+                    response.flagged_for_review = flagged_key in request.form
+                    
+                    # Update review notes
+                    notes_key = f'review_notes_{response_id}'
+                    response.review_notes = request.form.get(notes_key, '')
+                    
+                    # Commit changes
+                    db.session.commit()
+                    flash(f'Response {response_id} updated successfully!', 'success')
+                else:
+                    flash(f'Error: Response {response_id} not found.', 'danger')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error updating response: {str(e)}', 'danger')
+                
+        # Redirect back to the same page with all arguments preserved
         return redirect(url_for('main.view_responses', **request.args))
+        
     
     # Clear flags processing
     if 'clear_stories' in request.args and 'story_ids' in session:
@@ -1674,6 +1698,7 @@ def view_template_responses():
                            source_info = source_info, 
                            template_count=template_count,
                            template_id=int_template_ids[0] if template_count == 1 else None))
+
 
 @main_bp.route('/clear_session', methods=['GET'])
 def clear_session():

@@ -48,6 +48,19 @@ def list():
     category_filter = request.args.get('category_filter', '')
     sort_by = request.args.get('sort_by', 'desc')  # Default to descending (newest first)
     
+    # Check if we're filtering by templates (save source for template use)
+    source = request.args.get('source')
+    
+    # Store template filter information consistently in session FIRST
+    if source == 'templates':
+        session['stories_source'] = 'templates'
+        # Also set template_count if provided
+        if request.args.get('template_count'):
+            session['template_count'] = request.args.get('template_count')
+    
+    # THEN check if we're filtering by templates
+    is_template_filtered = session.get('stories_source') == 'templates' and session.get('template_ids')
+    
     # Get the current page from the request, default to page 1
     page = request.args.get('page', 1, type=int)
     per_page = 20  # Number of stories per page
@@ -56,6 +69,11 @@ def list():
     query = db.session.query(Story).options(
         db.joinedload(Story.story_categories).joinedload(StoryCategory.category)
     )
+
+    # Filter by templates if needed
+    if is_template_filtered:
+        template_ids = [int(tid) for tid in session.get('template_ids', [])]
+        query = query.filter(Story.template_id.in_(template_ids))
 
     # Apply search filter if provided
     if search_text:
@@ -86,15 +104,22 @@ def list():
     # Get currently selected story IDs from session
     selected_story_ids = session.get('story_ids', [])
 
-    # Render the template with stories and pagination data
+    # Get the template count for display (either from request or session)
+    template_count = session.get('template_count')
+    
+    # Render with explicit source parameters
     return render_template(
         'see_all_stories.html',
         stories=stories,
         categories=categories,
         pagination=pagination,
         sort_by=sort_by,
-        selected_story_ids=selected_story_ids
+        selected_story_ids=selected_story_ids,
+        is_template_filtered=is_template_filtered,
+        template_count=template_count,
+        source=session.get('stories_source')  # Use session value for consistency
     )
+       
 
 @stories_bp.route('/update_selection', methods=['POST'])
 def update_selection():
