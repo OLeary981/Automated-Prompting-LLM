@@ -27,26 +27,26 @@ def index():
 
 
 
-@main_bp.route('/manage_categories', methods=['GET', 'POST'])
-def manage_categories():
-    if request.method == 'POST':
-        action = request.form.get('action')
+# @main_bp.route('/manage_categories', methods=['GET', 'POST'])
+# def manage_categories():
+#     if request.method == 'POST':
+#         action = request.form.get('action')
         
-        if action == 'add':
-            category_name = request.form.get('category_name')
-            if category_name and category_name.strip():
-                try:
-                    category_service.add_category(category_name.strip())
-                    flash(f'Category "{category_name}" added successfully!', 'success')
-                except Exception as e:
-                    flash(f'Error adding category: {str(e)}', 'danger')
+#         if action == 'add':
+#             category_name = request.form.get('category_name')
+#             if category_name and category_name.strip():
+#                 try:
+#                     category_service.add_category(category_name.strip())
+#                     flash(f'Category "{category_name}" added successfully!', 'success')
+#                 except Exception as e:
+#                     flash(f'Error adding category: {str(e)}', 'danger')
         
-        # Could add edit/delete functionality here
+#         # Could add edit/delete functionality here
         
-        return redirect(url_for('main.manage_categories'))
+#         return redirect(url_for('main.manage_categories'))
     
-    categories = category_service.get_all_categories()
-    return render_template('manage_categories.html', categories=categories)
+#     categories = category_service.get_all_categories()
+#     return render_template('manage_categories.html', categories=categories)
    
 
 

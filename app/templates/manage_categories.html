@@ -23,7 +23,7 @@
     <div class="card mb-4">
         <div class="card-header">Add New Category</div>
         <div class="card-body">
-            <form method="POST" action="{{ url_for('main.manage_categories') }}" class="row g-3">
+            <form method="POST" action="{{ url_for('stories.manage_categories') }}" class="row g-3">
                 <input type="hidden" name="action" value="add">
                 <div class="col-md-6">
                     <input type="text" class="form-control" id="category_name" name="category_name" placeholder="Enter category name" required>
