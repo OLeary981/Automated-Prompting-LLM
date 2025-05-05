@@ -5,11 +5,6 @@ from ...models import  Story,  StoryCategory
 from . import stories_bp
 
 
-
-
-
-
-
 @stories_bp.route('/add', methods=['GET', 'POST'])
 def add():
     if request.method == 'POST':
@@ -275,3 +270,24 @@ def view_template_stories():
     return redirect(url_for('stories.list', 
                           source='templates',
                           template_count=len(template_ids)))
+
+@stories_bp.route('/manage_categories', methods=['GET', 'POST'])
+def manage_categories():
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'add':
+            category_name = request.form.get('category_name')
+            if category_name and category_name.strip():
+                try:
+                    category_service.add_category(category_name.strip())
+                    flash(f'Category "{category_name}" added successfully!', 'success')
+                except Exception as e:
+                    flash(f'Error adding category: {str(e)}', 'danger')
+        
+        # Could add edit/delete functionality here
+        
+        return redirect(url_for('stories.manage_categories'))
+    
+    categories = category_service.get_all_categories()
+    return render_template('manage_categories.html', categories=categories)

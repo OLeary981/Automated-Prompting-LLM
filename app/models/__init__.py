@@ -1,7 +1,6 @@
 from .prompt_testing import Prompt, Response
-from .story import Story, StoryCategory
+from .story import Story, Category, StoryCategory
 from .template_system import Template, Word, Field, word_field_association
-from .categorisation import Category
 from .question import Question
 from .llm import Provider, Model
 
