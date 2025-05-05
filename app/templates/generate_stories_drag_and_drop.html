@@ -6,7 +6,7 @@
 <div class="container">
     <h1>Generate Stories</h1>
     
-    <form method="POST" action="{{ url_for('main.generate_stories') }}" id="template-form">
+    <form method="POST" action="{{ url_for('templates.generate_stories') }}" id="template-form">
         <div class="form-group">
             <label for="template">Select a Template:</label>
             <select class="form-control" id="template" name="template_id">
@@ -39,7 +39,7 @@
     <div class="mt-4">
         <h3>Manage Fields:</h3>
         
-        <form id="fields-form" method="POST" action="{{ url_for('main.generate_stories') }}">
+        <form id="fields-form" method="POST" action="{{ url_for('templates.generate_stories') }}">
             <input type="hidden" name="template_id" value="{{ selected_template_id }}">
             <input type="hidden" name="field_data" id="field-data-json">
             

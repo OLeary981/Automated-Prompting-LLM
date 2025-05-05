@@ -26,27 +26,98 @@ def index():
     return render_template('index.html')
 
 
+@main_bp.route('/clear_session', methods=['GET'])
+def clear_session():
 
-# @main_bp.route('/manage_categories', methods=['GET', 'POST'])
-# def manage_categories():
-#     if request.method == 'POST':
-#         action = request.form.get('action')
-        
-#         if action == 'add':
-#             category_name = request.form.get('category_name')
-#             if category_name and category_name.strip():
-#                 try:
-#                     category_service.add_category(category_name.strip())
-#                     flash(f'Category "{category_name}" added successfully!', 'success')
-#                 except Exception as e:
-#                     flash(f'Error adding category: {str(e)}', 'danger')
-        
-#         # Could add edit/delete functionality here
-        
-#         return redirect(url_for('main.manage_categories'))
+    # Get selective clearing parameters
+    clear_model = request.args.get('clear_model') == 'true'
+    clear_parameters = request.args.get('clear_parameters') == 'true'
+    clear_stories = request.args.get('clear_stories') == 'true'
+    clear_question = request.args.get('clear_question') == 'true'
+    clear_all = 'clear_all' in request.args
     
-#     categories = category_service.get_all_categories()
-#     return render_template('manage_categories.html', categories=categories)
+    print("Session before clearing:", dict(session))
+    
+    if clear_all:
+        # Current behavior - full clearing and job cancellation
+        cleared_jobs = 0
+        for job_id, job in list(processing_jobs.items()):
+            try:
+                # Cancel the task if it exists and is not done
+                if "task" in job and hasattr(job["task"], "cancel") and not job["task"].done():
+                    print(f"Canceling task for job {job_id}")
+                    job["task"].cancel()
+                    cleared_jobs += 1
+                
+                # Mark job as cancelled
+                job["status"] = "cancelled"
+                job["processing"] = False
+            except Exception as e:
+                print(f"Error canceling job {job_id}: {str(e)}")
+        
+        # Clear all processing jobs
+        processing_jobs.clear()
+        
+        # Clear session data
+        session.clear()
+        
+        flash(f'Session data cleared and {cleared_jobs} background tasks cancelled!', 'success')
+        print(f"Cleared {cleared_jobs} tasks from processing_jobs")
+    else:
+        # Selective clearing of session data
+        items_cleared = []
+        stories_source = request.args.get('stories_source') == 'true'
+        clear_templates = request.args.get('clear_templates') == 'true'
+
+        if stories_source and 'stories_source' in session:
+            session.pop('stories_source')
+            session.pop('template_count', None)  # Also clear template_count
+            items_cleared.append('template filter')
+
+        if clear_templates and 'template_ids' in session:
+            session.pop('template_ids')
+            items_cleared.append('template selection')
+        # Clear model and provider if requested
+        if clear_model:
+            model_cleared = False
+            if 'model' in session:
+                session.pop('model')
+                model_cleared = True
+            if 'provider' in session:
+                session.pop('provider')
+                model_cleared = True
+            if 'model_id' in session:
+                session.pop('model_id')
+                model_cleared = True
+            
+            if model_cleared:
+                items_cleared.append('model selection')
+        
+        if clear_parameters and 'parameters' in session:
+            session.pop('parameters')
+            items_cleared.append('parameters')
+            
+        if clear_stories and 'story_ids' in session:
+            session.pop('story_ids')
+            items_cleared.append('story selection')
+            
+        if clear_question and 'question_id' in session:
+            session.pop('question_id')
+        if 'question_content' in session:
+            session.pop('question_content')
+            items_cleared.append('question')
+            
+        # Only show a flash message if something was cleared
+        if items_cleared:
+            flash(f'Cleared {", ".join(items_cleared)} from session', 'info')
+        
+       
+
+        print("Session after selective clearing:", dict(session))
+    
+    # Get the redirect URL - either specified or default to index
+    redirect_url = request.args.get('redirect_to', url_for('main.index'))
+    return redirect(redirect_url)
    
 
 
@@ -71,266 +142,13 @@ def add_question():
         return redirect(url_for('main.index'))
     return render_template('add_question.html')
 
-@main_bp.route('/see_all_templates')
-def see_all_templates():
-    # Current pagination and search code remains the same
-    search_text = request.args.get('search_text', '')
-    sort_by = request.args.get('sort_by', 'desc')
-    page = request.args.get('page', 1, type=int)
-    per_page = 10
-    
-    # Build the query
-    query = db.session.query(Template)
-    
-    # Apply search filter if provided
-    if search_text:
-        query = query.filter(Template.content.ilike(f'%{search_text}%'))
-    
-    # Apply sorting
-    if sort_by == 'asc':
-        query = query.order_by(Template.template_id.asc())
-    else:
-        query = query.order_by(Template.template_id.desc())
-    
-    # Apply pagination
-    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-    templates = pagination.items
-    
-    # Get all fields from the Field table
-    fields = db.session.query(Field.field).order_by(Field.field).all()
-    template_fields = [field[0] for field in fields]  # Extract field names from result tuples
-    
-    # Get currently selected template IDs from session
-    selected_template_ids = session.get('template_ids', [])
-    
-    return render_template('see_all_templates.html', 
-                          templates=templates, 
-                          pagination=pagination, 
-                          sort_by=sort_by,
-                          template_fields=template_fields,
-                          selected_template_ids=selected_template_ids)
-
-@main_bp.route('/add_template', methods=['POST'])
-def add_template():
-    template_content = request.form.get('template_content')
-    if template_content:
-        new_template = Template(content=template_content)
-        db.session.add(new_template)
-        db.session.commit()
-    return redirect(url_for('main.see_all_templates'))
-
-@main_bp.route('/update_template_selection', methods=['POST'])
-def update_template_selection():
-    """AJAX endpoint to update template selection in session"""
-    data = request.get_json()
-    
-    # Get the current selection from session
-    selected_template_ids = session.get('template_ids', [])
-    
-    # Clear all selected templates
-    if data.get('action') == 'clear_all':
-        selected_template_ids = []
-    
-    # Select multiple templates at once (for batch operations)
-    elif data.get('action') == 'select_multiple':
-        template_ids = data.get('template_ids', [])
-        for template_id in template_ids:
-            if template_id not in selected_template_ids:
-                selected_template_ids.append(template_id)
-    
-    # Handle individual toggle
-    elif 'template_id' in data:
-        template_id = str(data['template_id'])
-        is_selected = data.get('selected', False)
-        
-        if is_selected and template_id not in selected_template_ids:
-            selected_template_ids.append(template_id)
-        elif not is_selected and template_id in selected_template_ids:
-            selected_template_ids.remove(template_id)
-    
-    # Store updated selection in session
-    session['template_ids'] = selected_template_ids
-    
-    return jsonify({
-        'success': True,
-        'selected_count': len(selected_template_ids),
-        'selected_ids': selected_template_ids
-    })
-
-@main_bp.route('/generate_stories', methods=['GET', 'POST'])
-def generate_stories():
-    if request.method == 'POST':
-        # For form submissions (field updates, generation)
-        template_id = request.form.get('template_id')
-
-        if template_id:
-            session['template_id'] = template_id
-
-        print("Form data received:")
-        print("generate button:", "generate" in request.form)
-        print("update_fields button:", "update_fields" in request.form)
-        print("template_id:", request.form.get('template_id'))
-        print("field_data:", request.form.get('field_data'))
-        
-        # Check if we're updating the fields or generating stories
-        if 'update_fields' in request.form:
-            # Process field updates
-            field_data = json.loads(request.form.get('field_data', '{}'))
-            story_builder_service.update_field_words(field_data)
-            flash('Fields updated successfully!', 'success')
-            return redirect(url_for('main.generate_stories'))
-            
-        elif 'generate' in request.form:
-            # Generate stories with current fields
-            try:
-                # Parse the field data from the form
-                field_data = json.loads(request.form.get('field_data', '{}'))
-                story_builder_service.update_field_words(field_data)  # Save fields
-
-
-                template_id = session.get('template_id')
-                if not template_id:
-                    flash('No template selected. Please select a template first.', 'danger')
-                    return redirect(url_for('main.generate_stories'))
-                
-                # Process categories - both existing and new ones
-                category_ids = []
-                
-                # Process existing categories
-                selected_categories = request.form.getlist('story_categories')
-                category_ids.extend([int(cat_id) for cat_id in selected_categories if cat_id])
-                
-                # Process new categories
-                new_categories = request.form.getlist('new_categories')
-                for new_cat in new_categories:
-                    if new_cat.strip():
-                        try:
-                            cat_id = category_service.add_category(new_cat.strip())
-                            category_ids.append(cat_id)
-                        except Exception as e:
-                            print(f"Warning: Failed to add category '{new_cat}': {str(e)}")
-                
-                print(f"Applying categories {category_ids} to generated stories")
-                
-                # Pass the field data and category_ids to the generate_stories function
-                generated_story_ids = story_builder_service.generate_stories(template_id, field_data, category_ids)
-                session['generated_story_ids'] = generated_story_ids
-                
-                if category_ids:
-                    flash(f'Stories generated successfully with {len(category_ids)} categories!', 'success')
-                else:
-                    flash('Stories generated successfully!', 'success')
-                    
-                return redirect(url_for('main.display_generated_stories'))
-            
-            except Exception as e:
-                import traceback
-                traceback.print_exc()  # Print the full error stack
-                flash(f'Error generating stories: {str(e)}', 'danger')
-                return redirect(url_for('main.generate_stories'))
-    
-    # GET request - display the form
-    templates = story_builder_service.get_all_templates()
-    
-    # Get template_id either session (by default) or if I've missed something, from the args for backwards compat
-    template_id = session.get('template_id') or request.args.get('template_id')
-
-    # Update session if template_id came from query params
-    if request.args.get('template_id'):
-        session['template_id'] = request.args.get('template_id')
-    
-    fields = {}
-    missing_fields = []
-    template = None
-    
-    if template_id:
-        template = db.session.query(Template).get(template_id)
-        fields, missing_fields = story_builder_service.get_template_fields(template_id)
-
-        print("===== DEBUG INFO =====")
-        print("Template ID:", template_id)
-        print("Fields from database:", fields)
-        for field_name, words in fields.items():
-            print(f"Field '{field_name}' has {len(words)} words: {words[:5]}...")
-        print("Missing fields:", missing_fields)
-        print("======================")
-    
-    # Get all categories for the category selection
-    categories = category_service.get_all_categories()
-    
-    return render_template(
-        'generate_stories_drag_and_drop.html', 
-        templates=templates, 
-        selected_template_id=template_id,
-        template=template, 
-        fields=fields,
-        missing_fields=missing_fields,
-        categories=categories  
-    )
-
-@main_bp.route('/display_generated_stories', methods=['GET'])
-def display_generated_stories():
-    # Convert to strings for consistency
-    generated_story_ids = [str(story_id) for story_id in session.get('generated_story_ids', [])]
-    session['story_ids'] = generated_story_ids
-    
-    # When querying, convert back to integers
-    stories = [db.session.query(Story).get(int(story_id)) for story_id in generated_story_ids]    
-    return render_template('display_generated_stories.html', stories=stories)
-
-@main_bp.route('/add_word', methods=['POST'])
-def add_word():
-    # Check if this is an AJAX request or a form submission
-    is_ajax = request.headers.get('Content-Type') == 'application/json'
-    
-    if is_ajax:
-        # Handle AJAX request (from JavaScript)
-        data = request.get_json()
-        field_name = data.get('field_name')
-        new_words = data.get('new_words')
-        
-        if field_name and new_words:
-            try:
-                story_builder_service.add_words_to_field(field_name, new_words)
-                return jsonify({'success': True, 'message': f'Word(s) added to {field_name}'})
-            except Exception as e:
-                return jsonify({'success': False, 'message': str(e)}), 500
-        return jsonify({'success': False, 'message': 'Missing required fields'}), 400
-    else:
-        # Handle form submission (from HTML form)
-        field_name = request.form.get('field_name')
-        new_words = request.form.get('new_words')
-        template_id = request.form.get('template_id')
-        
-        if field_name and new_words:
-            story_builder_service.add_words_to_field(field_name, new_words)
-        
-        return redirect(url_for('main.generate_stories', template_id=template_id))
-
-@main_bp.route('/delete_word', methods=['POST'])
-def delete_word():
-    data = request.get_json()
-    field_name = data.get('field_name')
-    word = data.get('word')
-
-    if field_name and word:
-        try:
-            print(f"Attempting to delete word '{word}' from field '{field_name}'")
-            story_builder_service.delete_word_from_field(field_name, word)
-            return jsonify({'success': True, 'message': f'Word "{word}" deleted from field "{field_name}".'})
-        except Exception as e:
-            import traceback
-            print(f"ERROR deleting word '{word}' from field '{field_name}':")
-            print(traceback.format_exc())  # This prints the full stack trace
-            return jsonify({'success': False, 'message': str(e)}), 500
-    return jsonify({'success': False, 'message': 'Invalid data provided.'}), 400
 
 @main_bp.route('/select_model', methods=['GET', 'POST'])
 def select_model():    
     # Check for story IDs in session
     if not session.get('story_ids') and request.method == 'GET':
         flash('To continue, please select one or more stories first.', 'info')
-        return redirect(url_for('main.see_all_stories'))
+        return redirect(url_for('stories.list'))
     
     # Check for question_id in session
     if not session.get('question_id') and request.method == 'GET':
@@ -1614,7 +1432,7 @@ def view_story_responses():
     
     if not story_ids:
         flash('No stories selected. Please select at least one story.', 'warning')
-        return redirect(url_for('main.see_all_stories'))
+        return redirect(url_for('stories.list'))
     
     # Convert story IDs to integers for the database query
     int_story_ids = [int(sid) for sid in story_ids]
@@ -1626,7 +1444,7 @@ def view_story_responses():
     
     if not responses:
         flash('No responses found for the selected stories', 'info')
-        return redirect(url_for('main.see_all_stories'))
+        return redirect(url_for('stories.list'))
     
     # Clear any existing response filters first
     if 'response_ids' in session:
@@ -1699,95 +1517,3 @@ def view_template_responses():
                            template_count=template_count,
                            template_id=int_template_ids[0] if template_count == 1 else None))
 
-
-@main_bp.route('/clear_session', methods=['GET'])
-def clear_session():
-    # Get selective clearing parameters
-    clear_model = request.args.get('clear_model') == 'true'
-    clear_parameters = request.args.get('clear_parameters') == 'true'
-    clear_stories = request.args.get('clear_stories') == 'true'
-    clear_question = request.args.get('clear_question') == 'true'
-    clear_all = 'clear_all' in request.args
-    
-    print("Session before clearing:", dict(session))
-    
-    if clear_all:
-        # Current behavior - full clearing and job cancellation
-        cleared_jobs = 0
-        for job_id, job in list(processing_jobs.items()):
-            try:
-                # Cancel the task if it exists and is not done
-                if "task" in job and hasattr(job["task"], "cancel") and not job["task"].done():
-                    print(f"Canceling task for job {job_id}")
-                    job["task"].cancel()
-                    cleared_jobs += 1
-                
-                # Mark job as cancelled
-                job["status"] = "cancelled"
-                job["processing"] = False
-            except Exception as e:
-                print(f"Error canceling job {job_id}: {str(e)}")
-        
-        # Clear all processing jobs
-        processing_jobs.clear()
-        
-        # Clear session data
-        session.clear()
-        
-        flash(f'Session data cleared and {cleared_jobs} background tasks cancelled!', 'success')
-        print(f"Cleared {cleared_jobs} tasks from processing_jobs")
-    else:
-        # Selective clearing of session data
-        items_cleared = []
-        stories_source = request.args.get('stories_source') == 'true'
-        clear_templates = request.args.get('clear_templates') == 'true'
-
-        if stories_source and 'stories_source' in session:
-            session.pop('stories_source')
-            session.pop('template_count', None)  # Also clear template_count
-            items_cleared.append('template filter')
-
-        if clear_templates and 'template_ids' in session:
-            session.pop('template_ids')
-            items_cleared.append('template selection')
-        # Clear model and provider if requested
-        if clear_model:
-            model_cleared = False
-            if 'model' in session:
-                session.pop('model')
-                model_cleared = True
-            if 'provider' in session:
-                session.pop('provider')
-                model_cleared = True
-            if 'model_id' in session:
-                session.pop('model_id')
-                model_cleared = True
-            
-            if model_cleared:
-                items_cleared.append('model selection')
-        
-        if clear_parameters and 'parameters' in session:
-            session.pop('parameters')
-            items_cleared.append('parameters')
-            
-        if clear_stories and 'story_ids' in session:
-            session.pop('story_ids')
-            items_cleared.append('story selection')
-            
-        if clear_question and 'question_id' in session:
-            session.pop('question_id')
-        if 'question_content' in session:
-            session.pop('question_content')
-            items_cleared.append('question')
-            
-        # Only show a flash message if something was cleared
-        if items_cleared:
-            flash(f'Cleared {", ".join(items_cleared)} from session', 'info')
-        
-       
-
-        print("Session after selective clearing:", dict(session))
-    
-    # Get the redirect URL - either specified or default to index
-    redirect_url = request.args.get('redirect_to', url_for('main.index'))
-    return redirect(redirect_url)

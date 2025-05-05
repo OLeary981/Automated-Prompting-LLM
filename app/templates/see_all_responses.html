@@ -22,7 +22,7 @@
                     <a href="{{ url_for('main.see_all_prompts') }}" class="btn btn-outline-primary">
                         <i class="bi bi-chat-left-text"></i> Select Prompts
                     </a>
-                    <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-outline-primary">
+                    <a href="{{ url_for('templates.list') }}" class="btn btn-outline-primary">
                         <i class="bi bi-file-earmark-text"></i> Select Templates
                     </a>
                     
@@ -72,7 +72,7 @@
                     <i class="bi bi-funnel-fill"></i> 
                     <strong>Primary Selection:</strong> Responses for {{ source_info }}
                 </span>
-                <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                <a href="{{ url_for('templates.list') }}" class="btn btn-sm btn-outline-secondary ms-2">
                     <i class="bi bi-list"></i> Back to Templates
                 </a>
             {% elif session.get('story_ids') %}
@@ -88,7 +88,7 @@
                     <i class="bi bi-funnel-fill"></i> 
                     <strong>Primary Selection:</strong> {{ session.get('template_ids')|length }} templates selected
                 </span>
-                <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                <a href="{{ url_for('templates.list') }}" class="btn btn-sm btn-outline-secondary ms-2">
                     <i class="bi bi-pencil-square"></i> Modify Selection
                 </a>
             {% endif %}
