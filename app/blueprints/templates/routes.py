@@ -1,9 +1,12 @@
 from flask import flash, render_template, request, redirect, url_for, session, jsonify
 from ... import db
-from ...services import story_service, question_service, story_builder_service, llm_service, category_service
+from ...services import  story_builder_service,  category_service
 from ...models import  Story,  Word, Field, Template
 from . import templates_bp
 import json
+
+#Notes for self - check for duplication of retrieval of words etc from database. 
+#I think maybe theres a mix/overlap between story_builder_service and routes etc
 
 @templates_bp.route('/list')
 def list():

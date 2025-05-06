@@ -124,25 +124,6 @@ def clear_session():
 
 
 
-@main_bp.route('/see_all_questions')
-def see_all_questions():
-    questions = question_service.get_all_questions()
-    return render_template('see_all_questions.html', questions=questions)
-
-@main_bp.route('/add_question', methods=['GET', 'POST'])
-def add_question():
-    if request.method == 'POST':
-        question_content = request.form.get('question_content')
-        if question_content:
-            try:
-                question_id = question_service.add_question(question_content)
-                print(f"Question ID: {question_id}")
-            except Exception as e:
-                print(f"An error occurred: {e}")
-        return redirect(url_for('main.index'))
-    return render_template('add_question.html')
-
-
 @main_bp.route('/select_model', methods=['GET', 'POST'])
 def select_model():    
     # Check for story IDs in session
@@ -169,54 +150,6 @@ def select_model():
         models = db.session.query(Model).join(Provider).all()
         return render_template('select_model.html', models=models)
 
-
-
-
-
-@main_bp.route('/select_question', methods=['GET', 'POST'])
-def select_question():
-    if request.method == 'POST':
-        question_id = request.form.get('question_id')
-        if question_id:
-            session['question_id'] = question_id
-            print("Stored question_id in session:", session['question_id'])
-        return redirect(url_for('main.select_model'))  # Next step
-    else:
-        questions = llm_service.get_all_questions()
-        return render_template('see_all_questions.html', questions=questions)
-
-@main_bp.route('/update_question_selection', methods=['POST'])
-def update_question_selection():
-    data = request.get_json()
-    
-    # Check if we're clearing the selection
-    if data.get('clear'):
-        if 'question_id' in session:
-            session.pop('question_id')
-        if 'question_content' in session:
-            session.pop('question_content')
-        return jsonify({'success': True})
-    
-    # Otherwise update the question selection
-    question_id = data.get('question_id')
-    if question_id:
-        # Verify the question exists
-        question = db.session.query(Question).get(question_id)
-        if question:
-            # Store both ID and content in session
-            session['question_id'] = question_id
-            session['question_content'] = question.content            
-            print(f"Question stored in session - ID: {question_id}, Content: '{question.content[:30]}...'")
-            
-            return jsonify({
-                'success': True,
-                'question_id': question_id,
-                'content': question.content
-            })
-        return jsonify({'success': False, 'message': 'Question not found'}), 404
-    
-    return jsonify({'success': False, 'message': 'No question_id provided'}), 400
-    
 
 @main_bp.route('/select_parameters', methods=['GET', 'POST'])
 def select_parameters():
