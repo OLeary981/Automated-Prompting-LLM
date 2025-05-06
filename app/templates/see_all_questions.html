@@ -89,7 +89,7 @@
             <h5 class="mb-0">Add New Question</h5>
         </div>
         <div class="card-body">
-            <form method="POST" action="{{ url_for('main.add_question') }}">
+            <form method="POST" action="{{ url_for('questions.add') }}">
                 <div class="mb-3">
                     <label for="question_content" class="form-label">Question Content</label>
                     <textarea class="form-control" id="question_content" name="question_content" rows="3" required spellcheck="true" lang="en-GB"></textarea>
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function selectQuestion(questionId) {
     // Send AJAX request to update session
-    fetch('{{ url_for("main.update_question_selection") }}', {
+    fetch('{{ url_for("questions.update_selection") }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -166,7 +166,7 @@ function selectQuestion(questionId) {
 
 function clearQuestionSelection() {
     // Send AJAX request to clear selection
-    fetch('{{ url_for("main.update_question_selection") }}', {
+    fetch('{{ url_for("questions.update_selection") }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
