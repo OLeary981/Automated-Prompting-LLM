@@ -15,7 +15,7 @@
         <div class="card mt-4 mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>Model and Provider</span>
-                <a href="{{ url_for('main.select_model') }}" class="btn btn-outline-primary btn-sm">
+                <a href="{{ url_for('llm.select_model') }}" class="btn btn-outline-primary btn-sm">
                     <i class="bi bi-arrow-repeat"></i> Try with Different Model
                 </a>
             </div>
@@ -93,7 +93,7 @@
                         </div>
                     </div>
                     
-                    <form method="POST" action="{{ url_for('main.llm_response') }}">
+                    <form method="POST" action="{{ url_for('llm.llm_response') }}">
                         <input type="hidden" id="flag_hidden_{{ response_data.response_id }}" 
                                name="flagged_for_review_{{ response_data.response_id }}" 
                                value="{% if response_data.flagged_for_review %}true{% else %}false{% endif %}">

@@ -1,0 +1,566 @@
+2025-05-06 23:40:23,866 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-06 23:40:23,866 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-06 23:40:23,871 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-06 23:40:23,973 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-06 23:40:24,003 - werkzeug - WARNING -  * Debugger is active!
+2025-05-06 23:40:24,007 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-06 23:40:27,096 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:27,096 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:27] "GET / HTTP/1.1" 200 -
+2025-05-06 23:40:27,437 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:27,438 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:27] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:40:31,312 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\__init__.py", reloading
+2025-05-06 23:40:31,313 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:34,959 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-06 23:40:34,959 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-06 23:40:34,960 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-06 23:40:35,061 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-06 23:40:35,115 - werkzeug - WARNING -  * Debugger is active!
+2025-05-06 23:40:35,124 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-06 23:40:37,822 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:37,822 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:37] "GET /stories/select HTTP/1.1" 200 -
+2025-05-06 23:40:38,083 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:38,084 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:38] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:40:39,744 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:39,744 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:39] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-06 23:40:39,805 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:39,806 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:39] "GET /stories/list HTTP/1.1" 200 -
+2025-05-06 23:40:39,881 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:39,881 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:39] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:40:41,883 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:41,883 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:41] "[32mGET /clear_session?redirect_to=/&clear_all HTTP/1.1[0m" 302 -
+2025-05-06 23:40:41,897 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:41,898 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:41] "GET / HTTP/1.1" 200 -
+2025-05-06 23:40:41,991 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:41,991 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:41] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:40:43,146 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:43,146 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:43] "[32mGET /stories/select HTTP/1.1[0m" 302 -
+2025-05-06 23:40:43,163 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:43,164 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:43] "GET /stories/list HTTP/1.1" 200 -
+2025-05-06 23:40:43,212 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:43,213 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:43] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:40:45,117 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:45,117 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:45] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-06 23:40:45,728 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:45,729 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:45] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-06 23:40:46,650 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:46,651 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:46] "GET /stories/select HTTP/1.1" 200 -
+2025-05-06 23:40:46,734 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:46,734 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:46] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:40:47,907 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:47,907 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:47] "GET /questions/select HTTP/1.1" 200 -
+2025-05-06 23:40:47,989 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:47,989 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:47] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:40:48,758 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:48,759 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:48] "POST /questions/update_selection HTTP/1.1" 200 -
+2025-05-06 23:40:49,552 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:49,552 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:49] "GET /llm/select_model HTTP/1.1" 200 -
+2025-05-06 23:40:49,620 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:49,621 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:49] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:40:50,641 - app.blueprints.llm.routes - DEBUG - Model found, setting model and provider in session
+2025-05-06 23:40:50,644 - app.blueprints.llm.routes - DEBUG - <SecureCookieSession {'question_content': 'What do you think will happen next?', 'question_id': '1', 'story_ids': ['1153', '1152'], 'model_id': '3', 'model': 'llama-3.3-70b-versatile', 'provider': 'groq'}>
+2025-05-06 23:40:50,645 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:50,646 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:50] "[32mPOST /llm/select_model HTTP/1.1[0m" 302 -
+2025-05-06 23:40:50,672 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:50,672 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:50] "GET /llm/select_parameters HTTP/1.1" 200 -
+2025-05-06 23:40:50,771 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:50,771 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:50] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:40:51,980 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:51,980 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:51] "[32mPOST /llm/select_parameters HTTP/1.1[0m" 302 -
+2025-05-06 23:40:51,991 - app.blueprints.llm.routes - DEBUG - Created new job: 31a668e2-bd34-4821-84fa-3f389cc2aa99 with 2 stories to process
+2025-05-06 23:40:51,999 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:51,999 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:51] "GET /llm/loading HTTP/1.1" 200 -
+2025-05-06 23:40:52,067 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:52,067 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:52] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:40:52,236 - app.blueprints.llm.routes - INFO - Starting processing for job: 31a668e2-bd34-4821-84fa-3f389cc2aa99
+2025-05-06 23:40:52,236 - app.blueprints.llm.routes - INFO - Current job status: initializing
+2025-05-06 23:40:52,255 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-06 23:40:52,255 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-06 23:40:52,256 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-06 23:40:52,256 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-06 23:40:52,258 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-06 23:40:52,258 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-06 23:40:52,358 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-06 23:40:52,358 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-06 23:40:52,358 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:52,358 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:52,358 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:52] "GET /llm/start_processing/31a668e2-bd34-4821-84fa-3f389cc2aa99 HTTP/1.1" 200 -
+2025-05-06 23:40:52,358 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:52] "GET /llm/start_processing/31a668e2-bd34-4821-84fa-3f389cc2aa99 HTTP/1.1" 200 -
+2025-05-06 23:40:52,410 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:52,410 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:40:52,412 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:52] "GET /llm/progress_stream/31a668e2-bd34-4821-84fa-3f389cc2aa99 HTTP/1.1" 200 -
+2025-05-06 23:40:52,412 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:40:52] "GET /llm/progress_stream/31a668e2-bd34-4821-84fa-3f389cc2aa99 HTTP/1.1" 200 -
+2025-05-06 23:41:23,761 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:41:23,761 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:41:23,761 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:41:23] "GET /llm/cancel_processing/31a668e2-bd34-4821-84fa-3f389cc2aa99 HTTP/1.1" 200 -
+2025-05-06 23:41:23,761 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:41:23] "GET /llm/cancel_processing/31a668e2-bd34-4821-84fa-3f389cc2aa99 HTTP/1.1" 200 -
+2025-05-06 23:42:18,961 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:42:18,961 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:42:18,962 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:42:18] "GET / HTTP/1.1" 200 -
+2025-05-06 23:42:18,962 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:42:18] "GET / HTTP/1.1" 200 -
+2025-05-06 23:42:19,085 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:42:19,085 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:42:19,085 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:42:19] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:42:19,085 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:42:19] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:43:27,515 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\blueprints\\llm\\routes.py", reloading
+2025-05-06 23:43:27,515 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\blueprints\\llm\\routes.py", reloading
+2025-05-06 23:43:27,516 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:43:27,516 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:43:30,875 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-06 23:43:30,876 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-06 23:43:30,877 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-06 23:43:30,977 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-06 23:43:31,009 - werkzeug - WARNING -  * Debugger is active!
+2025-05-06 23:43:31,014 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-06 23:44:04,281 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\services\\async_service.py", reloading
+2025-05-06 23:44:04,281 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:44:08,062 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-06 23:44:08,063 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-06 23:44:08,064 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-06 23:44:08,165 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-06 23:44:08,194 - werkzeug - WARNING -  * Debugger is active!
+2025-05-06 23:44:08,197 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-06 23:45:11,935 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-06 23:45:11,937 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:11,938 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:11] "GET /stories/select HTTP/1.1" 200 -
+2025-05-06 23:45:12,215 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:12,216 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:12] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:45:13,562 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:13,563 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:13] "GET /questions/select HTTP/1.1" 200 -
+2025-05-06 23:45:13,617 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:13,618 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:13] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:45:14,825 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:14,827 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:14] "GET /llm/select_model HTTP/1.1" 200 -
+2025-05-06 23:45:14,883 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:14,883 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:14] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:45:15,708 - app.blueprints.llm.routes - DEBUG - Model found, setting model and provider in session
+2025-05-06 23:45:15,712 - app.blueprints.llm.routes - DEBUG - <SecureCookieSession {'job_id': '31a668e2-bd34-4821-84fa-3f389cc2aa99', 'model': 'llama-3.3-70b-versatile', 'model_id': '3', 'parameters': {'max_tokens': '1024', 'temperature': '0.7', 'top_p': '0.8'}, 'provider': 'groq', 'question_content': 'What do you think will happen next?', 'question_id': '1', 'story_ids': ['1153', '1152']}>
+2025-05-06 23:45:15,715 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:15,716 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:15] "[32mPOST /llm/select_model HTTP/1.1[0m" 302 -
+2025-05-06 23:45:15,740 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:15,741 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:15] "GET /llm/select_parameters HTTP/1.1" 200 -
+2025-05-06 23:45:15,819 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:15,820 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:15] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:45:17,164 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:17,164 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:17] "[32mPOST /llm/select_parameters HTTP/1.1[0m" 302 -
+2025-05-06 23:45:17,176 - app.blueprints.llm.routes - DEBUG - Created new job: fbae886f-596b-46b0-87dc-76ba6bccc1cd with 2 stories to process
+2025-05-06 23:45:17,184 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:17,185 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:17] "GET /llm/loading HTTP/1.1" 200 -
+2025-05-06 23:45:17,248 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:17,248 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:17] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:45:17,355 - app.blueprints.llm.routes - INFO - Starting processing for job: fbae886f-596b-46b0-87dc-76ba6bccc1cd
+2025-05-06 23:45:17,355 - app.blueprints.llm.routes - INFO - Current job status: initializing
+2025-05-06 23:45:17,355 - app.blueprints.llm.routes - INFO - Got event loop: <ProactorEventLoop running=False closed=False debug=False>
+2025-05-06 23:45:17,411 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-06 23:45:17,411 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-06 23:45:17,412 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-06 23:45:17,412 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-06 23:45:17,419 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-06 23:45:17,419 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-06 23:45:17,519 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-06 23:45:17,519 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-06 23:45:17,520 - app.blueprints.llm.routes - INFO - Created app for background task
+2025-05-06 23:45:17,520 - app.blueprints.llm.routes - INFO - Created app for background task
+2025-05-06 23:45:17,520 - app.blueprints.llm.routes - INFO - Created task: <Future at 0x20cc951b8d0 state=pending>
+2025-05-06 23:45:17,520 - app.blueprints.llm.routes - INFO - Created task: <Future at 0x20cc951b8d0 state=pending>
+2025-05-06 23:45:17,522 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:17,522 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:17,522 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-06 23:45:17,522 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-06 23:45:17,523 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:17] "GET /llm/start_processing/fbae886f-596b-46b0-87dc-76ba6bccc1cd HTTP/1.1" 200 -
+2025-05-06 23:45:17,523 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:17] "GET /llm/start_processing/fbae886f-596b-46b0-87dc-76ba6bccc1cd HTTP/1.1" 200 -
+2025-05-06 23:45:17,582 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:17,582 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:45:17,583 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:17] "GET /llm/progress_stream/fbae886f-596b-46b0-87dc-76ba6bccc1cd HTTP/1.1" 200 -
+2025-05-06 23:45:17,583 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:45:17] "GET /llm/progress_stream/fbae886f-596b-46b0-87dc-76ba6bccc1cd HTTP/1.1" 200 -
+2025-05-06 23:57:15,613 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\blueprints\\llm\\routes.py", reloading
+2025-05-06 23:57:15,613 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\blueprints\\llm\\routes.py", reloading
+2025-05-06 23:57:15,615 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:15,615 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:19,162 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-06 23:57:19,162 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-06 23:57:19,165 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-06 23:57:19,266 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-06 23:57:19,289 - werkzeug - WARNING -  * Debugger is active!
+2025-05-06 23:57:19,296 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-06 23:57:19,374 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:19,374 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-06 23:57:19,375 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:19] "[32mGET /clear_session?redirect_to=/&clear_all HTTP/1.1[0m" 302 -
+2025-05-06 23:57:19,406 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:19,407 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:19] "GET / HTTP/1.1" 200 -
+2025-05-06 23:57:19,644 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:19,645 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:19] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:57:20,905 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:20,906 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:20] "[32mGET /stories/select HTTP/1.1[0m" 302 -
+2025-05-06 23:57:21,009 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:21,009 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:21] "GET /stories/list HTTP/1.1" 200 -
+2025-05-06 23:57:21,052 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:21,053 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:21] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:57:22,890 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:22,890 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:22] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-06 23:57:23,945 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:23,945 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:23] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-06 23:57:24,659 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:24,659 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:24] "GET /stories/select HTTP/1.1" 200 -
+2025-05-06 23:57:24,736 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:24,737 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:24] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:57:25,652 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:25,653 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:25] "GET /questions/select HTTP/1.1" 200 -
+2025-05-06 23:57:25,694 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:25,694 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:25] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:57:27,236 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:27,236 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:27] "POST /questions/update_selection HTTP/1.1" 200 -
+2025-05-06 23:57:27,937 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:27,937 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:27] "GET /llm/select_model HTTP/1.1" 200 -
+2025-05-06 23:57:27,983 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:27,983 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:27] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:57:28,904 - app.blueprints.llm.routes - DEBUG - Model found, setting model and provider in session
+2025-05-06 23:57:28,906 - app.blueprints.llm.routes - DEBUG - <SecureCookieSession {'question_content': 'What do you think will happen next?', 'question_id': '1', 'story_ids': ['1153', '1151'], 'model_id': '3', 'model': 'llama-3.3-70b-versatile', 'provider': 'groq'}>
+2025-05-06 23:57:28,906 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:28,906 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:28] "[32mPOST /llm/select_model HTTP/1.1[0m" 302 -
+2025-05-06 23:57:28,928 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:28,928 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:28] "GET /llm/select_parameters HTTP/1.1" 200 -
+2025-05-06 23:57:28,978 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:28,979 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:28] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:57:29,951 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:29,951 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:29] "[32mPOST /llm/select_parameters HTTP/1.1[0m" 302 -
+2025-05-06 23:57:29,963 - app.blueprints.llm.routes - DEBUG - Created new job: 3945513b-a1ae-4352-8d17-752e85d5e06b with 2 stories to process
+2025-05-06 23:57:29,966 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:29,966 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:29] "GET /llm/loading HTTP/1.1" 200 -
+2025-05-06 23:57:30,017 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:30,018 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:30] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-06 23:57:30,101 - app.blueprints.llm.routes - INFO - Starting processing for job: 3945513b-a1ae-4352-8d17-752e85d5e06b
+2025-05-06 23:57:30,102 - app.blueprints.llm.routes - INFO - Current job status: initializing
+2025-05-06 23:57:30,102 - app.blueprints.llm.routes - INFO - Got event loop: <ProactorEventLoop running=False closed=False debug=False>
+2025-05-06 23:57:30,102 - app.blueprints.llm.routes - INFO - Created task: <Future at 0x1fd7871f150 state=pending>
+2025-05-06 23:57:30,102 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:30,102 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:30] "GET /llm/start_processing/3945513b-a1ae-4352-8d17-752e85d5e06b HTTP/1.1" 200 -
+2025-05-06 23:57:30,267 - app.services.async_service - INFO - Async event loop stopped
+2025-05-06 23:57:30,268 - werkzeug - INFO - 127.0.0.1 - - [06/May/2025 23:57:30] "GET /llm/progress_stream/3945513b-a1ae-4352-8d17-752e85d5e06b HTTP/1.1" 200 -
+2025-05-07 00:04:42,860 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\services\\async_service.py", reloading
+2025-05-07 00:04:42,860 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:04:46,206 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 00:04:46,206 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 00:04:46,208 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 00:04:46,309 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-07 00:04:46,345 - werkzeug - WARNING -  * Debugger is active!
+2025-05-07 00:04:46,348 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-07 00:05:08,574 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\services\\async_service.py", reloading
+2025-05-07 00:05:08,575 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:12,237 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 00:05:12,238 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 00:05:12,238 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 00:05:12,339 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-07 00:05:12,370 - werkzeug - WARNING -  * Debugger is active!
+2025-05-07 00:05:12,374 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-07 00:05:42,238 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:42,238 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-07 00:05:42,238 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:42] "[32mGET /clear_session?redirect_to=/&clear_all HTTP/1.1[0m" 302 -
+2025-05-07 00:05:42,331 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:42,332 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:42] "GET / HTTP/1.1" 200 -
+2025-05-07 00:05:42,532 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:42,532 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:42] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:05:43,481 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:43,482 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:43] "[32mGET /stories/select HTTP/1.1[0m" 302 -
+2025-05-07 00:05:43,676 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:43,676 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:43] "GET /stories/list HTTP/1.1" 200 -
+2025-05-07 00:05:43,739 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:43,740 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:43] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:05:45,430 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:45,430 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:45] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-07 00:05:45,782 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:45,783 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:45] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-07 00:05:46,577 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:46,577 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:46] "GET /stories/select HTTP/1.1" 200 -
+2025-05-07 00:05:46,642 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:46,643 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:46] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:05:47,584 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:47,585 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:47] "GET /questions/select HTTP/1.1" 200 -
+2025-05-07 00:05:47,642 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:47,643 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:47] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:05:48,635 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:48,635 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:48] "POST /questions/update_selection HTTP/1.1" 200 -
+2025-05-07 00:05:49,274 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:49,274 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:49] "GET /llm/select_model HTTP/1.1" 200 -
+2025-05-07 00:05:49,361 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:49,362 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:49] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:05:50,272 - app.blueprints.llm.routes - DEBUG - Model found, setting model and provider in session
+2025-05-07 00:05:50,274 - app.blueprints.llm.routes - DEBUG - <SecureCookieSession {'question_content': 'What do you think will happen next?', 'question_id': '1', 'story_ids': ['1153', '1152'], 'model_id': '3', 'model': 'llama-3.3-70b-versatile', 'provider': 'groq'}>
+2025-05-07 00:05:50,275 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:50,275 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:50] "[32mPOST /llm/select_model HTTP/1.1[0m" 302 -
+2025-05-07 00:05:50,288 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:50,288 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:50] "GET /llm/select_parameters HTTP/1.1" 200 -
+2025-05-07 00:05:50,343 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:50,343 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:50] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:05:51,475 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:51,475 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:51] "[32mPOST /llm/select_parameters HTTP/1.1[0m" 302 -
+2025-05-07 00:05:51,494 - app.blueprints.llm.routes - DEBUG - Created new job: cb19511f-2d72-42b4-b2c2-6ce54f949f57 with 2 stories to process
+2025-05-07 00:05:51,499 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:51,499 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:51] "GET /llm/loading HTTP/1.1" 200 -
+2025-05-07 00:05:51,570 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:51,571 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:51] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:05:51,644 - app.blueprints.llm.routes - INFO - Starting processing for job: cb19511f-2d72-42b4-b2c2-6ce54f949f57
+2025-05-07 00:05:51,645 - app.blueprints.llm.routes - INFO - Current job status: initializing
+2025-05-07 00:05:51,645 - app.blueprints.llm.routes - INFO - Got event loop: <ProactorEventLoop running=False closed=False debug=False>
+2025-05-07 00:05:51,645 - app.blueprints.llm.routes - INFO - Created task: <Future at 0x1aadae3d450 state=pending>
+2025-05-07 00:05:51,645 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:51,645 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:51] "GET /llm/start_processing/cb19511f-2d72-42b4-b2c2-6ce54f949f57 HTTP/1.1" 200 -
+2025-05-07 00:05:51,835 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:05:51,837 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:05:51] "GET /llm/progress_stream/cb19511f-2d72-42b4-b2c2-6ce54f949f57 HTTP/1.1" 200 -
+2025-05-07 00:13:29,880 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\blueprints\\llm\\routes.py", reloading
+2025-05-07 00:13:29,880 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:13:33,173 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 00:13:33,174 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 00:13:33,175 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 00:13:33,311 - werkzeug - WARNING -  * Debugger is active!
+2025-05-07 00:13:33,316 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-07 00:14:03,544 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:03,544 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-07 00:14:03,544 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:03] "[32mGET /clear_session?redirect_to=/&clear_all HTTP/1.1[0m" 302 -
+2025-05-07 00:14:03,589 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:03,589 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:03] "GET / HTTP/1.1" 200 -
+2025-05-07 00:14:03,799 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:03,799 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:03] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:14:04,550 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:04,553 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:04] "[32mGET /stories/select HTTP/1.1[0m" 302 -
+2025-05-07 00:14:04,679 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:04,679 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:04] "GET /stories/list HTTP/1.1" 200 -
+2025-05-07 00:14:04,732 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:04,732 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:04] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:14:06,746 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:06,747 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:06] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-07 00:14:07,498 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:07,498 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:07] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-07 00:14:08,572 - app.services.async_service - INFO - 2025-05-07 00:13:33,275 - app.services.async_service - INFO - Async service initialized with background event loop
+Async event loop stopped
+2025-05-07 00:14:08,573 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:08] "GET /stories/select HTTP/1.1" 200 -
+2025-05-07 00:14:08,623 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:08,623 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:08] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:14:09,516 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:09,516 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:09] "GET /questions/select HTTP/1.1" 200 -
+2025-05-07 00:14:09,588 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:09,589 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:09] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:14:10,559 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:10,559 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:10] "POST /questions/update_selection HTTP/1.1" 200 -
+2025-05-07 00:14:11,422 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:11,422 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:11] "GET /llm/select_model HTTP/1.1" 200 -
+2025-05-07 00:14:11,495 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:11,496 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:11] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:14:12,454 - app.blueprints.llm.routes - DEBUG - Model found, setting model and provider in session
+2025-05-07 00:14:12,457 - app.blueprints.llm.routes - DEBUG - <SecureCookieSession {'question_content': 'What do you think will happen next?', 'question_id': '1', 'story_ids': ['1150', '1149'], 'model_id': '3', 'model': 'llama-3.3-70b-versatile', 'provider': 'groq'}>
+2025-05-07 00:14:12,460 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:12,461 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:12] "[32mPOST /llm/select_model HTTP/1.1[0m" 302 -
+2025-05-07 00:14:12,488 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:12,488 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:12] "GET /llm/select_parameters HTTP/1.1" 200 -
+2025-05-07 00:14:12,590 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:12,593 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:12] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:14:14,239 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:14,239 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:14] "[32mPOST /llm/select_parameters HTTP/1.1[0m" 302 -
+2025-05-07 00:14:14,255 - app.blueprints.llm.routes - DEBUG - Created new job: 0d4d54b2-99a7-4686-aff9-81dfb687f985 with 2 stories to process
+2025-05-07 00:14:14,261 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:14,261 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:14] "GET /llm/loading HTTP/1.1" 200 -
+2025-05-07 00:14:14,346 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:14,346 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:14] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:14:14,459 - app.blueprints.llm.routes - INFO - Starting processing for job: 0d4d54b2-99a7-4686-aff9-81dfb687f985
+2025-05-07 00:14:14,459 - app.blueprints.llm.routes - INFO - Current job status: initializing
+2025-05-07 00:14:14,460 - app.blueprints.llm.routes - INFO - Got event loop: <ProactorEventLoop running=False closed=False debug=False>
+2025-05-07 00:14:14,460 - app.blueprints.llm.routes - INFO - Created task: <Future at 0x1a2a9ad6e90 state=pending>
+2025-05-07 00:14:14,460 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:14,460 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:14] "GET /llm/start_processing/0d4d54b2-99a7-4686-aff9-81dfb687f985 HTTP/1.1" 200 -
+2025-05-07 00:14:14,660 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:14:14,661 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:14:14] "GET /llm/progress_stream/0d4d54b2-99a7-4686-aff9-81dfb687f985 HTTP/1.1" 200 -
+2025-05-07 00:17:17,395 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:17,396 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:17] "[32mGET /clear_session?redirect_to=/&clear_all HTTP/1.1[0m" 302 -
+2025-05-07 00:17:17,415 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:17,416 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:17] "GET / HTTP/1.1" 200 -
+2025-05-07 00:17:17,494 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:17,498 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:17] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:17:18,907 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:18,908 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:18] "[32mGET /stories/select HTTP/1.1[0m" 302 -
+2025-05-07 00:17:18,954 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:18,955 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:18] "GET /stories/list HTTP/1.1" 200 -
+2025-05-07 00:17:19,057 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:19,058 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:19] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:17:19,272 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\services\\async_service.py", reloading
+2025-05-07 00:17:19,277 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:22,621 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 00:17:22,621 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 00:17:22,621 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 00:17:22,725 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-07 00:17:22,754 - werkzeug - WARNING -  * Debugger is active!
+2025-05-07 00:17:22,761 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-07 00:17:22,842 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:22,842 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-07 00:17:22,842 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:22] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-07 00:17:22,843 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:22,844 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:22] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-07 00:17:26,204 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:26,204 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:26] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-07 00:17:28,044 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:28,044 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:28] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-07 00:17:29,032 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:29,032 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:29] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-07 00:17:31,424 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:31,424 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:31] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-07 00:17:32,594 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:32,595 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:32] "GET /stories/select HTTP/1.1" 200 -
+2025-05-07 00:17:32,826 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:32,827 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:32] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:17:34,188 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:34,188 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:34] "GET /questions/select HTTP/1.1" 200 -
+2025-05-07 00:17:34,245 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:34,245 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:34] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:17:35,020 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:35,020 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:35] "POST /questions/update_selection HTTP/1.1" 200 -
+2025-05-07 00:17:36,193 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:36,195 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:36] "GET /llm/select_model HTTP/1.1" 200 -
+2025-05-07 00:17:36,258 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:36,258 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:36] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:17:37,359 - app.blueprints.llm.routes - DEBUG - Model found, setting model and provider in session
+2025-05-07 00:17:37,359 - app.blueprints.llm.routes - DEBUG - <SecureCookieSession {'question_content': 'What do you think will happen next?', 'question_id': '1', 'story_ids': ['1152', '1153', '1151'], 'model_id': '3', 'model': 'llama-3.3-70b-versatile', 'provider': 'groq'}>
+2025-05-07 00:17:37,359 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:37,359 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:37] "[32mPOST /llm/select_model HTTP/1.1[0m" 302 -
+2025-05-07 00:17:37,388 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:37,388 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:37] "GET /llm/select_parameters HTTP/1.1" 200 -
+2025-05-07 00:17:37,466 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:37,466 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:37] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:17:38,892 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:38,892 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:38] "[32mPOST /llm/select_parameters HTTP/1.1[0m" 302 -
+2025-05-07 00:17:38,904 - app.blueprints.llm.routes - DEBUG - Created new job: ff58569f-7f4e-49b6-97f6-9e3398148ecc with 3 stories to process
+2025-05-07 00:17:38,906 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:38,906 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:38] "GET /llm/loading HTTP/1.1" 200 -
+2025-05-07 00:17:38,975 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:38,975 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:38] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:17:39,068 - app.blueprints.llm.routes - INFO - Starting processing for job: ff58569f-7f4e-49b6-97f6-9e3398148ecc
+2025-05-07 00:17:39,068 - app.blueprints.llm.routes - INFO - Current job status: initializing
+2025-05-07 00:17:39,068 - app.blueprints.llm.routes - INFO - Got event loop: <ProactorEventLoop running=False closed=False debug=False>
+2025-05-07 00:17:39,068 - app.blueprints.llm.routes - INFO - Created task: <Future at 0x221ca0e0c90 state=pending>
+2025-05-07 00:17:39,069 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:39,069 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:39] "GET /llm/start_processing/ff58569f-7f4e-49b6-97f6-9e3398148ecc HTTP/1.1" 200 -
+2025-05-07 00:17:39,329 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:17:39,329 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:17:39] "GET /llm/progress_stream/ff58569f-7f4e-49b6-97f6-9e3398148ecc HTTP/1.1" 200 -
+2025-05-07 00:26:22,042 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\__init__.py", reloading
+2025-05-07 00:26:22,043 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 00:26:26,260 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 00:26:26,261 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 00:26:26,263 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 00:26:26,365 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-07 00:26:26,395 - werkzeug - WARNING -  * Debugger is active!
+2025-05-07 00:26:26,399 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-07 00:26:26,478 - app - INFO - App context shutting down
+2025-05-07 00:26:26,478 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:26] "[32mGET /clear_session?redirect_to=/&clear_all HTTP/1.1[0m" 302 -
+2025-05-07 00:26:26,512 - app - INFO - App context shutting down
+2025-05-07 00:26:26,512 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:26] "GET / HTTP/1.1" 200 -
+2025-05-07 00:26:26,723 - app - INFO - App context shutting down
+2025-05-07 00:26:26,724 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:26] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:26:27,795 - app - INFO - App context shutting down
+2025-05-07 00:26:27,795 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:27] "[32mGET /stories/select HTTP/1.1[0m" 302 -
+2025-05-07 00:26:27,887 - app - INFO - App context shutting down
+2025-05-07 00:26:27,887 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:27] "GET /stories/list HTTP/1.1" 200 -
+2025-05-07 00:26:27,939 - app - INFO - App context shutting down
+2025-05-07 00:26:27,941 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:27] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:26:29,273 - app - INFO - App context shutting down
+2025-05-07 00:26:29,274 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:29] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-07 00:26:29,657 - app - INFO - App context shutting down
+2025-05-07 00:26:29,657 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:29] "POST /stories/update_selection HTTP/1.1" 200 -
+2025-05-07 00:26:30,448 - app - INFO - App context shutting down
+2025-05-07 00:26:30,448 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:30] "GET /stories/select HTTP/1.1" 200 -
+2025-05-07 00:26:30,508 - app - INFO - App context shutting down
+2025-05-07 00:26:30,509 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:30] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:26:31,470 - app - INFO - App context shutting down
+2025-05-07 00:26:31,471 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:31] "GET /questions/select HTTP/1.1" 200 -
+2025-05-07 00:26:31,546 - app - INFO - App context shutting down
+2025-05-07 00:26:31,546 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:31] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:26:32,463 - app - INFO - App context shutting down
+2025-05-07 00:26:32,464 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:32] "POST /questions/update_selection HTTP/1.1" 200 -
+2025-05-07 00:26:33,469 - app - INFO - App context shutting down
+2025-05-07 00:26:33,469 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:33] "GET /llm/select_model HTTP/1.1" 200 -
+2025-05-07 00:26:33,530 - app - INFO - App context shutting down
+2025-05-07 00:26:33,530 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:33] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:26:34,433 - app.blueprints.llm.routes - DEBUG - Model found, setting model and provider in session
+2025-05-07 00:26:34,433 - app.blueprints.llm.routes - DEBUG - <SecureCookieSession {'question_content': 'What do you think will happen next?', 'question_id': '1', 'story_ids': ['1153', '1152'], 'model_id': '3', 'model': 'llama-3.3-70b-versatile', 'provider': 'groq'}>
+2025-05-07 00:26:34,434 - app - INFO - App context shutting down
+2025-05-07 00:26:34,434 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:34] "[32mPOST /llm/select_model HTTP/1.1[0m" 302 -
+2025-05-07 00:26:34,454 - app - INFO - App context shutting down
+2025-05-07 00:26:34,455 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:34] "GET /llm/select_parameters HTTP/1.1" 200 -
+2025-05-07 00:26:34,515 - app - INFO - App context shutting down
+2025-05-07 00:26:34,515 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:34] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:26:35,448 - app - INFO - App context shutting down
+2025-05-07 00:26:35,448 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:35] "[32mPOST /llm/select_parameters HTTP/1.1[0m" 302 -
+2025-05-07 00:26:35,461 - app.blueprints.llm.routes - DEBUG - Created new job: a0568a77-cdaf-4c63-91b7-ba42015f7743 with 2 stories to process
+2025-05-07 00:26:35,467 - app - INFO - App context shutting down
+2025-05-07 00:26:35,468 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:35] "GET /llm/loading HTTP/1.1" 200 -
+2025-05-07 00:26:35,536 - app - INFO - App context shutting down
+2025-05-07 00:26:35,536 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:35] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:26:35,704 - app.blueprints.llm.routes - INFO - Starting processing for job: a0568a77-cdaf-4c63-91b7-ba42015f7743
+2025-05-07 00:26:35,704 - app.blueprints.llm.routes - INFO - Current job status: initializing
+2025-05-07 00:26:35,704 - app.blueprints.llm.routes - INFO - Got event loop: <ProactorEventLoop running=True closed=False debug=False>
+2025-05-07 00:26:35,704 - app.services.async_service - INFO - Starting process_llm_requests for job: a0568a77-cdaf-4c63-91b7-ba42015f7743
+2025-05-07 00:26:35,704 - app.services.async_service - INFO - Job initialized: {'status': 'running', 'progress': 0, 'total': 2, 'completed': 0, 'results': {}, 'processing': True, 'last_activity': 1746573995.4615223, 'params': {'model_id': '3', 'story_ids': ['1153', '1152'], 'question_id': '1', 'parameters': {'max_tokens': '1024', 'temperature': '0.7', 'top_p': '0.8'}}}
+2025-05-07 00:26:35,709 - app - INFO - App context shutting down
+2025-05-07 00:26:35,711 - app.blueprints.llm.routes - INFO - Created task: <Future at 0x208fa4e2dd0 state=pending>
+2025-05-07 00:26:35,712 - app - INFO - App context shutting down
+2025-05-07 00:26:35,712 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:35] "GET /llm/start_processing/a0568a77-cdaf-4c63-91b7-ba42015f7743 HTTP/1.1" 200 -
+2025-05-07 00:26:35,748 - app.services.llm_service - INFO - LLM call: groq/llama-3.3-70b-versatile with story_id=1153, question_id=1
+2025-05-07 00:26:35,749 - app.services.llm_service - INFO - Parameters: {'max_tokens': '1024', 'temperature': '0.7', 'top_p': '0.8'}
+2025-05-07 00:26:35,757 - groq._base_client - DEBUG - Request options: {'method': 'post', 'url': '/openai/v1/chat/completions', 'files': None, 'json_data': {'messages': [{'role': 'user', 'content': 'Read my story: 06/05/25 Test of re-refactored routes and models for tempalating chocolate and May. now respond to these queries about it: What do you think will happen next?'}], 'model': 'llama-3.3-70b-versatile', 'max_tokens': 1024, 'stop': None, 'stream': False, 'temperature': 0.7, 'top_p': 0.8}}
+2025-05-07 00:26:35,786 - groq._base_client - DEBUG - Sending HTTP Request: POST https://api.groq.com/openai/v1/chat/completions
+2025-05-07 00:26:35,786 - httpcore.connection - DEBUG - connect_tcp.started host='api.groq.com' port=443 local_address=None timeout=5.0 socket_options=None
+2025-05-07 00:26:35,886 - app - INFO - App context shutting down
+2025-05-07 00:26:35,887 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:35] "GET /llm/progress_stream/a0568a77-cdaf-4c63-91b7-ba42015f7743 HTTP/1.1" 200 -
+2025-05-07 00:26:35,887 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000208FA54F110>
+2025-05-07 00:26:35,887 - httpcore.connection - DEBUG - start_tls.started ssl_context=<ssl.SSLContext object at 0x00000208F92B7890> server_hostname='api.groq.com' timeout=5.0
+2025-05-07 00:26:35,927 - httpcore.connection - DEBUG - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000208FA54F610>
+2025-05-07 00:26:35,927 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-05-07 00:26:35,928 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-05-07 00:26:35,928 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-05-07 00:26:35,928 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-05-07 00:26:35,928 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2025-05-07 00:26:37,008 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 06 May 2025 23:26:37 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Cache-Control', b'private, max-age=0, no-store, no-cache, must-revalidate'), (b'vary', b'Origin'), (b'x-groq-region', b'gcp-europe-west3'), (b'x-ratelimit-limit-requests', b'1000'), (b'x-ratelimit-limit-tokens', b'12000'), (b'x-ratelimit-remaining-requests', b'999'), (b'x-ratelimit-remaining-tokens', b'11952'), (b'x-ratelimit-reset-requests', b'1m26.4s'), (b'x-ratelimit-reset-tokens', b'240ms'), (b'x-request-id', b'req_01jtkyrc1zfh6a6x9x52j9en01'), (b'cf-cache-status', b'DYNAMIC'), (b'Set-Cookie', b'__cf_bm=S1567IvWaX96hIugu5V97T0ZqdRwHTAuZi7eUHceu.0-1746573997-1.0.1.1-iMmRdBmOm5lC7OzbQlZmSulxbA9tNCjPWkEeQVT5CdwRhRLPvtC5FU5LwyqNsXDnXuhUTaCk2fxFjmTu6SjZFb74eaXu6Qz_8DUEAJRv59Q; path=/; expires=Tue, 06-May-25 23:56:37 GMT; domain=.groq.com; HttpOnly; Secure; SameSite=None'), (b'Server', b'cloudflare'), (b'CF-RAY', b'93bc3e536ee9b3f9-MAN'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2025-05-07 00:26:37,010 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-07 00:26:37,010 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2025-05-07 00:26:37,011 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-05-07 00:26:37,011 - httpcore.http11 - DEBUG - response_closed.started
+2025-05-07 00:26:37,011 - httpcore.http11 - DEBUG - response_closed.complete
+2025-05-07 00:26:37,011 - groq._base_client - DEBUG - HTTP Response: POST https://api.groq.com/openai/v1/chat/completions "200 OK" Headers({'date': 'Tue, 06 May 2025 23:26:37 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'cache-control': 'private, max-age=0, no-store, no-cache, must-revalidate', 'vary': 'Origin', 'x-groq-region': 'gcp-europe-west3', 'x-ratelimit-limit-requests': '1000', 'x-ratelimit-limit-tokens': '12000', 'x-ratelimit-remaining-requests': '999', 'x-ratelimit-remaining-tokens': '11952', 'x-ratelimit-reset-requests': '1m26.4s', 'x-ratelimit-reset-tokens': '240ms', 'x-request-id': 'req_01jtkyrc1zfh6a6x9x52j9en01', 'cf-cache-status': 'DYNAMIC', 'set-cookie': '__cf_bm=S1567IvWaX96hIugu5V97T0ZqdRwHTAuZi7eUHceu.0-1746573997-1.0.1.1-iMmRdBmOm5lC7OzbQlZmSulxbA9tNCjPWkEeQVT5CdwRhRLPvtC5FU5LwyqNsXDnXuhUTaCk2fxFjmTu6SjZFb74eaXu6Qz_8DUEAJRv59Q; path=/; expires=Tue, 06-May-25 23:56:37 GMT; domain=.groq.com; HttpOnly; Secure; SameSite=None', 'server': 'cloudflare', 'cf-ray': '93bc3e536ee9b3f9-MAN', 'content-encoding': 'gzip', 'alt-svc': 'h3=":443"; ma=86400'})
+2025-05-07 00:26:37,017 - app.services.llm_service - INFO - save_prompt_and_response received prompt_id: None (type: <class 'NoneType'>)
+2025-05-07 00:26:37,049 - app - INFO - App context shutting down
+2025-05-07 00:26:37,052 - app - INFO - App context shutting down
+2025-05-07 00:26:42,057 - app.services.llm_service - INFO - LLM call: groq/llama-3.3-70b-versatile with story_id=1152, question_id=1
+2025-05-07 00:26:42,057 - app.services.llm_service - INFO - Parameters: {'max_tokens': '1024', 'temperature': '0.7', 'top_p': '0.8'}
+2025-05-07 00:26:42,060 - groq._base_client - DEBUG - Request options: {'method': 'post', 'url': '/openai/v1/chat/completions', 'files': None, 'json_data': {'messages': [{'role': 'user', 'content': 'Read my story: 06/05/25 Test of re-refactored routes and models for tempalating chocolate and March. now respond to these queries about it: What do you think will happen next?'}], 'model': 'llama-3.3-70b-versatile', 'max_tokens': 1024, 'stop': None, 'stream': False, 'temperature': 0.7, 'top_p': 0.8}}
+2025-05-07 00:26:42,062 - groq._base_client - DEBUG - Sending HTTP Request: POST https://api.groq.com/openai/v1/chat/completions
+2025-05-07 00:26:42,062 - httpcore.connection - DEBUG - close.started
+2025-05-07 00:26:42,063 - httpcore.connection - DEBUG - close.complete
+2025-05-07 00:26:42,063 - httpcore.connection - DEBUG - connect_tcp.started host='api.groq.com' port=443 local_address=None timeout=5.0 socket_options=None
+2025-05-07 00:26:42,082 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000208FA8180D0>
+2025-05-07 00:26:42,083 - httpcore.connection - DEBUG - start_tls.started ssl_context=<ssl.SSLContext object at 0x00000208F92B7890> server_hostname='api.groq.com' timeout=5.0
+2025-05-07 00:26:42,114 - httpcore.connection - DEBUG - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000208FA817D10>
+2025-05-07 00:26:42,114 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-05-07 00:26:42,115 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-05-07 00:26:42,115 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-05-07 00:26:42,115 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-05-07 00:26:42,115 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2025-05-07 00:26:43,548 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Tue, 06 May 2025 23:26:43 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Cache-Control', b'private, max-age=0, no-store, no-cache, must-revalidate'), (b'vary', b'Origin'), (b'x-groq-region', b'gcp-europe-west3'), (b'x-ratelimit-limit-requests', b'1000'), (b'x-ratelimit-limit-tokens', b'12000'), (b'x-ratelimit-remaining-requests', b'998'), (b'x-ratelimit-remaining-tokens', b'11952'), (b'x-ratelimit-reset-requests', b'2m46.616999999s'), (b'x-ratelimit-reset-tokens', b'240ms'), (b'x-request-id', b'req_01jtkyrj37e74v6w4e6jwkkx0m'), (b'cf-cache-status', b'DYNAMIC'), (b'Server', b'cloudflare'), (b'CF-RAY', b'93bc3e7a0c85b37b-MAN'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2025-05-07 00:26:43,549 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-07 00:26:43,549 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2025-05-07 00:26:43,550 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-05-07 00:26:43,550 - httpcore.http11 - DEBUG - response_closed.started
+2025-05-07 00:26:43,550 - httpcore.http11 - DEBUG - response_closed.complete
+2025-05-07 00:26:43,551 - groq._base_client - DEBUG - HTTP Response: POST https://api.groq.com/openai/v1/chat/completions "200 OK" Headers({'date': 'Tue, 06 May 2025 23:26:43 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'cache-control': 'private, max-age=0, no-store, no-cache, must-revalidate', 'vary': 'Origin', 'x-groq-region': 'gcp-europe-west3', 'x-ratelimit-limit-requests': '1000', 'x-ratelimit-limit-tokens': '12000', 'x-ratelimit-remaining-requests': '998', 'x-ratelimit-remaining-tokens': '11952', 'x-ratelimit-reset-requests': '2m46.616999999s', 'x-ratelimit-reset-tokens': '240ms', 'x-request-id': 'req_01jtkyrj37e74v6w4e6jwkkx0m', 'cf-cache-status': 'DYNAMIC', 'server': 'cloudflare', 'cf-ray': '93bc3e7a0c85b37b-MAN', 'content-encoding': 'gzip', 'alt-svc': 'h3=":443"; ma=86400'})
+2025-05-07 00:26:43,552 - app.services.llm_service - INFO - save_prompt_and_response received prompt_id: None (type: <class 'NoneType'>)
+2025-05-07 00:26:43,585 - app - INFO - App context shutting down
+2025-05-07 00:26:45,442 - app - INFO - App context shutting down
+2025-05-07 00:26:45,460 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:45] "[35m[1mGET /llm/llm_response HTTP/1.1[0m" 500 -
+2025-05-07 00:26:45,539 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:45] "GET /llm/llm_response?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2025-05-07 00:26:45,559 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:45] "GET /llm/llm_response?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2025-05-07 00:26:45,661 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:45] "GET /llm/llm_response?__debugger__=yes&cmd=resource&f=console.png&s=C7Kw5oQ37u3TEN6FrWax HTTP/1.1" 200 -
+2025-05-07 00:26:45,782 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:26:45] "GET /llm/llm_response?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2025-05-07 00:27:25,611 - app - INFO - App context shutting down
+2025-05-07 00:27:25,613 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:27:25] "GET /llm/llm_response HTTP/1.1" 200 -
+2025-05-07 00:27:25,661 - app - INFO - App context shutting down
+2025-05-07 00:27:25,662 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:27:25] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 00:27:35,087 - app - INFO - App context shutting down
+2025-05-07 00:27:35,088 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:27:35] "[32mGET /clear_session?redirect_to=/view_responses&clear_all HTTP/1.1[0m" 302 -
+2025-05-07 00:27:35,229 - app - INFO - App context shutting down
+2025-05-07 00:27:35,230 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 00:27:35] "GET /view_responses HTTP/1.1" 200 -
+2025-05-07 00:27:35,276 - app - INFO - App context shutting down
