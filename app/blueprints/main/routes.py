@@ -124,33 +124,6 @@ def clear_session():
 
 
 
-@main_bp.route('/select_model', methods=['GET', 'POST'])
-def select_model():    
-    # Check for story IDs in session
-    if not session.get('story_ids') and request.method == 'GET':
-        flash('To continue, please select one or more stories first.', 'info')
-        return redirect(url_for('stories.list'))
-    
-    # Check for question_id in session
-    if not session.get('question_id') and request.method == 'GET':
-        flash('Please select a question to ask about your stories.', 'info')
-        return redirect(url_for('main.see_all_questions'))
-
-    if request.method == 'POST':
-        model_id = request.form.get('model_id')
-        model = db.session.query(Model).filter_by(model_id=model_id).first()
-        if model:
-            print("Model found, setting model and provider in session")
-            session['model_id'] = model_id
-            session['model'] = model.name
-            session['provider'] = model.provider.provider_name
-            print(session)
-        return redirect(url_for('main.select_parameters'))
-    else:
-        models = db.session.query(Model).join(Provider).all()
-        return render_template('select_model.html', models=models)
-
-
 @main_bp.route('/select_parameters', methods=['GET', 'POST'])
 def select_parameters():
     if request.method == 'POST':

@@ -1,6 +1,6 @@
 from .prompt_testing import Prompt, Response
 from .story import Story, Category, StoryCategory
-from .template_system import Template, Word, Field, word_field_association
+from .template import Template, Field, Word, word_field_association
 from .question import Question
 from .llm import Provider, Model
 
@@ -12,7 +12,7 @@ __all__ = [
     
     # Template models
     'Template',
-    'word_field_association',  # Add this line to include the association table
+    'word_field_association',  
     
     # Category models
     'Category',
