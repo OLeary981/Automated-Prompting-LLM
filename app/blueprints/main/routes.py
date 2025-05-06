@@ -125,31 +125,6 @@ def clear_session():
 
 
 
-
-
-
-# def run_async_loop():
-#     global _event_loop
-#     loop = asyncio.new_event_loop()
-#     asyncio.set_event_loop(loop)
-#     with _event_loop_lock:
-#         _event_loop = loop  # Thread-safe assignment
-#     loop.run_forever()
-
-# # Helper to get the running event loop (from any thread)
-# def get_event_loop():
-#     global _event_loop
-#     with _event_loop_lock:
-#         if _event_loop is None:
-#             raise RuntimeError("Event loop not initialized")
-#         return _event_loop
-
-# # Start the background thread on module load
-# background_thread = Thread(target=run_async_loop, daemon=True)
-# background_thread.start()
-# time.sleep(0.1)  # Small delay to ensure the event loop initializes
-
-
 @main_bp.route('/view_responses', methods=['GET', 'POST'])
 def view_responses():
     # Handle POST requests as before
