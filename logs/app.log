@@ -535,3 +535,7 @@
 2025-05-07 12:51:43,036 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 12:51:43] "GET /questions/list HTTP/1.1" 200 -
 2025-05-07 12:51:43,066 - app - INFO - App context shutting down
 2025-05-07 12:51:43,066 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 12:51:43] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 14:29:35,601 - app - INFO - App context shutting down
+2025-05-07 14:29:35,606 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 14:29:35] "GET /prompts/list HTTP/1.1" 200 -
+2025-05-07 14:29:35,659 - app - INFO - App context shutting down
+2025-05-07 14:29:35,660 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 14:29:35] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
