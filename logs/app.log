@@ -963,3 +963,23 @@ Async event loop stopped
 2025-05-07 09:45:54,619 - app.services.async_service - INFO - Async service initialized with background event loop
 2025-05-07 09:45:54,653 - werkzeug - WARNING -  * Debugger is active!
 2025-05-07 09:45:54,661 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-07 09:56:12,815 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\services\\__init__.py", reloading
+2025-05-07 09:56:12,816 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 09:56:12,816 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-07 09:56:13,054 - werkzeug - INFO -  * Restarting with stat
+2025-05-07 09:56:16,656 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 09:56:16,656 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 09:56:16,656 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 09:56:16,766 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-07 09:56:16,792 - werkzeug - WARNING -  * Debugger is active!
+2025-05-07 09:56:16,794 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-07 09:56:36,577 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\services\\__init__.py", reloading
+2025-05-07 09:56:36,578 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 09:56:36,578 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-07 09:56:36,737 - werkzeug - INFO -  * Restarting with stat
+2025-05-07 09:56:40,146 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 09:56:40,147 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 09:56:40,147 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 09:56:40,248 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-07 09:56:40,288 - werkzeug - WARNING -  * Debugger is active!
+2025-05-07 09:56:40,288 - werkzeug - INFO -  * Debugger PIN: 614-294-467
