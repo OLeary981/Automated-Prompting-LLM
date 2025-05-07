@@ -7,7 +7,7 @@ from . import questions_bp
 @questions_bp.route('/list')
 def list():
     questions = question_service.get_all_questions()
-    return render_template('see_all_questions.html', questions=questions)
+    return render_template('see_all_questions_updated.html', questions=questions)
 
 @questions_bp.route('/add', methods=['GET', 'POST'])
 def add():
@@ -16,7 +16,7 @@ def add():
         if question_content:
             try:
                 question_id = question_service.add_question(question_content)
-                flash(f"Question added successfully!", "success")
+                #flash(f"Question added successfully!", "success")
             except Exception as e:
                 flash(f"Error adding question: {e}", "danger")
         return redirect(url_for('questions.list'))
@@ -32,7 +32,7 @@ def select():
             return redirect(url_for('llm.select_model'))
     else:
         questions = question_service.get_all_questions()
-        return render_template('see_all_questions.html', questions=questions)
+        return render_template('see_all_questions_updated.html', questions=questions)
 
 @questions_bp.route('/update_selection', methods=['POST'])
 def update_selection():
