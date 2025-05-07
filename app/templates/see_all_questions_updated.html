@@ -33,11 +33,19 @@
                 </div>
             </div>
             
-            <div class="d-grid gap-2">
-                <button id="process-selected-btn" class="btn btn-success btn-lg {% if not session.get('question_id') %}disabled{% endif %}" 
-                        onclick="proceedToSelectModel()">
-                    Continue with Selected Question
-                </button>
+            <!-- Replace the d-grid button with a right-aligned button with icon -->
+            <div class="row">
+                <div class="col-12 text-right">
+                    {% if session.get('question_id') %}
+                        <button id="process-selected-btn" class="btn btn-success" onclick="proceedToSelectModel()">
+                            <i class="bi bi-arrow-right-circle"></i> Continue with Selected Question
+                        </button>
+                    {% else %}
+                        <button class="btn btn-success disabled" id="process-selected-btn">
+                            <i class="bi bi-arrow-right-circle"></i> Continue with Selected Question
+                        </button>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -132,8 +140,11 @@ function selectQuestion(questionId) {
             selectedBadge.textContent = 'Question selected';
             selectedBadge.className = 'badge badge-success';
             
-            // Enable the continue button
-            document.getElementById('process-selected-btn').classList.remove('disabled');
+            // Enable the continue button and update its content
+            const processBtn = document.getElementById('process-selected-btn');
+            processBtn.classList.remove('disabled');
+            processBtn.innerHTML = '<i class="bi bi-arrow-right-circle"></i> Continue with Selected Question';
+            processBtn.setAttribute('onclick', 'proceedToSelectModel()');
             
             // Update all buttons
             document.querySelectorAll('.select-question-btn').forEach(btn => {
@@ -150,15 +161,8 @@ function selectQuestion(questionId) {
                 }
             });
             
-            // Show a notification
-            const notification = document.createElement('div');
-            notification.className = 'alert alert-success alert-dismissible fade show';
-            notification.innerHTML = `
-                Question selected! <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            `;
-            document.querySelector('.container').prepend(notification);
+            
+            
         }
     })
     .catch(error => console.error('Error selecting question:', error));
@@ -185,7 +189,9 @@ function clearQuestionSelection() {
             selectedBadge.className = 'badge badge-secondary';
             
             // Disable the continue button
-            document.getElementById('process-selected-btn').classList.add('disabled');
+            const processBtn = document.getElementById('process-selected-btn');
+            processBtn.classList.add('disabled');
+            processBtn.removeAttribute('onclick');
             
             // Update all buttons
             document.querySelectorAll('.select-question-btn').forEach(btn => {
@@ -194,15 +200,7 @@ function clearQuestionSelection() {
                 btn.closest('tr').className = '';
             });
             
-            // Show a notification
-            const notification = document.createElement('div');
-            notification.className = 'alert alert-info alert-dismissible fade show';
-            notification.innerHTML = `
-                Question selection cleared! <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            `;
-            document.querySelector('.container').prepend(notification);
+           
         }
     })
     .catch(error => console.error('Error clearing question selection:', error));
