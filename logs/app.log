@@ -845,3 +845,69 @@ Async event loop stopped
 2025-05-07 09:30:21,577 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:30:21] "GET / HTTP/1.1" 200 -
 2025-05-07 09:30:21,663 - app - INFO - App context shutting down
 2025-05-07 09:30:21,664 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:30:21] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 09:31:01,191 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\blueprints\\main\\routes.py", reloading
+2025-05-07 09:31:01,193 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-07 09:31:01,193 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 09:31:01,535 - werkzeug - INFO -  * Restarting with stat
+2025-05-07 09:31:04,790 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 09:31:04,791 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 09:31:04,801 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 09:31:04,901 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-07 09:31:04,923 - werkzeug - WARNING -  * Debugger is active!
+2025-05-07 09:31:04,929 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-07 09:31:13,526 - app - INFO - App context shutting down
+2025-05-07 09:31:13,539 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:31:13] "[35m[1mGET /clear_session?clear_all=True HTTP/1.1[0m" 500 -
+2025-05-07 09:31:13,802 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:31:13] "GET /clear_session?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2025-05-07 09:31:13,810 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:31:13] "GET /clear_session?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2025-05-07 09:31:13,883 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:31:13] "GET /clear_session?__debugger__=yes&cmd=resource&f=console.png&s=U39GrZJEKtaXepFh3M77 HTTP/1.1" 200 -
+2025-05-07 09:31:14,003 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:31:14] "GET /clear_session?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2025-05-07 09:33:24,274 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\blueprints\\main\\routes.py", reloading
+2025-05-07 09:33:24,275 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 09:33:24,276 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-07 09:33:24,658 - werkzeug - INFO -  * Restarting with stat
+2025-05-07 09:33:27,469 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 09:33:27,470 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 09:33:27,470 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 09:33:27,571 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-07 09:33:27,609 - werkzeug - WARNING -  * Debugger is active!
+2025-05-07 09:33:27,617 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-07 09:33:36,663 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\blueprints\\main\\routes.py", reloading
+2025-05-07 09:33:36,664 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 09:33:36,664 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-07 09:33:36,959 - werkzeug - INFO -  * Restarting with stat
+2025-05-07 09:33:40,403 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 09:33:40,403 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 09:33:40,404 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 09:33:40,505 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-07 09:33:40,535 - werkzeug - WARNING -  * Debugger is active!
+2025-05-07 09:33:40,539 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-07 09:34:04,244 - app - INFO - App context shutting down
+2025-05-07 09:34:04,245 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:34:04] "[32mGET /clear_session?clear_all=True HTTP/1.1[0m" 302 -
+2025-05-07 09:34:04,281 - app - INFO - App context shutting down
+2025-05-07 09:34:04,282 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:34:04] "GET / HTTP/1.1" 200 -
+2025-05-07 09:34:04,283 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\blueprints\\main\\routes.py", reloading
+2025-05-07 09:34:04,284 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 09:34:04,284 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-07 09:34:04,608 - werkzeug - INFO -  * Restarting with stat
+2025-05-07 09:34:08,574 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 09:34:08,574 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 09:34:08,575 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 09:34:08,675 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-07 09:34:08,717 - werkzeug - WARNING -  * Debugger is active!
+2025-05-07 09:34:08,723 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-07 09:34:08,940 - app - INFO - App context shutting down
+2025-05-07 09:34:08,940 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:34:08] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 09:34:11,163 - app - INFO - App context shutting down
+2025-05-07 09:34:11,163 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:34:11] "[32mGET /clear_session?clear_all=True HTTP/1.1[0m" 302 -
+2025-05-07 09:34:11,215 - app - INFO - App context shutting down
+2025-05-07 09:34:11,215 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:34:11] "GET / HTTP/1.1" 200 -
+2025-05-07 09:34:11,268 - app - INFO - App context shutting down
+2025-05-07 09:34:11,269 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:34:11] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 09:34:16,356 - app - INFO - App context shutting down
+2025-05-07 09:34:16,356 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:34:16] "GET / HTTP/1.1" 200 -
+2025-05-07 09:34:16,419 - app - INFO - App context shutting down
+2025-05-07 09:34:16,419 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:34:16] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 09:34:17,202 - app - INFO - App context shutting down
+2025-05-07 09:34:17,202 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:34:17] "GET /templates/list HTTP/1.1" 200 -
+2025-05-07 09:34:17,276 - app - INFO - App context shutting down
+2025-05-07 09:34:17,276 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:34:17] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -

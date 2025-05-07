@@ -1,18 +1,7 @@
-import datetime
-from flask import Blueprint, flash, render_template, request, redirect, url_for, session, jsonify, Response as FlaskResponse, send_file
-
+from flask import flash, render_template, request, redirect, url_for, session
 from app.services import async_service
-from ... import db, create_app
-from ...services import story_service, question_service, story_builder_service, llm_service, category_service
-from ...models import Template, Story, Question, Model, Provider, Response, StoryCategory, Prompt, Field
-import time
-import json
-import threading
-from threading import Thread
-import asyncio
-import uuid
-import csv
-import io
+
+
 from . import main_bp
 
 
@@ -37,7 +26,7 @@ def clear_session():
     if clear_all:
         # Current behavior - full clearing and job cancellation
         cleared_jobs = 0
-        for job_id, job in list(processing_jobs.items()):
+        for job_id, job in list(async_service.processing_jobs.items()):
             try:
                 # Cancel the task if it exists and is not done
                 if "task" in job and hasattr(job["task"], "cancel") and not job["task"].done():
@@ -52,7 +41,7 @@ def clear_session():
                 print(f"Error canceling job {job_id}: {str(e)}")
         
         # Clear all processing jobs
-        processing_jobs.clear()
+        async_service.processing_jobs.clear()
         
         # Clear session data
         session.clear()
