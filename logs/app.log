@@ -911,3 +911,55 @@ Async event loop stopped
 2025-05-07 09:34:17,202 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:34:17] "GET /templates/list HTTP/1.1" 200 -
 2025-05-07 09:34:17,276 - app - INFO - App context shutting down
 2025-05-07 09:34:17,276 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:34:17] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 09:34:56,565 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\blueprints\\main\\routes.py", reloading
+2025-05-07 09:34:56,566 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 09:34:56,799 - werkzeug - INFO -  * Restarting with stat
+2025-05-07 09:34:59,930 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 09:34:59,930 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 09:34:59,943 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 09:35:00,046 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-07 09:35:00,092 - werkzeug - WARNING -  * Debugger is active!
+2025-05-07 09:35:00,097 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-07 09:42:06,133 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\services\\__init__.py", reloading
+2025-05-07 09:42:06,133 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 09:42:06,133 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-07 09:42:06,465 - werkzeug - INFO -  * Restarting with stat
+2025-05-07 09:42:09,359 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 09:42:09,360 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 09:42:09,361 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 09:42:09,462 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-07 09:42:09,485 - werkzeug - WARNING -  * Debugger is active!
+2025-05-07 09:42:09,492 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-07 09:44:39,940 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 09:44:39,941 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 09:44:39,943 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 09:44:40,045 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-07 09:44:40,106 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-05-07 09:44:40,107 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-05-07 09:44:40,110 - werkzeug - INFO -  * Restarting with stat
+2025-05-07 09:44:43,907 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 09:44:43,908 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 09:44:43,909 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 09:44:44,009 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-07 09:44:44,031 - werkzeug - WARNING -  * Debugger is active!
+2025-05-07 09:44:44,031 - werkzeug - INFO -  * Debugger PIN: 614-294-467
+2025-05-07 09:45:03,146 - app - INFO - App context shutting down
+2025-05-07 09:45:03,146 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:45:03] "GET / HTTP/1.1" 200 -
+2025-05-07 09:45:03,315 - app - INFO - App context shutting down
+2025-05-07 09:45:03,316 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:45:03] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 09:45:04,887 - app - INFO - App context shutting down
+2025-05-07 09:45:04,888 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:45:04] "GET /responses/list HTTP/1.1" 200 -
+2025-05-07 09:45:04,941 - app - INFO - App context shutting down
+2025-05-07 09:45:04,942 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:45:04] "[36mGET /static/css/static.css HTTP/1.1[0m" 304 -
+2025-05-07 09:45:14,580 - app - INFO - App context shutting down
+2025-05-07 09:45:14,611 - werkzeug - INFO - 127.0.0.1 - - [07/May/2025 09:45:14] "GET /responses/export HTTP/1.1" 200 -
+2025-05-07 09:45:51,168 - werkzeug - INFO -  * Detected change in "c:\\Users\\AnneO'Leary\\OneDrive - Institute for Research in Schools\\Documents\\Projects\\LLM\\Automated-Prompting-LLM\\app\\services\\__init__.py", reloading
+2025-05-07 09:45:51,168 - app.services.async_service - INFO - Async event loop stopped
+2025-05-07 09:45:51,391 - werkzeug - INFO -  * Restarting with stat
+2025-05-07 09:45:54,510 - app - INFO - Logging to c:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-07 09:45:54,510 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-07 09:45:54,510 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-07 09:45:54,619 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-07 09:45:54,653 - werkzeug - WARNING -  * Debugger is active!
+2025-05-07 09:45:54,661 - werkzeug - INFO -  * Debugger PIN: 614-294-467

@@ -2,7 +2,7 @@ import csv
 import datetime
 import io
 from sqlalchemy import func
-from flask import send_file
+
 from ..models import Response, Prompt, Model, Provider, Story, Question, Template
 from .. import db
 

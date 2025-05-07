@@ -1,7 +1,5 @@
 from flask import flash, render_template, request, redirect, url_for, session
 from app.services import async_service
-
-
 from . import main_bp
 
 
