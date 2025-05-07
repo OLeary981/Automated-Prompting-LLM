@@ -265,15 +265,7 @@ def cancel_processing(job_id):
         return jsonify({"status": "cancelled"})
     return jsonify({"status": "error", "message": "Job not found"}), 404
 
-#possibly not needed now
-# @main_bp.route('/progress')
-# def progress_legacy():
-#     job_id = session.get('job_id')
-#     if not job_id or job_id not in processing_jobs:
-#         return jsonify({"error": "No active job found"}), 404
-    
-#     # Redirect to the new progress stream
-#     return redirect(url_for('main.progress_stream', job_id=job_id))
+
 
 @llm_bp.route('/rerun_prompts', methods=['POST'])
 def rerun_prompts():
@@ -288,7 +280,7 @@ def rerun_prompts():
     if not prompt_ids:
         print("No prompts selected to rerun.")
         flash('No prompts selected to rerun.', 'warning')
-        return redirect(url_for('main.see_all_prompts'))
+        return redirect(url_for('prompts.list'))
     
     # Create a new job for rerunning these prompts
     job_id = str(uuid.uuid4())
@@ -308,7 +300,7 @@ def rerun_prompts():
         first_prompt = db.session.query(Prompt).get(int_prompt_ids[0])
         if not first_prompt:
             flash('Selected prompt not found.', 'warning')
-            return redirect(url_for('main.see_all_prompts'))
+            return redirect(url_for('prompts.list'))
 
         # Get model and provider info for display context
         model = db.session.query(Model).get(first_prompt.model_id)
@@ -380,7 +372,7 @@ def rerun_prompts():
         
     except Exception as e:
         flash(f'Error setting up prompt rerun: {str(e)}', 'danger')
-        return redirect(url_for('main.see_all_prompts'))
+        return redirect(url_for('prompts.list'))
     
 @llm_bp.route('/llm_response', methods=['GET', 'POST'])
 def llm_response():

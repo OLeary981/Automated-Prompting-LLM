@@ -540,7 +540,7 @@
 
         if (selectedCount > 0) {
             // Preserve template filter context in the URL if it exists
-            let url = '{{ url_for("main.view_story_responses") }}';
+            let url = '{{ url_for("responses.view_story_responses") }}';
             if ('{{ session.get("stories_source") }}' === 'templates') {
                 url += '?source=templates&template_count={{ session.get("template_count", 1) }}';
             }
