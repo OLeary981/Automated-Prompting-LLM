@@ -7,12 +7,12 @@ class Story(db.Model):
 
     story_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     content = db.Column(db.Text, nullable=False)
-    template_id = db.Column(db.Integer, db.ForeignKey('template.template_id'), nullable=False)
+    template_id = db.Column(db.Integer, db.ForeignKey('template.template_id'), nullable=True)
 
     template = db.relationship('Template', backref=db.backref('stories', lazy=True))
 
     def __repr__(self):
-        return f'<Story {self.id} - {self.content}>'
+        return f'<Story {self.story_id} - {self.content}>'
     
 
 class Category(db.Model):
