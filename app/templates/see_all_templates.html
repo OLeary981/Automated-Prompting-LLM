@@ -453,7 +453,7 @@
 
         if (selectedCount > 0) {
             // Redirect to view_responses with template_ids filter
-            window.location.href = '{{ url_for("main.view_template_responses") }}'
+            window.location.href = '{{ url_for("responses.view_template_responses") }}'
         } else {
             alert('Please select at least one template first.');
         }

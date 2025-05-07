@@ -19,7 +19,7 @@
                     <a href="{{ url_for('stories.list') }}" class="btn btn-outline-primary">
                         <i class="bi bi-book"></i> Select Stories
                     </a>
-                    <a href="{{ url_for('main.see_all_prompts') }}" class="btn btn-outline-primary">
+                    <a href="{{ url_for('prompts.list') }}" class="btn btn-outline-primary">
                         <i class="bi bi-chat-left-text"></i> Select Prompts
                     </a>
                     <a href="{{ url_for('templates.list') }}" class="btn btn-outline-primary">
@@ -28,14 +28,14 @@
                     
                     
                     {% if session.get('story_ids') %}
-                    <a href="{{ url_for('main.view_story_responses') }}" class="btn btn-success">
+                    <a href="{{ url_for('responses.view_story_responses') }}" class="btn btn-success">
                         <i class="bi bi-eye"></i> View Selected Story Responses 
                         <span class="badge bg-light text-success">{{ session.get('story_ids')|length }}</span>
                     </a>
                     {% endif %}
                     
                     {% if session.get('prompt_ids') %}
-                    <a href="{{ url_for('main.batch_view_prompt_responses') }}" class="btn btn-success">
+                    <a href="{{ url_for('responses.view_prompt_responses_batch') }}" class="btn btn-success">
                         <i class="bi bi-eye"></i> View Selected Prompt Responses
                         <span class="badge bg-light text-success">{{ session.get('prompt_ids')|length }}</span>
                     </a>
@@ -56,7 +56,7 @@
                     <i class="bi bi-funnel-fill"></i> 
                     <strong>Primary Selection:</strong> Responses for {{ source_info }}
                 </span>
-                <a href="{{ url_for('main.see_all_prompts') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                <a href="{{ url_for('prompts.list') }}" class="btn btn-sm btn-outline-secondary ms-2">
                     <i class="bi bi-list"></i> Back to Prompts
                 </a>
             {% elif source == 'story' %}
@@ -94,7 +94,7 @@
             {% endif %}
         </div>
         <div>
-            <a href="{{ url_for('main.view_responses', clear_stories=true, clear_responses=true, clear_templates=true) }}" 
+            <a href="{{ url_for('responses.list', clear_stories=true, clear_responses=true, clear_templates=true) }}" 
                class="btn btn-sm btn-outline-danger">
                 <i class="bi bi-x"></i> Clear Selection
             </a>
@@ -109,7 +109,7 @@
         <h5 class="mb-0">Refine Results</h5>
         {% if request.args.get('provider') or request.args.get('model') or request.args.get('flagged_only') or 
            request.args.get('question_id') or request.args.get('start_date') or request.args.get('end_date') %}
-            <a href="{{ url_for('main.view_responses', 
+            <a href="{{ url_for('responses.list', 
                       source=source, 
                       prompt_id=request.args.get('prompt_id'),
                       story_id=request.args.get('story_id'),
@@ -121,7 +121,7 @@
     </div>
         <div class="collapse show" id="filterCollapse">
             <div class="card-body">
-                <form method="GET" action="{{ url_for('main.view_responses') }}" class="row gy-3 gx-4">
+                <form method="GET" action="{{ url_for('responses.list') }}" class="row gy-3 gx-4">
                     <!-- First row: Provider, Model, Question -->
 
                     <div class="col-md-3">
@@ -201,9 +201,9 @@
                     <!-- Buttons -->
                     <div class="col-md-12 d-flex justify-content-start mt-3">
                         <button type="submit" class="btn btn-sm btn-primary mr-3">Apply Filters</button>
-                        <a href="{{ url_for('main.view_responses') }}" class="btn btn-sm btn-secondary mr-3">Reset
+                        <a href="{{ url_for('responses.list') }}" class="btn btn-sm btn-secondary mr-3">Reset
                             Filters (Keep Story/Prompt Selection)</a>
-                        <a href="{{ url_for('main.export_responses') }}" class="btn btn-sm btn-success"
+                        <a href="{{ url_for('responses.export') }}" class="btn btn-sm btn-success"
                             onclick="this.href = this.href + window.location.search;">Export CSV</a>
                     </div>
                 </form>
@@ -294,7 +294,7 @@
                                 </div>
                             </div>
 
-                            <form method="POST" action="{{ url_for('main.view_responses', **request.args) }}">
+                            <form method="POST" action="{{ url_for('responses.list', **request.args) }}">
                                 <input type="hidden" name="response_id" value="{{ response.response_id }}">
 
                                 <div class="row mb-3">
@@ -339,7 +339,7 @@
                     {% if pagination.has_prev %}
                     <li class="page-item">
                         <a class="page-link"
-                            href="{{ url_for('main.view_responses', page=pagination.prev_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Previous</a>
+                            href="{{ url_for('responses.list', page=pagination.prev_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Previous</a>
                     </li>
                     {% else %}
                     <li class="page-item disabled"><span class="page-link">Previous</span></li>
@@ -349,7 +349,7 @@
                     {% if page_num %}
                     <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
                         <a class="page-link"
-                            href="{{ url_for('main.view_responses', page=page_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">{{
+                            href="{{ url_for('responses.list', page=page_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">{{
                             page_num }}</a>
                     </li>
                     {% else %}
@@ -360,7 +360,7 @@
                     {% if pagination.has_next %}
                     <li class="page-item">
                         <a class="page-link"
-                            href="{{ url_for('main.view_responses', page=pagination.next_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Next</a>
+                            href="{{ url_for('responses.list', page=pagination.next_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else '', question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Next</a>
                     </li>
                     {% else %}
                     <li class="page-item disabled"><span class="page-link">Next</span></li>
@@ -376,7 +376,7 @@
     // Function to quickly toggle flag status
     function toggleFlag(responseId, flagged) {
         // Send AJAX request to update flag status
-        fetch('{{ url_for("main.update_response_flag") }}', {
+        fetch('{{ url_for("responses.update_response_flag") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
