@@ -55,7 +55,7 @@
         </div>
         <div class="collapse show" id="filterCollapse">
             <div class="card-body">
-                <form method="GET" action="{{ url_for('main.see_all_prompts') }}" class="row gy-3 gx-4">
+                <form method="GET" action="{{ url_for('prompts.list') }}" class="row gy-3 gx-4">
                     <!-- First row: Provider, Model, Question -->
                     <div class="col-md-3">
                         <label for="provider" class="form-label">Provider:</label>
@@ -123,7 +123,7 @@
                     <!-- Buttons -->
                     <div class="col-md-12 d-flex justify-content-start mt-3">
                         <button type="submit" class="btn btn-sm btn-primary me-3">Apply Filters</button>
-                        <a href="{{ url_for('main.see_all_prompts') }}" class="btn btn-sm btn-secondary">Reset</a>
+                        <a href="{{ url_for('prompts.list') }}" class="btn btn-sm btn-secondary">Reset</a>
                     </div>
                 </form>
             </div>
@@ -202,7 +202,7 @@
                     </div>
                     
                     <div class="d-grid gap-2 mt-3">
-                        <a href="{{ url_for('main.view_prompt_responses', prompt_id=prompt.prompt_id) }}" 
+                        <a href="{{ url_for('responses.view_prompt_responses', prompt_id=prompt.prompt_id) }}" 
                            class="btn btn-outline-secondary">
                             View All Responses for this Prompt
                         </a>
@@ -223,7 +223,7 @@
             {% if pagination.has_prev %}
             <li class="page-item">
                 <a class="page-link"
-                    href="{{ url_for('main.see_all_prompts', page=pagination.prev_num, provider=current_filters.provider, model=current_filters.model, question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Previous</a>
+                    href="{{ url_for('prompts.list', page=pagination.prev_num, provider=current_filters.provider, model=current_filters.model, question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Previous</a>
             </li>
             {% else %}
             <li class="page-item disabled"><span class="page-link">Previous</span></li>
@@ -233,7 +233,7 @@
             {% if page_num %}
             <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
                 <a class="page-link"
-                    href="{{ url_for('main.see_all_prompts', page=page_num, provider=current_filters.provider, model=current_filters.model, question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">{{
+                    href="{{ url_for('prompts.list', page=page_num, provider=current_filters.provider, model=current_filters.model, question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">{{
                     page_num }}</a>
             </li>
             {% else %}
@@ -244,7 +244,7 @@
             {% if pagination.has_next %}
             <li class="page-item">
                 <a class="page-link"
-                    href="{{ url_for('main.see_all_prompts', page=pagination.next_num, provider=current_filters.provider, model=current_filters.model, question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Next</a>
+                    href="{{ url_for('prompts.list', page=pagination.next_num, provider=current_filters.provider, model=current_filters.model, question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Next</a>
             </li>
             {% else %}
             <li class="page-item disabled"><span class="page-link">Next</span></li>
@@ -270,7 +270,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const isChecked = this.checked;
             
             // Send AJAX request to update session
-            fetch('{{ url_for("main.update_prompt_selection") }}', {
+            fetch('{{ url_for("prompts.update_selection") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -317,7 +317,7 @@ function selectAllVisible() {
     
     // If there are prompts to select, make a single batch request
     if (promptIdsToSelect.length > 0) {
-        fetch('{{ url_for("main.update_prompt_selection") }}', {
+        fetch('{{ url_for("prompts.update_selection") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -357,7 +357,7 @@ function deselectAllVisible() {
     
     // If there are prompts to deselect, make a single batch request
     if (promptIdsToDeselect.length > 0) {
-        fetch('{{ url_for("main.update_prompt_selection") }}', {
+        fetch('{{ url_for("prompts.update_selection") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -404,7 +404,7 @@ function invertVisibleSelection() {
     
     // If there are changes to make, send a batch request
     if (promptIdsToSelect.length > 0 || promptIdsToDeselect.length > 0) {
-        fetch('{{ url_for("main.update_prompt_selection") }}', {
+        fetch('{{ url_for("prompts.update_selection") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -436,7 +436,7 @@ function invertVisibleSelection() {
 // Clear all selected prompts
 function clearSelection() {
     // Send request to clear all selected prompts
-    fetch('{{ url_for("main.update_prompt_selection") }}', {
+    fetch('{{ url_for("prompts.update_selection") }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -477,7 +477,7 @@ function rerunSelectedPrompts() {
             // Submit the form to rerun prompts
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '{{ url_for("main.rerun_prompts") }}';
+            form.action = '{{ url_for("llm.rerun_prompts") }}';
             document.body.appendChild(form);
             form.submit();
         }

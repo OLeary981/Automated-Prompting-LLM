@@ -1,44 +1,54 @@
 from app import db
 from config import Config
-from app.models import Story, Question, Model, Response, Prompt
+from app.models import Story, Question, Model, Response, Prompt, Provider
 import requests
 import json
 import time
 from groq import Groq, APIError
 from flask_sse import sse
+import copy
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 GROQ_API_KEY = Config.GROQ_API_KEY
 groq_client = Groq(api_key=GROQ_API_KEY)
 
-def get_all_stories():
-    return db.session.query(Story).all()
 
-def get_all_questions():
-    return db.session.query(Question).all()
 
-def get_story_by_id(story_id):
-    return db.session.query(Story).get(story_id)
-
-def get_question_by_id(question_id):
-    return db.session.query(Question).get(question_id)
-
-def get_model_parameters_and_values(model_id):
-    model = db.session.query(Model).get(model_id)
-    parameters = json.loads(model.parameters)
-        # Convert the list of parameters to a dictionary
-    parameters_dict = {param['name']: param for param in parameters['parameters']}
-    return parameters_dict
 
 def get_model_name_by_id(model_id):
     model = db.session.query(Model).get(model_id)
     return model.name
 
+def get_all_models():
+    """Get all models with their provider information"""
+    return db.session.query(Model).join(Provider).all()
+
+def get_models_by_provider(provider_id):
+    """Get all models for a specific provider"""
+    return db.session.query(Model).filter_by(provider_id=provider_id).all()
+
 def get_model_by_id(model_id):
+    """Get model by ID and return with original parameters preserved"""
     model = db.session.query(Model).get(model_id)
-    model.parameters = json.loads(model.parameters)  # Parse JSON string into dictionary
-    # Convert the list of parameters to a dictionary
-    model.parameters = {param['name']: param for param in model.parameters['parameters']}
+    if model:
+        # Parse parameters but keep the original in model.parameters
+        parsed = json.loads(model.parameters)
+        # Make a deep copy to ensure we don't modify the original
+        model.parsed_parameters = {param['name']: copy.deepcopy(param) for param in parsed['parameters']}
     return model
+
+def get_model_parameters(model_id, saved_parameters=None):
+    """Get model parameters with any saved values applied"""
+    model = get_model_by_id(model_id)
+    if not model:
+        return {}        
+    parameters = model.parsed_parameters  # Use parsed_parameters instead of parameters
+    if saved_parameters:
+        parameters = apply_saved_parameters(parameters, saved_parameters)        
+    return parameters
 
 
 def get_provider_name_by_model_id(model_id):
@@ -49,13 +59,50 @@ def get_request_delay_by_model_id(model_id):
     model = db.session.query(Model).get(model_id)
     return model.request_delay
 
+
+
+
+def apply_saved_parameters(model_parameters, saved_parameters):
+    """Apply saved parameter values while respecting model constraints"""
+    if not saved_parameters:
+        return model_parameters
+        
+    # Create a copy to avoid modifying the original
+    parameters = copy.deepcopy(model_parameters)
+    
+    # Apply saved values where available and valid
+    for param_name, param_details in parameters.items():
+        if param_name in saved_parameters:
+            saved_value = saved_parameters[param_name]
+            
+            if param_details['type'] == 'float':
+                try:
+                    saved_value = float(saved_value)
+                    if param_details['min_value'] <= saved_value <= param_details['max_value']:
+                        param_details['default'] = saved_value
+                except (ValueError, TypeError):
+                    pass
+                    
+            elif param_details['type'] == 'int':
+                try:
+                    saved_value = int(saved_value)
+                    if param_details['min_value'] <= saved_value <= param_details['max_value']:
+                        param_details['default'] = saved_value
+                except (ValueError, TypeError):
+                    pass
+    
+    return parameters
+
+
+
+
 def save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id, question_id, 
                             payload_json, response_content, full_response_json, prompt_id=None):
     """
     Save the prompt and response to the database.
     If prompt_id is provided, reuse that prompt instead of creating a new one.
     """
-    print(f"save_prompt_and_response received prompt_id: {prompt_id} (type: {type(prompt_id)})")
+    logger.info(f"save_prompt_and_response received prompt_id: {prompt_id} (type: {type(prompt_id)})")
 
     # If no prompt_id is provided, create a new prompt
     if prompt_id is None:
@@ -92,6 +139,9 @@ def call_llm(provider_name, story, question, story_id, question_id, model_name, 
     
     If prompt_id is provided, reuses that prompt instead of creating a new one.
     """
+    logger.info(f"LLM call: {provider_name}/{model_name} with story_id={story_id}, question_id={question_id}")
+    logger.info(f"Parameters: {parameters}")
+    
     # Check if this is a rerun from an existing prompt
     print(f"call_llm received prompt_id: {prompt_id} (type: {type(prompt_id)})")
     if prompt_id:

@@ -32,7 +32,7 @@
                 <small class="form-text text-muted">Click any field to add it to your template.</small>
             </div>
 
-            <form action="{{ url_for('main.add_template') }}" method="POST">
+            <form action="{{ url_for('templates.add') }}" method="POST">
                 <div class="form-group">
                     <label for="template_content">Template Content</label>
                     <textarea class="form-control" id="template_content" name="template_content" rows="3" required
@@ -99,7 +99,7 @@
     <!-- Search Form -->
     <div class="card mb-4">
         <div class="card-body">
-            <form method="GET" action="{{ url_for('main.see_all_templates') }}" class="row g-3">
+            <form method="GET" action="{{ url_for('templates.list') }}" class="row g-3">
                 <div class="col-md-8">
                     <label for="search_text" class="form-label">Search by content:</label>
                     <input type="text" class="form-control" id="search_text" name="search_text"
@@ -114,7 +114,7 @@
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary me-2">Update</button>
-                    <a href="{{ url_for('main.see_all_templates') }}" class="btn btn-secondary">Reset</a>
+                    <a href="{{ url_for('templates.list') }}" class="btn btn-secondary">Reset</a>
                 </div>
             </form>
         </div>
@@ -149,7 +149,7 @@
                         <td>{{ template.template_id }}</td>
                         <td>{{ template.content }}</td>
                         <td>
-                            <form method="POST" action="{{ url_for('main.generate_stories') }}" class="d-inline">
+                            <form method="POST" action="{{ url_for('templates.generate_stories') }}" class="d-inline">
                                 <input type="hidden" name="template_id" value="{{ template.template_id }}">
                                 <button type="submit" class="btn btn-sm btn-primary">Generate Stories</button>
                             </form>
@@ -170,7 +170,7 @@
                     {% if pagination.has_prev %}
                     <li class="page-item">
                         <a class="page-link"
-                            href="{{ url_for('main.see_all_templates', page=pagination.prev_num, search_text=request.args.get('search_text', ''), sort_by=sort_by) }}">Previous</a>
+                            href="{{ url_for('templates.list', page=pagination.prev_num, search_text=request.args.get('search_text', ''), sort_by=sort_by) }}">Previous</a>
                     </li>
                     {% else %}
                     <li class="page-item disabled"><span class="page-link">Previous</span></li>
@@ -180,7 +180,7 @@
                     {% if page_num %}
                     <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
                         <a class="page-link"
-                            href="{{ url_for('main.see_all_templates', page=page_num, search_text=request.args.get('search_text', ''), sort_by=sort_by) }}">{{
+                            href="{{ url_for('templates.list', page=page_num, search_text=request.args.get('search_text', ''), sort_by=sort_by) }}">{{
                             page_num }}</a>
                     </li>
                     {% else %}
@@ -191,7 +191,7 @@
                     {% if pagination.has_next %}
                     <li class="page-item">
                         <a class="page-link"
-                            href="{{ url_for('main.see_all_templates', page=pagination.next_num, search_text=request.args.get('search_text', ''), sort_by=sort_by) }}">Next</a>
+                            href="{{ url_for('templates.list', page=pagination.next_num, search_text=request.args.get('search_text', ''), sort_by=sort_by) }}">Next</a>
                     </li>
                     {% else %}
                     <li class="page-item disabled"><span class="page-link">Next</span></li>
@@ -231,7 +231,7 @@
                 const isChecked = this.checked;
 
                 // Send AJAX request to update session
-                fetch('{{ url_for("main.update_template_selection") }}', {
+                fetch('{{ url_for("templates.update_template_selection") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -299,7 +299,7 @@
 
         // If there are templates to select, make a single batch request
         if (templateIdsToSelect.length > 0) {
-            fetch('{{ url_for("main.update_template_selection") }}', {
+            fetch('{{ url_for("templates.update_template_selection") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -335,7 +335,7 @@
 
         // If there are templates to deselect, make a single batch request
         if (templateIdsToDeselect.length > 0) {
-            fetch('{{ url_for("main.update_template_selection") }}', {
+            fetch('{{ url_for("templates.update_template_selection") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -376,7 +376,7 @@
 
         // If there are changes to make, send a batch request
         if (templateIdsToSelect.length > 0 || templateIdsToDeselect.length > 0) {
-            fetch('{{ url_for("main.update_template_selection") }}', {
+            fetch('{{ url_for("templates.update_template_selection") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -418,7 +418,7 @@
     // Clear all selected templates
     function clearSelection() {
         // Send request to clear all selected templates
-        fetch('{{ url_for("main.update_template_selection") }}', {
+        fetch('{{ url_for("templates.update_template_selection") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -453,7 +453,7 @@
 
         if (selectedCount > 0) {
             // Redirect to view_responses with template_ids filter
-            window.location.href = '{{ url_for("main.view_template_responses") }}'
+            window.location.href = '{{ url_for("responses.view_template_responses") }}'
         } else {
             alert('Please select at least one template first.');
         }
@@ -465,7 +465,7 @@
 
         if (selectedCount > 0) {
             // Redirect to view_template_stories route
-            window.location.href = '{{ url_for("main.view_template_stories") }}'
+            window.location.href = '{{ url_for("stories.view_template_stories") }}'
         } else {
             alert('Please select at least one template first.');
         }
