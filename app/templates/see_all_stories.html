@@ -11,50 +11,50 @@
         </a>
     </div>
 
-{% if session.get('stories_source') == 'templates' %}
-<!-- Alert when coming from templates selection -->
-<div class="alert alert-info alert-persistent">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <i class="bi bi-funnel-fill"></i>
-            <strong>Filter:</strong> Stories from
-            {% if (session.get('template_count', 1))|int == 1 %}
+    {% if session.get('stories_source') == 'templates' %}
+    <!-- Alert when coming from templates selection -->
+    <div class="alert alert-info alert-persistent">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-funnel-fill"></i>
+                <strong>Filter:</strong> Stories from
+                {% if (session.get('template_count', 1))|int == 1 %}
                 1 template
-            {% else %}
+                {% else %}
                 {{ session.get('template_count') }} templates
-            {% endif %}
-        </div>
-        <div>
-            <a href="{{ url_for('templates.list') }}" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Back to Templates
-            </a>
-           <a href="{{ url_for('main.clear_session', 
+                {% endif %}
+            </div>
+            <div>
+                <a href="{{ url_for('templates.list') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Templates
+                </a>
+                <a href="{{ url_for('main.clear_session', 
       clear_stories='true', 
       stories_source='true', 
       template_count='true',
       clear_templates='true',
       redirect_to=url_for('stories.list')) }}" class="btn btn-sm btn-outline-danger ms-2">
-    <i class="bi bi-x"></i> Clear Filter
-</a>
+                    <i class="bi bi-x"></i> Clear Filter
+                </a>
+            </div>
         </div>
     </div>
-</div>
-{% endif %}
+    {% endif %}
 
     <!-- Search Form -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" action="{{ url_for('stories.list') }}" class="row g-3">
-            {% if session.get('stories_source') == 'templates' %}
-    <input type="hidden" name="source" value="{{ session.get('stories_source') }}">
-    <input type="hidden" name="template_count" value="{{ session.get('template_count', 1) }}">
-    {% endif %}
-            
-            <div class="col-md-4">
-                <label for="search_text" class="form-label">Search by content:</label>
-                <input type="text" class="form-control" id="search_text" name="search_text"
-                    value="{{ request.args.get('search_text', '') }}" placeholder="Enter keywords">
-            </div>
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('stories.list') }}" class="row g-3">
+                {% if session.get('stories_source') == 'templates' %}
+                <input type="hidden" name="source" value="{{ session.get('stories_source') }}">
+                <input type="hidden" name="template_count" value="{{ session.get('template_count', 1) }}">
+                {% endif %}
+
+                <div class="col-md-4">
+                    <label for="search_text" class="form-label">Search by content:</label>
+                    <input type="text" class="form-control" id="search_text" name="search_text"
+                        value="{{ request.args.get('search_text', '') }}" placeholder="Enter keywords">
+                </div>
                 <div class="col-md-4">
                     <label for="category_filter" class="form-label">Filter by category:</label>
                     <select class="form-select" id="category_filter" name="category_filter">
@@ -75,12 +75,13 @@
                     </select>
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary me-2">Update</button>
-                <a href="{{ url_for('stories.list', source=session.get('stories_source'), template_count=session.get('template_count')) }}" class="btn btn-secondary">Reset</a>
-            </div>
-        </form>
+                    <button type="submit" class="btn btn-primary me-2">Update</button>
+                    <a href="{{ url_for('stories.list', source=session.get('stories_source'), template_count=session.get('template_count')) }}"
+                        class="btn btn-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
     <!-- Batch Selection Actions -->
     <div class="card mb-3">
@@ -119,17 +120,18 @@
 
 
             <div class="d-grid gap-2">
-                <button id="process-selected-btn"
-                    class="btn btn-success btn-lg {% if not selected_story_ids %}disabled{% endif %}"
-                    onclick="proceedToLLM()">
-                    Process <span id="selected-count">{{ selected_story_ids|length }}</span> Selected Stories with LLM
-                </button>
 
                 <!-- Add this new button -->
                 <button id="view-responses-btn"
                     class="btn btn-info btn-lg {% if not selected_story_ids %}disabled{% endif %}"
                     onclick="viewSelectedResponses()">
                     View Existing Responses for Selected Stories
+                </button>
+                <button id="process-selected-btn"
+                    class="btn btn-success btn-lg {% if not selected_story_ids %}disabled{% endif %}"
+                    onclick="proceedToLLM()">
+                    <i class="bi bi-arrow-right-circle"></i> Process <span id="selected-count">{{
+                        selected_story_ids|length }}</span> Selected Stories with LLM
                 </button>
             </div>
         </div>
@@ -237,7 +239,7 @@
         if (resetButton && '{{ session.get("stories_source") }}' === 'templates') {
             resetButton.href = '{{ url_for("stories.list", source="templates", template_count=session.get("template_count", 1)) }}';
         }
-        
+
         // Track selected stories
         const checkboxes = document.querySelectorAll('.story-checkbox');
         const selectedCount = document.getElementById('selected-count');
@@ -428,7 +430,7 @@
         // Get current filter parameters
         const searchText = document.getElementById('search_text').value;
         const categoryFilter = document.getElementById('category_filter').value;
-        
+
         // Include template filter if active
         const templateFilter = '{{ session.get("stories_source") }}' === 'templates' ? true : false;
         const templateCount = '{{ session.get("template_count", 1) }}';
