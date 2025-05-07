@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     function startProcessing() {
-        fetch(`/start_processing/${jobId}`)
+        fetch(`{{ url_for('llm.start_processing', job_id='placeholder') }}`.replace('placeholder', jobId))
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`Server returned error: ${response.status}`);
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
             eventSource.close();
         }
         
-        eventSource = new EventSource(`/progress_stream/${jobId}`);
+        eventSource = new EventSource(`{{ url_for('llm.progress_stream', job_id='placeholder') }}`.replace('placeholder', jobId));
         
         // Set up specific event listeners
         eventSource.addEventListener('connected', function(event) {
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = JSON.parse(event.data);
             updateProgressBar(data.progress || 0);
             document.getElementById('status-message').textContent = 
-                `Processing: ${data.progress || 0}% complete`;
+                `Processing: ${data.progress || 0}% complete (${data.completed || 0}/${data.total || '?'} items)`;
         });
         
         eventSource.addEventListener('complete', function(event) {
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('cancel-button').style.display = 'none';
             // Redirect to results page after a short delay
             setTimeout(() => {
-                window.location.href = '/llm_response';
+                window.location.href = '{{ url_for('llm.llm_response') }}';
             }, 1500);
         });
         
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const retryBtn = document.createElement('button');
             retryBtn.textContent = 'Return to Home';
             retryBtn.className = 'btn btn-primary mt-3';
-            retryBtn.onclick = () => window.location.href = '/';
+            retryBtn.onclick = () => window.location.href = '{{ url_for('main.index') }}';
             document.getElementById('loading-container').appendChild(retryBtn);
         });
         
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('cancel-button').style.display = 'none';
                 // Redirect to results page after a short delay
                 setTimeout(() => {
-                    window.location.href = '/llm_response';
+                    window.location.href = '{{ url_for('llm.llm_response') }}';
                 }, 1500);
                 break;
             
@@ -167,14 +167,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const retryBtn = document.createElement('button');
                 retryBtn.textContent = 'Return to Home';
                 retryBtn.className = 'btn btn-primary mt-3';
-                retryBtn.onclick = () => window.location.href = '/';
+                retryBtn.onclick = () => window.location.href = '{{ url_for('main.index') }}';
                 document.getElementById('loading-container').appendChild(retryBtn);
                 break;
             
             default:
                 // Normal processing updates
                 document.getElementById('status-message').textContent = 
-                    `Processing: ${data.progress || 0}% complete`;
+                    `Processing: ${data.progress || 0}% complete `;
         }
     } catch (e) {
         console.error("Error parsing SSE message:", e, "Raw data:", event.data);
@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
             eventSource.close();
         }
         
-        fetch(`/cancel_processing/${jobId}`)
+        fetch(`{{ url_for('llm.cancel_processing', job_id='placeholder') }}`.replace('placeholder', jobId))
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'cancelled') {
@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const homeButton = document.createElement('button');
                     homeButton.textContent = 'Return to Home';
                     homeButton.className = 'btn btn-primary';
-                    homeButton.onclick = () => window.location.href = '/';
+                    homeButton.onclick = () => window.location.href = '{{ url_for('main.index') }}';
                     document.getElementById('loading-container').appendChild(homeButton);
                 } else {
                     showError('Failed to cancel processing. Please try again.');
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const homeButton = document.createElement('button');
         homeButton.textContent = 'Return to Home';
         homeButton.className = 'btn btn-primary mt-3';
-        homeButton.onclick = () => window.location.href = '/';
+        homeButton.onclick = () => window.location.href = '{{ url_for('main.index') }}';
         document.getElementById('loading-container').appendChild(homeButton);
     }
 });

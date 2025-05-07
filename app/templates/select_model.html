@@ -4,7 +4,7 @@
 
 {% block content %}
     <h1>Select Model</h1>
-    <form method="POST" action="{{ url_for('main.select_model') }}">
+    <form method="POST" action="{{ url_for('llm.select_model') }}">
         <div class="row">
             {% for model in models %}
                 <div class="col-md-4">
