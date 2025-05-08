@@ -9,6 +9,8 @@ coverage html
 pytest tests/unit/test_models/test_story.py -v
 pytest tests/unit/test_models/test_question.py -v
 pytest tests/unit/test_models/test_prompt_response.py -v
+pytest tests/unit/test_models/template/test_word.py -v
+pytest tests/unit/test_models/template/test_field.py -v
 
 Jobs list:
 Report - contents page (chronological vs categories?)

@@ -9,7 +9,7 @@ class Template(db.Model):
     content = db.Column(db.Text, nullable=False)
 
     def __repr__(self):
-        return f'<Template {self.id} - {self.content}>'
+        return f'<Template {self.template_id} - {self.content}>'
 
 
 
