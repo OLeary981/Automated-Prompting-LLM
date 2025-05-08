@@ -30,22 +30,21 @@ class TestStoryModel:
             assert saved_story.template_id == template.template_id
             assert saved_story.template == template
 
-    def test_story_template_relationship(self, app, test_data):
-        """Test the relationship between stories and templates."""
+    def test_template_story_link_from_fixture(self, app, session, test_data):
+        """Test that template.stories returns all stories with that template_id."""
         with app.app_context():
-            # Get a story that has a template from test data
-            stories_with_templates = [s for s in test_data["stories"] if s.template_id is not None]
-            
-            # Skip test if no stories with templates
-            if not stories_with_templates:
-                pytest.skip("No stories with templates in test data")
-                
-            story = stories_with_templates[0]
-            template = story.template
+            from app.models import Template, Story
+            template_id = test_data["ids"]["templates"][0]
+            template = session.get(Template, template_id)
+            # Get all stories with this template_id
+            expected_stories = session.query(Story).filter_by(template_id=template_id).all()
+            # The stories related to the template via the relationship
+            related_stories = template.stories
 
-            # Test relationship navigation
-            assert story.template == template
-            assert story in template.stories
+            # Both lists should have the same story_ids
+            expected_ids = {s.story_id for s in expected_stories}
+            related_ids = {s.story_id for s in related_stories}
+            assert expected_ids == related_ids
 
     def test_story_without_content(self, app, session):
         """Test that a story cannot be created without content."""
@@ -140,10 +139,11 @@ class TestStoryModel:
             assert stories_with_template[0].template == template
             assert stories_without_template[0].template is None
 
-    def test_story_representation(self, app, test_data):
+    def test_story_representation(self, app, session, test_data):
         """Test the __repr__ method of the Story model."""
         with app.app_context():
-            story = test_data["stories"][0]
+            story_id = test_data["ids"]["stories"][0]
+            story = session.get(Story, story_id)
             repr_string = repr(story)
             assert str(story.story_id) in repr_string
             assert str(story.content) in repr_string
@@ -229,7 +229,7 @@ class TestStoryCategoryRelationship:
             session.add(category)
             session.commit()
             
-            # Try to create relationship without a valid story
+            # Try to create relationship without a valid story (story_id= 999 does not exist)
             story_category = StoryCategory(story_id=999, category_id=category.category_id)
             session.add(story_category)
             
