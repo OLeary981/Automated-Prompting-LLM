@@ -30,6 +30,15 @@ def app():
     
     with app.app_context():
         db.session.execute(text("PRAGMA foreign_keys=ON"))
+        @event.listens_for(db.engine, "connect")
+        def set_sqlite_pragma(dbapi_connection, connection_record):
+            cursor = dbapi_connection.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
+
+
+
+
         db.create_all()
         result = db.session.execute(text("PRAGMA foreign_keys;")).scalar()
         if result != 1:
