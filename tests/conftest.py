@@ -255,168 +255,6 @@ def test_data(session):
         }
     }
 
-# @pytest.fixture(scope='function')
-# def test_data(app, session):
-#     """Create test data in the database."""
-#     with app.app_context():
-#         # Create test providers and models
-#         provider1 = Provider(provider_name="Test Provider")
-#         provider2 = Provider(provider_name="Another Provider")
-#         session.add_all([provider1, provider2])
-#         session.commit()
-        
-#         model1 = Model(
-#         name="Test Model", 
-#         provider_id=provider1.provider_id,
-#         endpoint="placeholder",
-#         request_delay=5,
-#         parameters='''{  "parameters": [    {      "name": "temperature",      "description": "Controls the randomness of the output. Lower values make the output more deterministic, while higher values increase creativity.",      "type": "float",      "default": 0.7,      "min_value": 0.0,      "max_value": 1.0    },    {      "name": "max_tokens",      "description": "The maximum number of tokens to generate in the response.",      "type": "integer",      "default": 1024,      "min_value": 1,      "max_value": 2048    },    {      "name": "top_p",      "description": "Controls nucleus sampling, where the model considers only the most likely tokens with cumulative probability up to `top_p`.",      "type": "float",      "default": 0.8,      "min_value": 0.0,      "max_value": 1.0    }  ]}'''
-#         )
-
-#         model2 = Model(
-#         name="GPT-4", 
-#         provider_id=provider2.provider_id,
-#         endpoint="placeholder", 
-#         request_delay=5,
-#         parameters='''{  "parameters": [    {      "name": "temperature",      "description": "Controls the randomness of the output. Lower values make the output more deterministic, while higher values increase creativity.",      "type": "float",      "default": 0.5,      "min_value": 0.0,      "max_value": 1.0    },    {      "name": "max_tokens",      "description": "The maximum number of tokens to generate in the response.",      "type": "integer",      "default": 2048,      "min_value": 1,      "max_value": 4096    },    {      "name": "top_p",      "description": "Controls nucleus sampling, where the model considers only the most likely tokens with cumulative probability up to `top_p`.",      "type": "float",      "default": 0.9,      "min_value": 0.0,      "max_value": 1.0    }  ]}'''
-#         )
-#         session.add_all([model1, model2])
-#         session.commit()
-        
-#         # Create test templates and categories
-#         category1 = Category(category="Test Category") 
-#         category2 = Category(category="Another Category")
-        
-#         session.add_all([category1, category2])
-#         session.commit()
-        
-
-
-#         template1 = Template(content="This is a {animal} template with {action}.", 
-#                            )
-#         template2 = Template(content="The {color} {object} is on the {location}.",
-#                            )
-#         session.add_all([template1, template2])
-#         session.commit()
-        
-#         # Create fields and words
-#         animal_field = Field(field="animal")
-#         action_field = Field(field="action")
-#         color_field = Field(field="color")
-#         object_field = Field(field="object")
-#         location_field = Field(field="location")
-        
-#         cat_word = Word(word="cat")
-#         dog_word = Word(word="dog")
-#         run_word = Word(word="run")
-#         jump_word = Word(word="jump")
-#         red_word = Word(word="red")
-#         blue_word = Word(word="blue")
-#         ball_word = Word(word="ball")
-#         table_word = Word(word="table")
-#         floor_word = Word(word="floor")
-        
-#         # Associate words with fields
-#         animal_field.words.extend([cat_word, dog_word])
-#         action_field.words.extend([run_word, jump_word])
-#         color_field.words.extend([red_word, blue_word])
-#         object_field.words.append(ball_word)
-#         location_field.words.extend([table_word, floor_word])
-        
-#         session.add_all([
-#             animal_field, action_field, color_field, object_field, location_field
-#         ])
-#         session.commit()
-        
-#         # Create test stories
-#         story1 = Story(content="This is a cat template with run.", template_id=template1.template_id)
-#         story2 = Story(content="This is a dog template with jump.", template_id=template1.template_id)
-#         story3 = Story(content="The red ball is on the table.", template_id=template2.template_id)
-#         story4 = Story(content="The blue ball is on the floor.", template_id=template2.template_id)
-#         story5 = Story(content="This is a story without a template and with no category associations.")
-        
-#         session.add_all([story1, story2, story3, story4, story5])
-#         session.commit()
-
-#         # NOW create the story-category relationships
-#         story_category1 = StoryCategory(story_id=story1.story_id, category_id=category1.category_id)
-#         story_category2 = StoryCategory(story_id=story2.story_id, category_id=category2.category_id)
-#         story_category3 = StoryCategory(story_id=story3.story_id, category_id=category1.category_id)
-#         # Note: Intentionally not creating a category for story4 to test stories without categories
-
-#         session.add_all([story_category1, story_category2, story_category3])
-#         session.commit()
-        
-#         # Create test questions
-#         question1 = Question(content="What is the main theme of this story?")
-#         question2 = Question(content="What emotions does this story evoke?")
-        
-#         session.add_all([question1, question2])
-#         session.commit()
-        
-#         # Create test prompts
-#         prompt1 = Prompt(
-#             model_id=model1.model_id,
-#             story_id=story1.story_id,
-#             question_id=question1.question_id,
-#             temperature=0.7,
-#             max_tokens=100,
-#             top_p=1.0,
-#             payload="Test payload content" 
-#         )
-#         prompt2 = Prompt(
-#             model_id=model2.model_id,
-#             story_id=story2.story_id,
-#             question_id=question2.question_id,
-#             temperature=0.5,
-#             max_tokens=150,
-#             top_p=0.9,
-#             payload="Test payload content"
-#         )
-        
-#         session.add_all([prompt1, prompt2])
-#         session.commit()
-        
-#         # Create test responses
-#         response1 = Response(
-#             prompt_id=prompt1.prompt_id,
-#             response_content="This story is about animals and their actions.",  # Changed from 'content'
-#             full_response="""{"response": "This story is about animals and their actions. The cat runs quickly across the yard, demonstrating agility and playfulness that is characteristic of felines.", "metadata": {"tokens": 25, "processing_time": 1.5}}""",
-#             timestamp=datetime.datetime.now(),
-#             flagged_for_review=False,
-#             review_notes=None
-#         )
-
-#         response2 = Response(
-#             prompt_id=prompt2.prompt_id,
-#             response_content="The story evokes feelings of playfulness and energy.",  # Changed from 'content'
-#             full_response="""{"response": "The story evokes feelings of playfulness and energy. The dog jumping demonstrates enthusiasm and joy, which creates a lighthearted atmosphere throughout the narrative.", "metadata": {"tokens": 30, "processing_time": 1.8}}""",
-#             timestamp=datetime.datetime.now(),
-#             flagged_for_review=True,
-#             review_notes="Contains overly simplistic analysis of animal behavior."
-#         )
-        
-#         session.add_all([response1, response2])
-#         session.commit()
-        
-#         return {
-#             "providers": [provider1, provider2],
-#             "models": [model1, model2],
-#             "templates": [template1, template2],
-#             "fields": {
-#                 "animal": animal_field,
-#                 "action": action_field,
-#                 "color": color_field,
-#                 "object": object_field,
-#                 "location": location_field
-#             },
-#             "stories": [story1, story2, story3, story4, story5],
-#             "categories": [category1, category2],
-#             "story_categories": [story_category1, story_category2, story_category3],
-#             "questions": [question1, question2],            
-#             "prompts": [prompt1, prompt2],
-#             "responses": [response1, response2]
-#         }
 
 
 @pytest.fixture
@@ -500,3 +338,20 @@ def with_parameters(client):
             'top_p': 1.0
         }
     return client
+
+@pytest.fixture
+def dummy_job():
+    class DummyTask:
+        def __init__(self):
+            self._done = False
+            self._cancelled = False
+        def done(self):
+            return self._done
+        def cancel(self):
+            self._cancelled = True
+
+    dummy_task = DummyTask()
+    from app.services import async_service
+    async_service.processing_jobs['job1'] = {"task": dummy_task, "status": "running", "processing": True}
+    yield dummy_task
+    async_service.processing_jobs.clear()
