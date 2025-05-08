@@ -229,7 +229,7 @@ class TestStoryCategoryRelationship:
             session.add(category)
             session.commit()
             
-            # Try to create relationship without a valid story (story_id= 999 does not exist)
+            # Try to create relationship without a valid story (story_id= 999 does not exist, unless I go mad creating test data!)
             story_category = StoryCategory(story_id=999, category_id=category.category_id)
             session.add(story_category)
             

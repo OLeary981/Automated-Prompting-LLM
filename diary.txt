@@ -1,9 +1,14 @@
 Notes:
 
+Checking coverage terminal commands:
+coverage run -m pytest
+coverage report
+coverage html
+
+
 pytest tests/unit/test_models/test_story.py -v
 pytest tests/unit/test_models/test_question.py -v
-
-
+pytest tests/unit/test_models/test_prompt_response.py -v
 
 Jobs list:
 Report - contents page (chronological vs categories?)
