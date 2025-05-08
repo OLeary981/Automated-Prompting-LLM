@@ -29,3 +29,12 @@ class TestFieldModel:
         with pytest.raises(IntegrityError):
             session.commit()
         session.rollback()
+
+    def test_field_repr(self, session):
+        field = Field(field="repr_field")
+        session.add(field)
+        session.commit()
+        saved = session.query(Field).filter_by(field_id=field.field_id).first()
+        repr_str = repr(saved)
+        assert str(saved.field_id) in repr_str
+        assert "repr_field" in repr_str

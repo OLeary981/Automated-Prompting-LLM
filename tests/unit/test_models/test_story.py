@@ -297,3 +297,15 @@ class TestStoryCategoryRelationship:
             # Test easy story access through relationships
             stories = [sc.story for sc in category1.story_categories]
             assert story in stories
+
+            
+    def test_story_category_repr(self, app, session, test_data):
+        """Test the __repr__ method of the StoryCategory model using test_data from conftest."""
+        with app.app_context():
+            # Get a valid (story_id, category_id) tuple from test_data
+            story_id, category_id = test_data["ids"]["story_categories"][0]
+            from app.models.story import StoryCategory
+            story_category = session.get(StoryCategory, {"story_id": story_id, "category_id": category_id})
+            repr_str = repr(story_category)
+            assert str(story_id) in repr_str
+            assert str(category_id) in repr_str
