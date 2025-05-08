@@ -7,4 +7,4 @@ class Question(db.Model):
     content = db.Column(db.Text, nullable=False)
 
     def __repr__(self):
-        return f'<Question {self.id} - {self.content}>'
+        return f'<Question {self.question_id} - {self.content}>'

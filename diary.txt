@@ -1,6 +1,10 @@
 Notes:
 
 pytest tests/unit/test_models/test_story.py -v
+pytest tests/unit/test_models/test_question.py -v
+
+
+
 Jobs list:
 Report - contents page (chronological vs categories?)
 Category functionality:

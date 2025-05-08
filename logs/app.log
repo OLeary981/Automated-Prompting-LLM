@@ -24893,3 +24893,116 @@ s should not happen during normal operation!
 2025-05-08 22:05:15,918 - app.services.async_service - INFO - Async event loop stopped
 2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
 2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:09:26,127 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:09:26,127 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-08 22:09:26,128 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-08 22:09:26,229 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-08 22:09:26,396 - app - INFO - App context shutting down
+2025-05-08 22:09:26,397 - app - INFO - App context shutting down
+2025-05-08 22:09:26,398 - app - INFO - App context shutting down
+2025-05-08 22:09:26,415 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:09:26,415 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:09:26,416 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:09:26,416 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:09:26,518 - app - INFO - App context shutting down
+2025-05-08 22:09:26,518 - app - INFO - App context shutting down
+2025-05-08 22:09:26,519 - app - INFO - App context shutting down
+2025-05-08 22:09:26,519 - app - INFO - App context shutting down
+2025-05-08 22:09:26,521 - app - INFO - App context shutting down
+2025-05-08 22:09:26,521 - app - INFO - App context shutting down
+2025-05-08 22:09:26,543 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:09:26,543 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:09:26,543 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:09:26,545 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:09:26,545 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:09:26,545 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:09:26,673 - app - INFO - App context shutting down
+2025-05-08 22:09:26,673 - app - INFO - App context shutting down
+2025-05-08 22:09:26,673 - app - INFO - App context shutting down
+2025-05-08 22:09:26,965 - app - INFO - App context shutting down
+2025-05-08 22:09:26,965 - app - INFO - App context shutting down
+2025-05-08 22:09:26,965 - app - INFO - App context shutting down
+2025-05-08 22:09:26,966 - app - INFO - App context shutting down
+2025-05-08 22:09:26,966 - app - INFO - App context shutting down
+2025-05-08 22:09:26,966 - app - INFO - App context shutting down
+2025-05-08 22:09:27,002 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:09:27,002 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:09:27,002 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:09:27,002 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:09:27,002 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:10:11,569 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:10:11,570 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-08 22:10:11,571 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-08 22:10:11,672 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-08 22:10:11,835 - app - INFO - App context shutting down
+2025-05-08 22:10:11,836 - app - INFO - App context shutting down
+2025-05-08 22:10:11,837 - app - INFO - App context shutting down
+2025-05-08 22:10:11,850 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:10:11,850 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:10:11,851 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:10:11,851 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:10:11,954 - app - INFO - App context shutting down
+2025-05-08 22:10:11,954 - app - INFO - App context shutting down
+2025-05-08 22:10:11,956 - app - INFO - App context shutting down
+2025-05-08 22:10:11,956 - app - INFO - App context shutting down
+2025-05-08 22:10:11,958 - app - INFO - App context shutting down
+2025-05-08 22:10:11,958 - app - INFO - App context shutting down
+2025-05-08 22:10:11,984 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:10:11,984 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:10:11,984 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:10:11,985 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:10:11,985 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:10:11,985 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:10:12,110 - app - INFO - App context shutting down
+2025-05-08 22:10:12,110 - app - INFO - App context shutting down
+2025-05-08 22:10:12,110 - app - INFO - App context shutting down
+2025-05-08 22:10:12,113 - app - INFO - App context shutting down
+2025-05-08 22:10:12,113 - app - INFO - App context shutting down
+2025-05-08 22:10:12,113 - app - INFO - App context shutting down
+2025-05-08 22:10:12,114 - app - INFO - App context shutting down
+2025-05-08 22:10:12,114 - app - INFO - App context shutting down
+2025-05-08 22:10:12,114 - app - INFO - App context shutting down
+2025-05-08 22:10:12,126 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:10:12,126 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:10:12,126 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:10:12,126 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:10:12,126 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:10:12,126 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:11:54,839 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:11:54,841 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-08 22:11:54,843 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-08 22:11:54,944 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-08 22:11:55,177 - app - INFO - App context shutting down
+2025-05-08 22:11:55,178 - app - INFO - App context shutting down
+2025-05-08 22:11:55,178 - app - INFO - App context shutting down
+2025-05-08 22:11:55,239 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:11:55,239 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:11:55,241 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:11:55,241 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:11:55,361 - app - INFO - App context shutting down
+2025-05-08 22:11:55,361 - app - INFO - App context shutting down
+2025-05-08 22:11:55,362 - app - INFO - App context shutting down
+2025-05-08 22:11:55,362 - app - INFO - App context shutting down
+2025-05-08 22:11:55,363 - app - INFO - App context shutting down
+2025-05-08 22:11:55,363 - app - INFO - App context shutting down
+2025-05-08 22:11:55,392 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:11:55,392 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:11:55,392 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:11:55,393 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:11:55,393 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:11:55,393 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:11:55,523 - app - INFO - App context shutting down
+2025-05-08 22:11:55,523 - app - INFO - App context shutting down
+2025-05-08 22:11:55,523 - app - INFO - App context shutting down
+2025-05-08 22:11:55,524 - app - INFO - App context shutting down
+2025-05-08 22:11:55,524 - app - INFO - App context shutting down
+2025-05-08 22:11:55,524 - app - INFO - App context shutting down
+2025-05-08 22:11:55,526 - app - INFO - App context shutting down
+2025-05-08 22:11:55,526 - app - INFO - App context shutting down
+2025-05-08 22:11:55,526 - app - INFO - App context shutting down
+2025-05-08 22:11:55,534 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:11:55,534 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:11:55,534 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:11:55,534 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:11:55,534 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:11:55,534 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
