@@ -24340,3 +24340,556 @@ s should not happen during normal operation!
 2025-05-08 22:02:02,088 - app.services.async_service - INFO - Async event loop stopped
 2025-05-08 22:02:02,088 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
 2025-05-08 22:02:02,088 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:05:13,188 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:13,190 - app.services.async_service - INFO - Initializing async service for app: app
+2025-05-08 22:05:13,191 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-05-08 22:05:13,291 - app.services.async_service - INFO - Async service initialized with background event loop
+2025-05-08 22:05:13,479 - app - INFO - App context shutting down
+2025-05-08 22:05:13,481 - app - INFO - App context shutting down
+2025-05-08 22:05:13,481 - app - INFO - App context shutting down
+2025-05-08 22:05:13,501 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:13,501 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:13,502 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:13,502 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:13,755 - app - INFO - App context shutting down
+2025-05-08 22:05:13,755 - app - INFO - App context shutting down
+2025-05-08 22:05:13,757 - app - INFO - App context shutting down
+2025-05-08 22:05:13,757 - app - INFO - App context shutting down
+2025-05-08 22:05:13,758 - app - INFO - App context shutting down
+2025-05-08 22:05:13,758 - app - INFO - App context shutting down
+2025-05-08 22:05:13,771 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:13,771 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:13,771 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:13,772 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:13,772 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:13,772 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:13,875 - app - INFO - App context shutting down
+2025-05-08 22:05:13,875 - app - INFO - App context shutting down
+2025-05-08 22:05:13,875 - app - INFO - App context shutting down
+2025-05-08 22:05:13,878 - app - INFO - App context shutting down
+2025-05-08 22:05:13,878 - app - INFO - App context shutting down
+2025-05-08 22:05:13,878 - app - INFO - App context shutting down
+2025-05-08 22:05:13,878 - app - INFO - App context shutting down
+2025-05-08 22:05:13,878 - app - INFO - App context shutting down
+2025-05-08 22:05:13,878 - app - INFO - App context shutting down
+2025-05-08 22:05:13,899 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:13,899 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:13,899 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:13,899 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:13,899 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:13,899 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:13,899 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:13,899 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,024 - app - INFO - App context shutting down
+2025-05-08 22:05:14,024 - app - INFO - App context shutting down
+2025-05-08 22:05:14,024 - app - INFO - App context shutting down
+2025-05-08 22:05:14,024 - app - INFO - App context shutting down
+2025-05-08 22:05:14,026 - app - INFO - App context shutting down
+2025-05-08 22:05:14,026 - app - INFO - App context shutting down
+2025-05-08 22:05:14,026 - app - INFO - App context shutting down
+2025-05-08 22:05:14,026 - app - INFO - App context shutting down
+2025-05-08 22:05:14,028 - app - INFO - App context shutting down
+2025-05-08 22:05:14,028 - app - INFO - App context shutting down
+2025-05-08 22:05:14,028 - app - INFO - App context shutting down
+2025-05-08 22:05:14,028 - app - INFO - App context shutting down
+2025-05-08 22:05:14,071 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,071 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,071 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,071 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,071 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,071 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,071 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,071 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,071 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,071 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,233 - app - INFO - App context shutting down
+2025-05-08 22:05:14,233 - app - INFO - App context shutting down
+2025-05-08 22:05:14,233 - app - INFO - App context shutting down
+2025-05-08 22:05:14,233 - app - INFO - App context shutting down
+2025-05-08 22:05:14,233 - app - INFO - App context shutting down
+2025-05-08 22:05:14,235 - app - INFO - App context shutting down
+2025-05-08 22:05:14,235 - app - INFO - App context shutting down
+2025-05-08 22:05:14,235 - app - INFO - App context shutting down
+2025-05-08 22:05:14,235 - app - INFO - App context shutting down
+2025-05-08 22:05:14,235 - app - INFO - App context shutting down
+2025-05-08 22:05:14,236 - app - INFO - App context shutting down
+2025-05-08 22:05:14,236 - app - INFO - App context shutting down
+2025-05-08 22:05:14,236 - app - INFO - App context shutting down
+2025-05-08 22:05:14,236 - app - INFO - App context shutting down
+2025-05-08 22:05:14,236 - app - INFO - App context shutting down
+2025-05-08 22:05:14,263 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,263 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,263 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,263 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,263 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,263 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,263 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,263 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,263 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,263 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,263 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,263 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,399 - app - INFO - App context shutting down
+2025-05-08 22:05:14,399 - app - INFO - App context shutting down
+2025-05-08 22:05:14,399 - app - INFO - App context shutting down
+2025-05-08 22:05:14,399 - app - INFO - App context shutting down
+2025-05-08 22:05:14,399 - app - INFO - App context shutting down
+2025-05-08 22:05:14,399 - app - INFO - App context shutting down
+2025-05-08 22:05:14,402 - app - INFO - App context shutting down
+2025-05-08 22:05:14,402 - app - INFO - App context shutting down
+2025-05-08 22:05:14,402 - app - INFO - App context shutting down
+2025-05-08 22:05:14,402 - app - INFO - App context shutting down
+2025-05-08 22:05:14,402 - app - INFO - App context shutting down
+2025-05-08 22:05:14,402 - app - INFO - App context shutting down
+2025-05-08 22:05:14,402 - app - INFO - App context shutting down
+2025-05-08 22:05:14,402 - app - INFO - App context shutting down
+2025-05-08 22:05:14,402 - app - INFO - App context shutting down
+2025-05-08 22:05:14,402 - app - INFO - App context shutting down
+2025-05-08 22:05:14,402 - app - INFO - App context shutting down
+2025-05-08 22:05:14,402 - app - INFO - App context shutting down
+2025-05-08 22:05:14,420 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,420 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,420 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,420 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,420 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,420 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,420 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,423 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,423 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,423 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,423 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,423 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,423 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,423 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,709 - app - INFO - App context shutting down
+2025-05-08 22:05:14,709 - app - INFO - App context shutting down
+2025-05-08 22:05:14,709 - app - INFO - App context shutting down
+2025-05-08 22:05:14,709 - app - INFO - App context shutting down
+2025-05-08 22:05:14,709 - app - INFO - App context shutting down
+2025-05-08 22:05:14,709 - app - INFO - App context shutting down
+2025-05-08 22:05:14,709 - app - INFO - App context shutting down
+2025-05-08 22:05:14,711 - app - INFO - App context shutting down
+2025-05-08 22:05:14,711 - app - INFO - App context shutting down
+2025-05-08 22:05:14,711 - app - INFO - App context shutting down
+2025-05-08 22:05:14,711 - app - INFO - App context shutting down
+2025-05-08 22:05:14,711 - app - INFO - App context shutting down
+2025-05-08 22:05:14,711 - app - INFO - App context shutting down
+2025-05-08 22:05:14,711 - app - INFO - App context shutting down
+2025-05-08 22:05:14,711 - app - INFO - App context shutting down
+2025-05-08 22:05:14,711 - app - INFO - App context shutting down
+2025-05-08 22:05:14,711 - app - INFO - App context shutting down
+2025-05-08 22:05:14,711 - app - INFO - App context shutting down
+2025-05-08 22:05:14,711 - app - INFO - App context shutting down
+2025-05-08 22:05:14,711 - app - INFO - App context shutting down
+2025-05-08 22:05:14,711 - app - INFO - App context shutting down
+2025-05-08 22:05:14,752 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,752 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,752 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,752 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,752 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,752 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,752 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,752 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,753 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,753 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,753 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,753 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,753 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,753 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,753 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,753 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,896 - app - INFO - App context shutting down
+2025-05-08 22:05:14,896 - app - INFO - App context shutting down
+2025-05-08 22:05:14,896 - app - INFO - App context shutting down
+2025-05-08 22:05:14,896 - app - INFO - App context shutting down
+2025-05-08 22:05:14,896 - app - INFO - App context shutting down
+2025-05-08 22:05:14,896 - app - INFO - App context shutting down
+2025-05-08 22:05:14,896 - app - INFO - App context shutting down
+2025-05-08 22:05:14,896 - app - INFO - App context shutting down
+2025-05-08 22:05:14,899 - app - INFO - App context shutting down
+2025-05-08 22:05:14,899 - app - INFO - App context shutting down
+2025-05-08 22:05:14,899 - app - INFO - App context shutting down
+2025-05-08 22:05:14,899 - app - INFO - App context shutting down
+2025-05-08 22:05:14,899 - app - INFO - App context shutting down
+2025-05-08 22:05:14,899 - app - INFO - App context shutting down
+2025-05-08 22:05:14,899 - app - INFO - App context shutting down
+2025-05-08 22:05:14,899 - app - INFO - App context shutting down
+2025-05-08 22:05:14,900 - app - INFO - App context shutting down
+2025-05-08 22:05:14,900 - app - INFO - App context shutting down
+2025-05-08 22:05:14,900 - app - INFO - App context shutting down
+2025-05-08 22:05:14,900 - app - INFO - App context shutting down
+2025-05-08 22:05:14,900 - app - INFO - App context shutting down
+2025-05-08 22:05:14,900 - app - INFO - App context shutting down
+2025-05-08 22:05:14,900 - app - INFO - App context shutting down
+2025-05-08 22:05:14,900 - app - INFO - App context shutting down
+2025-05-08 22:05:14,964 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,964 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,964 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,964 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,964 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,964 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,964 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,964 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,964 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:14,965 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,965 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,965 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,965 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,965 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,965 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,965 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,965 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:14,965 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,066 - app - INFO - App context shutting down
+2025-05-08 22:05:15,066 - app - INFO - App context shutting down
+2025-05-08 22:05:15,066 - app - INFO - App context shutting down
+2025-05-08 22:05:15,066 - app - INFO - App context shutting down
+2025-05-08 22:05:15,066 - app - INFO - App context shutting down
+2025-05-08 22:05:15,066 - app - INFO - App context shutting down
+2025-05-08 22:05:15,066 - app - INFO - App context shutting down
+2025-05-08 22:05:15,066 - app - INFO - App context shutting down
+2025-05-08 22:05:15,066 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,071 - app - INFO - App context shutting down
+2025-05-08 22:05:15,101 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,101 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,101 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,101 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,101 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,101 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,101 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,101 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,101 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,101 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,108 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,108 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,108 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,108 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,108 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,108 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,108 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,108 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,108 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,108 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,221 - app - INFO - App context shutting down
+2025-05-08 22:05:15,221 - app - INFO - App context shutting down
+2025-05-08 22:05:15,221 - app - INFO - App context shutting down
+2025-05-08 22:05:15,221 - app - INFO - App context shutting down
+2025-05-08 22:05:15,221 - app - INFO - App context shutting down
+2025-05-08 22:05:15,221 - app - INFO - App context shutting down
+2025-05-08 22:05:15,221 - app - INFO - App context shutting down
+2025-05-08 22:05:15,221 - app - INFO - App context shutting down
+2025-05-08 22:05:15,221 - app - INFO - App context shutting down
+2025-05-08 22:05:15,221 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,225 - app - INFO - App context shutting down
+2025-05-08 22:05:15,247 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,247 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,247 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,247 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,247 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,247 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,247 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,247 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,247 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,247 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,247 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,247 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,247 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,247 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,247 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,247 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,247 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,247 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,247 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,247 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,247 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,247 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,410 - app - INFO - App context shutting down
+2025-05-08 22:05:15,410 - app - INFO - App context shutting down
+2025-05-08 22:05:15,410 - app - INFO - App context shutting down
+2025-05-08 22:05:15,410 - app - INFO - App context shutting down
+2025-05-08 22:05:15,410 - app - INFO - App context shutting down
+2025-05-08 22:05:15,410 - app - INFO - App context shutting down
+2025-05-08 22:05:15,410 - app - INFO - App context shutting down
+2025-05-08 22:05:15,410 - app - INFO - App context shutting down
+2025-05-08 22:05:15,410 - app - INFO - App context shutting down
+2025-05-08 22:05:15,410 - app - INFO - App context shutting down
+2025-05-08 22:05:15,410 - app - INFO - App context shutting down
+2025-05-08 22:05:15,416 - app - INFO - App context shutting down
+2025-05-08 22:05:15,416 - app - INFO - App context shutting down
+2025-05-08 22:05:15,416 - app - INFO - App context shutting down
+2025-05-08 22:05:15,416 - app - INFO - App context shutting down
+2025-05-08 22:05:15,416 - app - INFO - App context shutting down
+2025-05-08 22:05:15,416 - app - INFO - App context shutting down
+2025-05-08 22:05:15,416 - app - INFO - App context shutting down
+2025-05-08 22:05:15,416 - app - INFO - App context shutting down
+2025-05-08 22:05:15,416 - app - INFO - App context shutting down
+2025-05-08 22:05:15,416 - app - INFO - App context shutting down
+2025-05-08 22:05:15,416 - app - INFO - App context shutting down
+2025-05-08 22:05:15,417 - app - INFO - App context shutting down
+2025-05-08 22:05:15,417 - app - INFO - App context shutting down
+2025-05-08 22:05:15,417 - app - INFO - App context shutting down
+2025-05-08 22:05:15,417 - app - INFO - App context shutting down
+2025-05-08 22:05:15,417 - app - INFO - App context shutting down
+2025-05-08 22:05:15,417 - app - INFO - App context shutting down
+2025-05-08 22:05:15,417 - app - INFO - App context shutting down
+2025-05-08 22:05:15,417 - app - INFO - App context shutting down
+2025-05-08 22:05:15,417 - app - INFO - App context shutting down
+2025-05-08 22:05:15,417 - app - INFO - App context shutting down
+2025-05-08 22:05:15,417 - app - INFO - App context shutting down
+2025-05-08 22:05:15,449 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,449 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,449 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,449 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,449 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,449 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,449 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,449 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,449 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,449 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,449 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,449 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,449 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,449 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,449 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,449 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,449 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,449 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,449 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,449 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,449 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,449 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,449 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,449 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,561 - app - INFO - App context shutting down
+2025-05-08 22:05:15,561 - app - INFO - App context shutting down
+2025-05-08 22:05:15,561 - app - INFO - App context shutting down
+2025-05-08 22:05:15,561 - app - INFO - App context shutting down
+2025-05-08 22:05:15,561 - app - INFO - App context shutting down
+2025-05-08 22:05:15,561 - app - INFO - App context shutting down
+2025-05-08 22:05:15,561 - app - INFO - App context shutting down
+2025-05-08 22:05:15,561 - app - INFO - App context shutting down
+2025-05-08 22:05:15,561 - app - INFO - App context shutting down
+2025-05-08 22:05:15,561 - app - INFO - App context shutting down
+2025-05-08 22:05:15,561 - app - INFO - App context shutting down
+2025-05-08 22:05:15,561 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,564 - app - INFO - App context shutting down
+2025-05-08 22:05:15,586 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,586 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,586 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,586 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,586 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,586 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,586 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,586 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,586 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,586 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,586 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,586 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,586 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,586 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,586 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,586 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,586 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,586 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,586 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,586 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,586 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,586 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,586 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,586 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,586 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,586 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,714 - app - INFO - App context shutting down
+2025-05-08 22:05:15,714 - app - INFO - App context shutting down
+2025-05-08 22:05:15,714 - app - INFO - App context shutting down
+2025-05-08 22:05:15,714 - app - INFO - App context shutting down
+2025-05-08 22:05:15,714 - app - INFO - App context shutting down
+2025-05-08 22:05:15,714 - app - INFO - App context shutting down
+2025-05-08 22:05:15,714 - app - INFO - App context shutting down
+2025-05-08 22:05:15,714 - app - INFO - App context shutting down
+2025-05-08 22:05:15,714 - app - INFO - App context shutting down
+2025-05-08 22:05:15,714 - app - INFO - App context shutting down
+2025-05-08 22:05:15,714 - app - INFO - App context shutting down
+2025-05-08 22:05:15,714 - app - INFO - App context shutting down
+2025-05-08 22:05:15,714 - app - INFO - App context shutting down
+2025-05-08 22:05:15,717 - app - INFO - App context shutting down
+2025-05-08 22:05:15,717 - app - INFO - App context shutting down
+2025-05-08 22:05:15,717 - app - INFO - App context shutting down
+2025-05-08 22:05:15,717 - app - INFO - App context shutting down
+2025-05-08 22:05:15,717 - app - INFO - App context shutting down
+2025-05-08 22:05:15,717 - app - INFO - App context shutting down
+2025-05-08 22:05:15,717 - app - INFO - App context shutting down
+2025-05-08 22:05:15,717 - app - INFO - App context shutting down
+2025-05-08 22:05:15,717 - app - INFO - App context shutting down
+2025-05-08 22:05:15,717 - app - INFO - App context shutting down
+2025-05-08 22:05:15,717 - app - INFO - App context shutting down
+2025-05-08 22:05:15,717 - app - INFO - App context shutting down
+2025-05-08 22:05:15,717 - app - INFO - App context shutting down
+2025-05-08 22:05:15,718 - app - INFO - App context shutting down
+2025-05-08 22:05:15,718 - app - INFO - App context shutting down
+2025-05-08 22:05:15,718 - app - INFO - App context shutting down
+2025-05-08 22:05:15,718 - app - INFO - App context shutting down
+2025-05-08 22:05:15,718 - app - INFO - App context shutting down
+2025-05-08 22:05:15,718 - app - INFO - App context shutting down
+2025-05-08 22:05:15,718 - app - INFO - App context shutting down
+2025-05-08 22:05:15,718 - app - INFO - App context shutting down
+2025-05-08 22:05:15,718 - app - INFO - App context shutting down
+2025-05-08 22:05:15,718 - app - INFO - App context shutting down
+2025-05-08 22:05:15,718 - app - INFO - App context shutting down
+2025-05-08 22:05:15,718 - app - INFO - App context shutting down
+2025-05-08 22:05:15,718 - app - INFO - App context shutting down
+2025-05-08 22:05:15,738 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,738 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,738 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,738 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,738 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,738 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,738 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,738 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,738 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,738 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,738 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,738 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,738 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,738 - app - INFO - Logging to C:\Users\AnneO'Leary\OneDrive - Institute for Research in Schools\Documents\Projects\LLM\Automated-Prompting-LLM\logs\app.log
+2025-05-08 22:05:15,738 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,738 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,738 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,738 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,738 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,738 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,738 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,738 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,738 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,738 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,738 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,738 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,738 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,738 - app.services.async_service - INFO - Async service already initialized, skipping.
+2025-05-08 22:05:15,896 - app - INFO - App context shutting down
+2025-05-08 22:05:15,896 - app - INFO - App context shutting down
+2025-05-08 22:05:15,896 - app - INFO - App context shutting down
+2025-05-08 22:05:15,896 - app - INFO - App context shutting down
+2025-05-08 22:05:15,896 - app - INFO - App context shutting down
+2025-05-08 22:05:15,896 - app - INFO - App context shutting down
+2025-05-08 22:05:15,896 - app - INFO - App context shutting down
+2025-05-08 22:05:15,896 - app - INFO - App context shutting down
+2025-05-08 22:05:15,896 - app - INFO - App context shutting down
+2025-05-08 22:05:15,896 - app - INFO - App context shutting down
+2025-05-08 22:05:15,896 - app - INFO - App context shutting down
+2025-05-08 22:05:15,896 - app - INFO - App context shutting down
+2025-05-08 22:05:15,896 - app - INFO - App context shutting down
+2025-05-08 22:05:15,896 - app - INFO - App context shutting down
+2025-05-08 22:05:15,899 - app - INFO - App context shutting down
+2025-05-08 22:05:15,899 - app - INFO - App context shutting down
+2025-05-08 22:05:15,899 - app - INFO - App context shutting down
+2025-05-08 22:05:15,899 - app - INFO - App context shutting down
+2025-05-08 22:05:15,899 - app - INFO - App context shutting down
+2025-05-08 22:05:15,899 - app - INFO - App context shutting down
+2025-05-08 22:05:15,899 - app - INFO - App context shutting down
+2025-05-08 22:05:15,899 - app - INFO - App context shutting down
+2025-05-08 22:05:15,899 - app - INFO - App context shutting down
+2025-05-08 22:05:15,899 - app - INFO - App context shutting down
+2025-05-08 22:05:15,899 - app - INFO - App context shutting down
+2025-05-08 22:05:15,899 - app - INFO - App context shutting down
+2025-05-08 22:05:15,899 - app - INFO - App context shutting down
+2025-05-08 22:05:15,899 - app - INFO - App context shutting down
+2025-05-08 22:05:15,900 - app - INFO - App context shutting down
+2025-05-08 22:05:15,900 - app - INFO - App context shutting down
+2025-05-08 22:05:15,900 - app - INFO - App context shutting down
+2025-05-08 22:05:15,900 - app - INFO - App context shutting down
+2025-05-08 22:05:15,900 - app - INFO - App context shutting down
+2025-05-08 22:05:15,900 - app - INFO - App context shutting down
+2025-05-08 22:05:15,900 - app - INFO - App context shutting down
+2025-05-08 22:05:15,900 - app - INFO - App context shutting down
+2025-05-08 22:05:15,900 - app - INFO - App context shutting down
+2025-05-08 22:05:15,900 - app - INFO - App context shutting down
+2025-05-08 22:05:15,900 - app - INFO - App context shutting down
+2025-05-08 22:05:15,900 - app - INFO - App context shutting down
+2025-05-08 22:05:15,900 - app - INFO - App context shutting down
+2025-05-08 22:05:15,900 - app - INFO - App context shutting down
+2025-05-08 22:05:15,918 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:05:15,918 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:05:15,918 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:05:15,918 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:05:15,918 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:05:15,918 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - thi2025-05-08 22:05:15,918 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:05:15,918 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:05:15,918 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:05:15,918 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:05:15,918 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:05:15,918 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:05:15,918 - app.services.async_service - INFO - Async event loop stopped
+2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
+2025-05-08 22:05:15,918 - app.services.async_service - WARNING - Event loop exited - this should not happen during normal operation!
