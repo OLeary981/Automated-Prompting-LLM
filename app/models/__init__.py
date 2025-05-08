@@ -1,4 +1,4 @@
-from .prompt_testing import Prompt, Response
+from .prompt_response import Prompt, Response
 from .story import Story, Category, StoryCategory
 from .template import Template, Field, Word, word_field_association
 from .question import Question
