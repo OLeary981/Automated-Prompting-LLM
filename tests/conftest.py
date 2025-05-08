@@ -30,7 +30,7 @@ def app():
     
     with app.app_context():
         db.session.execute(text("PRAGMA foreign_keys=ON"))
-        @event.listens_for(db.engine, "connect")
+        @event.listens_for(db.engine, "connect") #have to make sure the constraint is always set (solving problem in test_stories.py)
         def set_sqlite_pragma(dbapi_connection, connection_record):
             cursor = dbapi_connection.cursor()
             cursor.execute("PRAGMA foreign_keys=ON")
