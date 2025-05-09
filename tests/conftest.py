@@ -128,7 +128,8 @@ def test_data(session):
     # Create Templates
     template1 = Template(content="This is a {animal} template with {action}.")
     template2 = Template(content="The {color} {object} is on the {location}.")
-    session.add_all([template1, template2])
+    template3 = Template(content="The {no_words_field} is on the {object}.")
+    session.add_all([template1, template2, template3])
     session.commit()
 
     # Create Categories
@@ -220,7 +221,7 @@ def test_data(session):
         "ids": {
             "providers": [provider1.provider_id, provider2.provider_id],
             "models": [model1.model_id, model2.model_id],
-            "templates": [template1.template_id, template2.template_id],
+            "templates": [template1.template_id, template2.template_id, template3.template_id],
             "categories": [category1.category_id, category2.category_id],
             "stories": [story1.story_id, story2.story_id, story3.story_id, story4.story_id, story5.story_id],
             "story_categories": [(sc1.story_id, sc1.category_id), (sc2.story_id, sc2.category_id), (sc3.story_id, sc3.category_id)],
