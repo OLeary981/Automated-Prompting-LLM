@@ -1,5 +1,6 @@
 from app import db
 from app.models import Story, StoryCategory
+from flask import abort
 
 def add_story(content, category_ids=None):
     """Add a new story to the database with optional categories"""
@@ -28,7 +29,10 @@ def get_all_stories():
     return Story.query.all()
 
 def get_story_by_id(story_id):
-    return Story.query.get_or_404(story_id)
+    story = db.session.get(Story, story_id)
+    if story is None:
+        abort(404) #chose this instead of a flash message or a custom error with an API in mind for the future.
+    return story
 
 def delete_story(story_id):
     """Delete a story by ID"""

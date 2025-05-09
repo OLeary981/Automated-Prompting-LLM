@@ -12,13 +12,20 @@
     <div id="status-message" class="alert alert-info">
         Starting processing...
     </div>
-    
+    <div class="my-4 text-center">
+        <img src="{{ url_for('static', filename='icons/development.gif') }}" alt="Loading..." width="120" height="120">
+    </div>
     <div id="error-message" class="alert alert-danger" style="display: none;">
     </div>
     
     <div class="text-center mt-4">
         <button id="cancel-button" class="btn btn-warning">Cancel Processing</button>
     </div>
+    <div class="text-center mt-2">
+    <a href="https://www.flaticon.com/free-animated-icons/development" title="development animated icons">
+        Development animated icons created by Freepik - Flaticon
+    </a>
+</div>
 </div>
 {% endblock %}
 

@@ -8,6 +8,14 @@ from . import main_bp
 def index():
     return render_template('index.html')
 
+@main_bp.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html'), 404
+
+@main_bp.route('/404')
+def page_not_found():
+    return render_template('404.html'), 404
+
 
 @main_bp.route('/clear_session', methods=['GET'])
 def clear_session():
