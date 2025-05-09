@@ -6,7 +6,7 @@ coverage report -m
 coverage html
 
 To run all just pytest
-
+pytest tests/unit/test_services/test_story_service.py -v
 pytest tests/functional/test_blueprints/test_main_routes.py -v
 pytest tests/unit/test_models/test_story.py -v
 pytest tests/unit/test_models/test_question.py -v
