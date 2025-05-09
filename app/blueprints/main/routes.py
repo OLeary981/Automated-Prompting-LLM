@@ -62,19 +62,17 @@ def clear_session():
             items_cleared.append('template selection')
         # Clear model and provider if requested
         if clear_model:
-            model_cleared = False
-            if 'model' in session:
-                session.pop('model')
-                model_cleared = True
-            if 'provider' in session:
-                session.pop('provider')
-                model_cleared = True
-            if 'model_id' in session:
-                session.pop('model_id')
-                model_cleared = True
-            
-            if model_cleared:
+            model_keys = ['model', 'provider', 'model_id']
+            cleared_any = False
+            for key in model_keys:
+                if key in session:
+                    session.pop(key)
+                    cleared_any = True
+            # Only append if all three keys are now absent from the session
+            if all(key not in session for key in model_keys) and cleared_any:
                 items_cleared.append('model selection')
+            
+            
         
         if clear_parameters and 'parameters' in session:
             session.pop('parameters')
@@ -84,11 +82,12 @@ def clear_session():
             session.pop('story_ids')
             items_cleared.append('story selection')
             
-        if clear_question and 'question_id' in session:
-            session.pop('question_id')
-        if 'question_content' in session:
-            session.pop('question_content')
-            items_cleared.append('question')
+        if clear_question:
+            if 'question_id' in session:
+                session.pop('question_id')
+            if 'question_content' in session:
+                session.pop('question_content')
+                items_cleared.append('question')
             
         # Only show a flash message if something was cleared
         if items_cleared:
