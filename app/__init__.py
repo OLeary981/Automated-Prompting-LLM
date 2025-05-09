@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 import os
 import json  # Add this import
@@ -71,4 +71,9 @@ def create_app(config=None):
         """Just log shutdown, don't restart services"""
         app.logger.info("App context shutting down")
 
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('404.html'), 404
+
     return app
+

@@ -109,3 +109,4 @@ def test_clear_session_clears_question_content(client):
     with client.session_transaction() as sess:
         assert 'question_content' not in sess
         assert 'question_id' not in sess
+
