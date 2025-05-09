@@ -16,6 +16,14 @@ def add_story(content, category_ids=None):
     db.session.commit()
     return story.story_id
 
+def add_story_with_categories(content, category_ids, new_category=None):
+    from app.services import category_service  # Avoid circular import
+    if new_category and new_category.strip():
+        new_category_id = category_service.add_category(new_category.strip())
+        if new_category_id not in category_ids:
+            category_ids.append(new_category_id)
+    return add_story(content, category_ids)
+
 def get_all_stories():
     return Story.query.all()
 
