@@ -355,3 +355,13 @@ def dummy_job():
     async_service.processing_jobs['job1'] = {"task": dummy_task, "status": "running", "processing": True}
     yield dummy_task
     async_service.processing_jobs.clear()
+
+@pytest.fixture
+def dummy_job_exception():
+    class DummyTask:
+        def done(self): return False
+        def cancel(self): raise RuntimeError("Cancel failed")
+    from app.services import async_service
+    async_service.processing_jobs['job1'] = {"task": DummyTask(), "status": "running", "processing": True}
+    yield
+    async_service.processing_jobs.clear()
