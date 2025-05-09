@@ -2,18 +2,13 @@ from app import db
 from app.models import Story, StoryCategory
 from flask import abort
 
-def add_story(content, category_ids=None):
-    """Add a new story to the database with optional categories"""
-    story = Story(content=content)
+def add_story(content, category_ids=None, template_id=None):
+    story = Story(content=content, template_id=template_id)
     db.session.add(story)
-    db.session.flush()  # Get the story_id before committing
-    
-    # Add categories if provided
+    db.session.flush()
     if category_ids:
         for category_id in category_ids:
-            story_category = StoryCategory(story_id=story.story_id, category_id=category_id)
-            db.session.add(story_category)
-    
+            db.session.add(StoryCategory(story_id=story.story_id, category_id=category_id))
     db.session.commit()
     return story.story_id
 
