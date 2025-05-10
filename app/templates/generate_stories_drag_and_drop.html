@@ -193,7 +193,7 @@
                                 <label for="new_category" class="form-label">Add New Category:</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="new_category" 
-                                           name="new_category" placeholder="Enter a new category name"
+                                           name="new_categories" placeholder="Enter a new category name"
                                            spellcheck="true" lang="en-GB">
                                     <div class="input-group-append">
                                         <button class="btn btn-outline-secondary" type="button" 
@@ -218,6 +218,53 @@
     {% endif %}
 </div>
 <script src="{{ url_for('static', filename='js/story_field_manager.js') }}" defer></script>
+<script>
+document.getElementById('add-new-category-btn').addEventListener('click', function() {
+    var input = document.getElementById('new_category');
+    var value = input.value.trim();
+    if (value) {
+        // Create a unique ID for the new category (to avoid conflicts)
+        var uniqueId = 'new_cat_' + Date.now();
 
+        // Create a checkbox for the new category
+        var checkboxDiv = document.createElement('div');
+        checkboxDiv.className = 'col-md-3 col-sm-4 mb-2';
+
+        var formCheck = document.createElement('div');
+        formCheck.className = 'form-check';
+
+        var checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'form-check-input';
+        checkbox.name = 'story_categories';
+        checkbox.id = uniqueId;
+        checkbox.value = value;
+        checkbox.checked = true; // Select automatically
+
+        var label = document.createElement('label');
+        label.className = 'form-check-label';
+        label.htmlFor = uniqueId;
+        label.textContent = value;
+
+        formCheck.appendChild(checkbox);
+        formCheck.appendChild(label);
+        checkboxDiv.appendChild(formCheck);
+
+        // Add the new checkbox to the categories row
+        var categoriesRow = document.querySelector('.card-body .row');
+        categoriesRow.appendChild(checkboxDiv);
+
+        // Also add a hidden input so the backend knows it's a new category
+        var hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'new_categories';
+        hiddenInput.value = value;
+        document.getElementById('fields-form').appendChild(hiddenInput);
+
+        // Clear the input
+        input.value = '';
+    }
+});
+</script>
 
 {% endblock %}

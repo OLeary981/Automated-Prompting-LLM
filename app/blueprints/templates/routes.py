@@ -130,9 +130,14 @@ def generate_stories():
                 
                 # Process existing categories
                 selected_categories = request.form.getlist('story_categories')
-                category_ids.extend([int(cat_id) for cat_id in selected_categories if cat_id])
-                
-                # Process new categories
+                for cat_id in selected_categories:
+                    try:
+                        category_ids.append(int(cat_id))
+                    except ValueError:
+                        # Not an int, so it's a new category name, will be handled below
+                        pass
+
+                # Process new categories (names)
                 new_categories = request.form.getlist('new_categories')
                 for new_cat in new_categories:
                     if new_cat.strip():
