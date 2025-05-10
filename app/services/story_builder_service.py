@@ -7,6 +7,13 @@ from ..services import story_service
 def get_all_templates():
     return db.session.query(Template).all()
 
+def add_template(content):
+    """Add a new template to the database and return its ID."""
+    new_template = Template(content=content)
+    db.session.add(new_template)
+    db.session.commit()
+    return new_template.template_id
+
 def get_template_fields(template_id):
     template = db.session.get(Template, template_id)
     field_names = re.findall(r'\{(.*?)\}', template.content)
