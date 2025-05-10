@@ -1,4 +1,5 @@
 Notes:
+basic change to diary to check publishing to new testing number 2 branch is ok 
 
 Checking coverage terminal commands:
 coverage run -m pytest
