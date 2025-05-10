@@ -10,6 +10,7 @@ To run all just pytest
 pytest tests/unit/test_services/test_story_builder_service.py -v
 pytest tests/unit/test_services/test_story_service.py -v
 pytest tests/functional/test_blueprints/test_main_routes.py -v
+pytest tests/functional/test_blueprints/test_question_routes.py -v
 pytest tests/unit/test_models/test_story.py -v
 pytest tests/unit/test_models/test_question.py -v
 pytest tests/unit/test_models/test_prompt_response.py -v

@@ -45,8 +45,8 @@ def update_selection():
     if data.get('clear'):
         if 'question_id' in session:
             session.pop('question_id')
-        if 'question_content' in session: #shouldn't be needed any more since question_content no longer being added to session (I think)
-            session.pop('question_content')
+        # if 'question_content' in session: #shouldn't be needed any more since question_content no longer being added to session (I think)
+        #     session.pop('question_content')
         return jsonify({'success': True})
     
     # Otherwise update the question selection
