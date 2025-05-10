@@ -2,6 +2,8 @@ import datetime
 from sqlalchemy import func, select
 from ..models import Prompt, Model, Provider, Story, Question, Response
 from .. import db
+from ..utils.pagination import Pagination
+
 
 def get_filtered_prompts(
     page=1, 
@@ -15,58 +17,60 @@ def get_filtered_prompts(
     sort='date_desc'
 ):
     """
-    Get filtered and paginated prompts based on criteria
-    
+    Get filtered and paginated prompts based on criteria using SQLAlchemy 2.0 API
+
     Returns:
-        tuple: (pagination, prompt_data)
+        Pagination: Custom pagination object with items and metadata
     """
-    # Build base query with joins
-    query = db.session.query(
-        Prompt, 
-        func.max(Response.timestamp).label('last_used')
-    ).\
-        join(Model, Prompt.model_id == Model.model_id).\
-        join(Provider, Model.provider_id == Provider.provider_id).\
-        join(Story, Prompt.story_id == Story.story_id).\
-        join(Question, Prompt.question_id == Question.question_id).\
-        outerjoin(Response, Prompt.prompt_id == Response.prompt_id).\
-        group_by(Prompt.prompt_id)
-    
-    # Apply filters
+    stmt = (
+        select(Prompt, func.max(Response.timestamp).label('last_used'))
+        .join(Model, Prompt.model_id == Model.model_id)
+        .join(Provider, Model.provider_id == Provider.provider_id)
+        .join(Story, Prompt.story_id == Story.story_id)
+        .join(Question, Prompt.question_id == Question.question_id)
+        .outerjoin(Response, Prompt.prompt_id == Response.prompt_id)
+        .group_by(Prompt.prompt_id)
+    )
+
+    # Filters
     if provider:
-        query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
+        stmt = stmt.where(Provider.provider_name.ilike(f"%{provider}%"))
     if model:
-        query = query.filter(Model.name.ilike(f'%{model}%'))
+        stmt = stmt.where(Model.name.ilike(f"%{model}%"))
     if question_id:
-        query = query.filter(Prompt.question_id == question_id)
+        stmt = stmt.where(Prompt.question_id == question_id)
     if story_id:
-        query = query.filter(Prompt.story_id == story_id)
-    
-    # Apply date range filters
+        stmt = stmt.where(Prompt.story_id == story_id)
+
     if start_date:
         try:
             start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-            query = query.filter(Response.timestamp >= start_date_obj)
+            stmt = stmt.where(Response.timestamp >= start_date_obj)
         except ValueError:
             pass
-    
+
     if end_date:
         try:
-            # Add one day to include the end date fully
             end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
-            query = query.filter(Response.timestamp < end_date_obj)
+            stmt = stmt.where(Response.timestamp < end_date_obj)
         except ValueError:
             pass
-    
-    # Apply sorting
+
+    # Sorting
     if sort == 'date_asc':
-        query = query.order_by(func.max(Response.timestamp).asc())
-    else:  # Default to date_desc
-        query = query.order_by(func.max(Response.timestamp).desc())
-    
-    # Paginate results
-    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-    return pagination
+        stmt = stmt.order_by(func.max(Response.timestamp).asc())
+    else:
+        stmt = stmt.order_by(func.max(Response.timestamp).desc())
+
+    # Count total (using subquery to avoid recomputing filters)
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = db.session.execute(count_stmt).scalar()
+
+    # Pagination
+    paginated_stmt = stmt.offset((page - 1) * per_page).limit(per_page)
+    items = db.session.execute(paginated_stmt).all()
+
+    return Pagination(items=items, page=page, per_page=per_page, total=total)
 
 def get_filter_options():
     """
