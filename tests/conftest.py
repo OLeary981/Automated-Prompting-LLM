@@ -36,7 +36,11 @@ def app():
             cursor.execute("PRAGMA foreign_keys=ON")
             cursor.close()
 
-
+        app.config.update({
+            "TESTING": True,
+            "SERVER_NAME": "localhost.localdomain",  # Needed for url_for() outside request
+            "PREFERRED_URL_SCHEME": "http",          # Optional, avoids https:// warnings
+        })
 
 
         db.create_all()
@@ -45,17 +49,7 @@ def app():
             print("WARNING: Foreign key constraints could not be enabled!")
     
         yield app  # This should NOT be inside the context
-    # from app import db
-    # @event.listens_for(db.engine, "connect")
-    # def set_sqlite_pragma(dbapi_connection, connection_record):
-    #     cursor = dbapi_connection.cursor()
-    #     cursor.execute("PRAGMA foreign_keys=ON")
-    #     cursor.close()
 
-    # with app.app_context():
-    #     db.create_all()
-    #     yield app
-    
     
     try:
         os.close(db_fd)
@@ -215,9 +209,22 @@ def test_data(session):
     )
     session.add_all([response1, response2])
     session.commit()
-
+    
+    #Flask session referred to as "sess" so renamed this 
+    sess_data = {
+                'story_ids': ['1', '2', '3'],
+                'question_id': '42',
+                'model': 'Test Model',
+                'provider': 'Test Provider',
+                'model_id': '123',
+                'parameters': {'temperature': '0.7'},
+                'stories_source': 'source',
+                'template_ids': ['10', '11'],
+            }
     
     return {
+        "sess_data": sess_data,      
+
         "ids": {
             "providers": [provider1.provider_id, provider2.provider_id],
             "models": [model1.model_id, model2.model_id],

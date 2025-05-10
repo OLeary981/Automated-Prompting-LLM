@@ -53,16 +53,16 @@ def test_clear_session_cancels_jobs(client, dummy_job):
 
 
 
-ALL_SESSION_KEYS = {
-    'story_ids': [1, 2, 3],
-    'question_id': 42,
-    'model': 'Test Model',
-    'provider': 'Test Provider',
-    'model_id': 123,
-    'parameters': {'temperature': 0.7},
-    'stories_source': 'source',
-    'template_ids': [10, 11],
-}
+# ALL_SESSION_KEYS = {
+#     'story_ids': [1, 2, 3],
+#     'question_id': 42,
+#     'model': 'Test Model',
+#     'provider': 'Test Provider',
+#     'model_id': 123,
+#     'parameters': {'temperature': 0.7},
+#     'stories_source': 'source',
+#     'template_ids': [10, 11],
+# }
 
 @pytest.mark.parametrize("param,session_keys_to_clear", [
     ("clear_stories", ["story_ids"]),
@@ -72,8 +72,9 @@ ALL_SESSION_KEYS = {
     ("stories_source", ["stories_source"]),
     ("clear_templates", ["template_ids"]),
 ])
-def test_clear_session_selective_keys(client, param, session_keys_to_clear):
+def test_clear_session_selective_keys(client, param, session_keys_to_clear, test_data):
     # Set up all session data
+    ALL_SESSION_KEYS = test_data["sess_data"]
     with client.session_transaction() as sess:
         for key, value in ALL_SESSION_KEYS.items():
             sess[key] = value
