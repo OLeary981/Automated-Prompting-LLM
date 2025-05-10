@@ -4,6 +4,31 @@ from ..models import Prompt, Model, Provider, Story, Question, Response
 from .. import db
 from ..utils.pagination import Pagination
 
+def _parse_date(date_str):
+    try:
+        return datetime.datetime.strptime(date_str, '%Y-%m-%d')
+    except (ValueError, TypeError):
+        return None
+
+def _apply_filters(stmt, provider, model, question_id, story_id, start_date, end_date):
+    if provider:
+        stmt = stmt.where(Provider.provider_name.ilike(f"%{provider}%"))
+    if model:
+        stmt = stmt.where(Model.name.ilike(f"%{model}%"))
+    if question_id:
+        stmt = stmt.where(Prompt.question_id == question_id)
+    if story_id:
+        stmt = stmt.where(Prompt.story_id == story_id)
+    if start_date:
+        start_date_obj = _parse_date(start_date)
+        if start_date_obj:
+            stmt = stmt.where(Response.timestamp >= start_date_obj)
+    if end_date:
+        end_date_obj = _parse_date(end_date)
+        if end_date_obj:
+            stmt = stmt.where(Response.timestamp < end_date_obj + datetime.timedelta(days=1))
+    return stmt
+
 
 def get_filtered_prompts(
     page=1, 
@@ -32,29 +57,8 @@ def get_filtered_prompts(
         .group_by(Prompt.prompt_id)
     )
 
-    # Filters
-    if provider:
-        stmt = stmt.where(Provider.provider_name.ilike(f"%{provider}%"))
-    if model:
-        stmt = stmt.where(Model.name.ilike(f"%{model}%"))
-    if question_id:
-        stmt = stmt.where(Prompt.question_id == question_id)
-    if story_id:
-        stmt = stmt.where(Prompt.story_id == story_id)
-
-    if start_date:
-        try:
-            start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-            stmt = stmt.where(Response.timestamp >= start_date_obj)
-        except ValueError:
-            pass
-
-    if end_date:
-        try:
-            end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
-            stmt = stmt.where(Response.timestamp < end_date_obj)
-        except ValueError:
-            pass
+    # Apply filters using the helper function
+    stmt = _apply_filters(stmt, provider, model, question_id, story_id, start_date, end_date)
 
     # Sorting
     if sort == 'date_asc':
@@ -79,16 +83,16 @@ def get_filter_options():
     Returns:
         dict: Dictionary containing providers, models, and questions
     """
-    providers = db.session.query(Provider).all()
-    models = db.session.query(Model).all()
-    questions = db.session.query(Question).all()
+    providers = db.session.execute(select(Provider)).scalars().all()
+    models = db.session.execute(select(Model)).scalars().all()
+    questions = db.session.execute(select(Question)).scalars().all()
     
     return {
         'providers': providers,
         'models': models,
         'questions': questions
     }
-
+#feels like a basic and important function but not actually being called anywhere?! End up having to do joins to story and question for all pages anyway?
 def get_prompts_by_ids(prompt_ids):
     """
     Get prompts by their IDs
@@ -101,8 +105,29 @@ def get_prompts_by_ids(prompt_ids):
     """
     if not prompt_ids:
         return []
-        
-    return db.session.query(Prompt).filter(Prompt.prompt_id.in_(prompt_ids)).all()
+    stmt = select(Prompt).where(Prompt.prompt_id.in_(prompt_ids))
+    return db.session.execute(stmt).scalars().all()
+
+
+def _clear_all():
+    return set()
+
+def _select_multiple(selection, prompt_ids):
+    return selection.union(set(map(str, prompt_ids)))
+
+def _invert_selection(selection, select_ids, deselect_ids):
+    selection.update(map(str, select_ids))
+    selection.difference_update(map(str, deselect_ids))
+    return selection
+
+def _toggle(selection, prompt_id, is_selected):
+    if is_selected:
+        selection.add(prompt_id)
+    else:
+        selection.discard(prompt_id)
+    return selection
+
+
 
 def update_prompt_selection(current_selection, action, data):
     """
@@ -116,37 +141,17 @@ def update_prompt_selection(current_selection, action, data):
     Returns:
         list: Updated list of selected prompt IDs
     """
-    selected_prompt_ids = current_selection.copy() if current_selection else []
+    selection = set(current_selection or [])
     
     if action == 'clear_all':
-        selected_prompt_ids = []
-    
+        selection = _clear_all()
     elif action == 'select_multiple':
-        prompt_ids = data.get('prompt_ids', [])
-        for prompt_id in prompt_ids:
-            prompt_id = str(prompt_id)
-            if prompt_id not in selected_prompt_ids:
-                selected_prompt_ids.append(prompt_id)
-    
+        selection = _select_multiple(selection, data.get('prompt_ids', []))
     elif action == 'invert_selection':
-        select_ids = [str(pid) for pid in data.get('select_ids', [])]
-        deselect_ids = [str(pid) for pid in data.get('deselect_ids', [])]
-        
-        # Add new selections
-        for pid in select_ids:
-            if pid not in selected_prompt_ids:
-                selected_prompt_ids.append(pid)
-                
-        # Remove deselections
-        selected_prompt_ids = [pid for pid in selected_prompt_ids if pid not in deselect_ids]
-    
+        selection = _invert_selection(selection, data.get('select_ids', []), data.get('deselect_ids', []))
     elif action == 'toggle':
         prompt_id = str(data.get('prompt_id'))
         is_selected = data.get('selected', False)
-        
-        if is_selected and prompt_id not in selected_prompt_ids:
-            selected_prompt_ids.append(prompt_id)
-        elif not is_selected and prompt_id in selected_prompt_ids:
-            selected_prompt_ids.remove(prompt_id)
-    
-    return selected_prompt_ids
+        selection = _toggle(selection, prompt_id, is_selected)
+
+    return list(selection)
