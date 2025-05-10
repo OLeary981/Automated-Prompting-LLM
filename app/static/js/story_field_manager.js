@@ -459,4 +459,7 @@ $('#wordActionModal').on('hide.bs.modal', function () {
     document.activeElement.blur();
 });
 
+
+
+
 document.addEventListener('DOMContentLoaded', initialize);
