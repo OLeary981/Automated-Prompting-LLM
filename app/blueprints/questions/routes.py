@@ -16,6 +16,8 @@ def add():
         if question_content:
             try:
                 question_id = question_service.add_question(question_content)
+                session['question_id'] = question_id
+                session['question_content'] = question_content
                 #flash(f"Question added successfully!", "success")
             except Exception as e:
                 flash(f"Error adding question: {e}", "danger")
