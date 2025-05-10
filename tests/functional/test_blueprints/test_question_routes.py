@@ -103,3 +103,13 @@ def test_update_selection_no_id(client, questions_url_map):
     )
     assert response.status_code == 400
     assert response.get_json()["success"] is False
+
+def test_add_question_exception(client, mocker):
+    # Mock the add_question method to raise an exception
+    mocker.patch('app.blueprints.questions.routes.question_service.add_question', side_effect=Exception("Simulated failure"))
+
+    # Simulate a POST request to the '/add' route
+    response = client.post('/questions/add', data={'question_content': 'Test question'}, follow_redirects=True)
+
+    # Assert that the error message is present in the response HTML
+    assert b"Error adding question: Simulated failure" in response.data
