@@ -3,9 +3,34 @@ import re
 from app import db
 from app.models import Template, Story, Word, Field, StoryCategory
 from ..services import story_service
+from sqlalchemy import select
 
 def get_all_templates():
     return db.session.query(Template).all()
+
+# def get_all_fields():
+#     return db.session.query(Field.field).order_by(Field.field).all()
+
+def get_all_field_names():
+    """Return a flat list of all field names as strings."""
+    return [f[0] for f in db.session.query(Field.field).order_by(Field.field).all()]
+
+def get_template_by_id(template_id):
+    return db.session.get(Template, template_id)
+
+def get_templates_filtered(search_text='', sort_by='desc'):
+    stmt = select(Template)
+    if search_text:
+        stmt = stmt.where(Template.content.ilike(f'%{search_text}%'))
+    if sort_by == 'asc':
+        stmt = stmt.order_by(Template.template_id.asc())
+    else:
+        stmt = stmt.order_by(Template.template_id.desc())
+    return db.session.execute(stmt).scalars().all()
+
+#Realised this was duplicated in the story_service.py file so deleted it. 
+# def get_story_by_id(story_id):
+#     return db.session.get(Story, story_id)
 
 def add_template(content):
     """Add a new template to the database and return its ID."""
@@ -15,7 +40,7 @@ def add_template(content):
     return new_template.template_id
 
 def get_template_fields(template_id):
-    template = db.session.get(Template, template_id)
+    template = get_template_by_id( template_id)
     field_names = re.findall(r'\{(.*?)\}', template.content)
     fields = {}
     missing_fields = []
@@ -146,38 +171,38 @@ def template_filler(template, template_id, field_data=None, category_ids=None):
 
 def generate_stories(template_id, field_data, category_ids=None):
     """Generate stories from a template and field data, with optional categories"""
-    template = db.session.get(Template, template_id)
+    template = get_template_by_id( template_id)
     if not template:
         raise ValueError(f"Template with ID {template_id} not found")
     
     # Use the existing template_filler function with category support
     return template_filler(template, template_id, field_data, category_ids)
 
-def generate_story_permutations(template_content, field_data):
-    """Generate all possible story permutations from a template and field data."""
-    # Extract field names from template
-    field_names = re.findall(r'\{(.*?)\}', template_content)
-    unique_field_names = list(set(field_names))
+# def generate_story_permutations(template_content, field_data):
+#     """Generate all possible story permutations from a template and field data."""
+#     # Extract field names from template
+#     field_names = re.findall(r'\{(.*?)\}', template_content)
+#     unique_field_names = list(set(field_names))
     
-    # Ensure all required fields have values
-    for field_name in unique_field_names:
-        if field_name not in field_data or not field_data[field_name]:
-            raise ValueError(f"Field '{field_name}' has no values assigned")
+#     # Ensure all required fields have values
+#     for field_name in unique_field_names:
+#         if field_name not in field_data or not field_data[field_name]:
+#             raise ValueError(f"Field '{field_name}' has no values assigned")
     
-    # Generate all possible combinations of field values
-    field_values_list = [field_data[field_name] for field_name in unique_field_names]
-    combinations = list(itertools.product(*field_values_list))
+#     # Generate all possible combinations of field values
+#     field_values_list = [field_data[field_name] for field_name in unique_field_names]
+#     combinations = list(itertools.product(*field_values_list))
     
-    # Generate stories by substituting field values
-    stories = []
-    for combo in combinations:
-        story = template_content
-        for i, field_name in enumerate(unique_field_names):
-            # Replace all occurrences of this field
-            story = story.replace(f"{{{field_name}}}", str(combo[i]))
-        stories.append(story)
+#     # Generate stories by substituting field values
+#     stories = []
+#     for combo in combinations:
+#         story = template_content
+#         for i, field_name in enumerate(unique_field_names):
+#             # Replace all occurrences of this field
+#             story = story.replace(f"{{{field_name}}}", str(combo[i]))
+#         stories.append(story)
     
-    return stories
+#     return stories
 
 def update_field_words(field_data):
     """Update field words based on user selection"""
