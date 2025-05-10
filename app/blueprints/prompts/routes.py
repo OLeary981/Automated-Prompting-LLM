@@ -6,14 +6,11 @@ from . import prompts_bp
 @prompts_bp.route('/list', methods=['GET', 'POST'])
 def list():
     if request.method == 'POST':
-        # Process form data for prompt updates if needed
-        # (Similar to view_responses POST handler but for prompts)
         return redirect(url_for('prompts.list', **request.args))
-        
-    # Initialize prompt_ids for selection
+
     selected_prompt_ids = session.get('prompt_ids', [])
-    
-    # GET request - handle filtering
+
+    # Collect filter params
     provider = request.args.get('provider', '')
     model = request.args.get('model', '')
     question_id = request.args.get('question_id', '')
@@ -23,23 +20,16 @@ def list():
     sort = request.args.get('sort', 'date_desc')
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
-    
+
     # Validate date formats
-    if start_date:
+    for date_param, label in [(start_date, "start date"), (end_date, "end date")]:
         try:
-            datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            if date_param:
+                datetime.datetime.strptime(date_param, "%Y-%m-%d")
         except ValueError:
-            flash(f"Invalid start date format: {start_date}", "warning")
-            start_date = ''
-    
-    if end_date:
-        try:
-            datetime.datetime.strptime(end_date, '%Y-%m-%d')
-        except ValueError:
-            flash(f"Invalid end date format: {end_date}", "warning")
-            end_date = ''
-    
-    # Get filtered prompts using the service
+            flash(f"Invalid {label} format: {date_param}", "warning")
+
+    # Use the updated service
     pagination = prompt_service.get_filtered_prompts(
         page=page,
         per_page=per_page,
@@ -51,26 +41,27 @@ def list():
         end_date=end_date,
         sort=sort
     )
-    
-    # Get filter options
+
     filter_options = prompt_service.get_filter_options()
-    
-    return render_template('see_all_prompts.html', 
-                          prompts=pagination.items,
-                          pagination=pagination,
-                          providers=filter_options['providers'],
-                          models=filter_options['models'],
-                          questions=filter_options['questions'],
-                          selected_prompt_ids=selected_prompt_ids,
-                          current_filters={
-                              'provider': provider,
-                              'model': model,
-                              'question_id': question_id,
-                              'story_id': story_id,
-                              'start_date': start_date,
-                              'end_date': end_date,
-                              'sort': sort
-                          })
+
+    return render_template(
+        'see_all_prompts.html',
+        prompts=pagination.items,
+        pagination=pagination,
+        providers=filter_options['providers'],
+        models=filter_options['models'],
+        questions=filter_options['questions'],
+        selected_prompt_ids=selected_prompt_ids,
+        current_filters={
+            'provider': provider,
+            'model': model,
+            'question_id': question_id,
+            'story_id': story_id,
+            'start_date': start_date,
+            'end_date': end_date,
+            'sort': sort
+        }
+    )
 
 @prompts_bp.route('/update_selection', methods=['POST'])
 def update_selection():
