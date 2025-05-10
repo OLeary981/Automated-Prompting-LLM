@@ -17,7 +17,7 @@ def add():
             try:
                 question_id = question_service.add_question(question_content)
                 session['question_id'] = question_id
-                session['question_content'] = question_content
+                #session['question_content'] = question_content
                 #flash(f"Question added successfully!", "success")
             except Exception as e:
                 flash(f"Error adding question: {e}", "danger")
@@ -54,14 +54,14 @@ def update_selection():
         # Verify the question exists
         question = question_service.get_question_by_id(question_id)
         if question:
-            # Store both ID and content in session
+            # Used to store both ID and content in session - convenient but can lead to inconsistencies
             session['question_id'] = question_id
-            session['question_content'] = question.content            
+            #session['question_content'] = question.content            
             
             return jsonify({
                 'success': True,
                 'question_id': question_id,
-                'content': question.content
+                # 'content': question.content
             })
         return jsonify({'success': False, 'message': 'Question not found'}), 404
     

@@ -315,7 +315,7 @@ def with_selected_question(client):
     """A test client with selected question in session."""
     with client.session_transaction() as session:
         session['question_id'] = '1'
-        session['question_content'] = 'What is the main theme of this story?'
+        #session['question_content'] = 'What is the main theme of this story?'
     return client
 
 
