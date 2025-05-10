@@ -16,11 +16,14 @@ def add():
         if question_content:
             try:
                 question_id = question_service.add_question(question_content)
+                session['question_id'] = question_id
+                #session['question_content'] = question_content
                 #flash(f"Question added successfully!", "success")
             except Exception as e:
                 flash(f"Error adding question: {e}", "danger")
         return redirect(url_for('questions.list'))
-    return render_template('add_question.html')
+    return render_template('see_all_questions_updated.html') #removed add_question after testing as no longer use it. 
+#Must not be hitting this part of the route as didn't see until now.
 
 @questions_bp.route('/select', methods=['GET', 'POST'])
 def select():
@@ -42,8 +45,8 @@ def update_selection():
     if data.get('clear'):
         if 'question_id' in session:
             session.pop('question_id')
-        if 'question_content' in session:
-            session.pop('question_content')
+        # if 'question_content' in session: #shouldn't be needed any more since question_content no longer being added to session (I think)
+        #     session.pop('question_content')
         return jsonify({'success': True})
     
     # Otherwise update the question selection
@@ -52,14 +55,14 @@ def update_selection():
         # Verify the question exists
         question = question_service.get_question_by_id(question_id)
         if question:
-            # Store both ID and content in session
+            # Used to store both ID and content in session - convenient but can lead to inconsistencies
             session['question_id'] = question_id
-            session['question_content'] = question.content            
+            #session['question_content'] = question.content            
             
             return jsonify({
                 'success': True,
                 'question_id': question_id,
-                'content': question.content
+                # 'content': question.content
             })
         return jsonify({'success': False, 'message': 'Question not found'}), 404
     

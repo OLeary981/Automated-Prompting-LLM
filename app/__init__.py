@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template, session
 from flask_sqlalchemy import SQLAlchemy
 import os
 import json  # Add this import
@@ -71,4 +71,21 @@ def create_app(config=None):
         """Just log shutdown, don't restart services"""
         app.logger.info("App context shutting down")
 
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('404.html'), 404
+
+    
+
+    @app.context_processor
+    def inject_current_question_content():
+        from app.services import question_service #had to move this down here to avoid circular import
+        question_id = session.get('question_id')
+        question_content = None
+        if question_id:
+            question = question_service.get_question_by_id(question_id)
+            if question:
+                question_content = question.content
+        return dict(current_question_content=question_content)
+    
     return app

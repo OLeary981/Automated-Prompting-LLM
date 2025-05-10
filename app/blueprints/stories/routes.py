@@ -11,20 +11,11 @@ def add():
         content = request.form.get('story_content')
         new_category = request.form.get('new_category')
         selected_categories = request.form.getlist('categories')
-        
-        # Convert selected categories to integers
         category_ids = [int(cat_id) for cat_id in selected_categories if cat_id]
         
         if content:
             try:
-                # Process new category if provided
-                if new_category and new_category.strip():
-                    new_category_id = category_service.add_category(new_category.strip())
-                    if new_category_id not in category_ids:
-                        category_ids.append(new_category_id)
-                
-                # Add story with categories
-                story_id = story_service.add_story(content, category_ids)
+                story_id = story_service.add_story_with_categories(content, category_ids, new_category)
                 flash('Story added successfully!', 'success')
                 print(f"Story ID: {story_id}")
             except Exception as e:
@@ -32,7 +23,6 @@ def add():
                 print(f"An error occurred: {e}")
         return redirect(url_for('stories.list'))
     
-    # Get all existing categories for the form
     categories = category_service.get_all_categories()
     return render_template('add_story.html', categories=categories)
 
