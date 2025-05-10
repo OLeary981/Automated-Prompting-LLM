@@ -3,6 +3,7 @@ Notes:
 Checking coverage terminal commands:
 coverage run -m pytest
 coverage report -m
+coverage report --skip-covered
 coverage html
 
 To run all just pytest

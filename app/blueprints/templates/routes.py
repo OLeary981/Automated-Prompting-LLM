@@ -1,7 +1,7 @@
 from flask import flash, render_template, request, redirect, url_for, session, jsonify
 from sqlalchemy import select
 from ... import db
-from ...services import  story_builder_service,  category_service
+from ...services import  story_builder_service,  category_service, story_service
 from ...models import  Story,  Word, Field, Template
 from . import templates_bp
 import json
@@ -17,23 +17,22 @@ def list():
     page = request.args.get('page', 1, type=int)
     per_page = 10
 
-    stmt = select(Template)
-    if search_text:
-        stmt = stmt.where(Template.content.ilike(f'%{search_text}%'))
-    if sort_by == 'asc':
-        stmt = stmt.order_by(Template.template_id.asc())
-    else:
-        stmt = stmt.order_by(Template.template_id.desc())
+    # stmt = select(Template)
+    # if search_text:
+    #     stmt = stmt.where(Template.content.ilike(f'%{search_text}%'))
+    # if sort_by == 'asc':
+    #     stmt = stmt.order_by(Template.template_id.asc())
+    # else:
+    #     stmt = stmt.order_by(Template.template_id.desc())
 
-    all_templates = db.session.execute(stmt).scalars().all()
+    all_templates = story_builder_service.get_templates_filtered(search_text, sort_by)
     total = len(all_templates)
     start = (page - 1) * per_page
     end = start + per_page
     templates = all_templates[start:end]
     pagination = Pagination(templates, page, per_page, total)
 
-    fields = db.session.query(Field.field).order_by(Field.field).all()
-    template_fields = [field[0] for field in fields]
+    template_fields = story_builder_service.get_all_field_names()
     selected_template_ids = session.get('template_ids', [])
 
     return render_template(
@@ -177,7 +176,7 @@ def generate_stories():
     template = None
     
     if template_id:
-        template = db.session.query(Template).get(template_id)
+        template = story_builder_service.get_template_by_id(template_id)
         fields, missing_fields = story_builder_service.get_template_fields(template_id)
 
         print("===== DEBUG INFO =====")
@@ -208,7 +207,7 @@ def display_generated_stories():
     session['story_ids'] = generated_story_ids
     
     # When querying, convert back to integers
-    stories = [db.session.query(Story).get(int(story_id)) for story_id in generated_story_ids]    
+    stories = [story_service.get_story_by_id(int(story_id)) for story_id in generated_story_ids]
     return render_template('display_generated_stories.html', stories=stories)
 
 @templates_bp.route('/add_word', methods=['POST'])

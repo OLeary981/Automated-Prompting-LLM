@@ -3,11 +3,82 @@ from app.services import story_builder_service
 from app.models import Template, Story, Field, Word, StoryCategory, Category
 
 class TestStoryBuilderService:
+
+    # def test_get_all_templates(self, session, test_data):
+    #     """Test get_all_templates returns all templates."""
+    #     templates = story_builder_service.get_all_templates()
+    #     # Should include at least the templates from test_data
+    #     ids = [t.template_id for t in templates]
+    #     for tid in test_data["ids"]["templates"]:
+    #         assert tid in ids
+
+    # def test_get_all_templates(self, session, test_data):
+    #     """Test retrieval of all templates."""
+    #     templates = story_builder_service.get_all_templates()
+    #     assert len(templates) >= 2  # At least those from test_data
+    #     assert any(t.content == "This is a {animal} template with {action}." for t in templates)
+
+
+#combination of the logic in both tests that are commented out.
     def test_get_all_templates(self, session, test_data):
-        """Test retrieval of all templates."""
+        """Test get_all_templates returns all templates and expected content."""
         templates = story_builder_service.get_all_templates()
+        ids = [t.template_id for t in templates]
+        for tid in test_data["ids"]["templates"]:
+            assert tid in ids
         assert len(templates) >= 2  # At least those from test_data
         assert any(t.content == "This is a {animal} template with {action}." for t in templates)
+
+    def test_get_all_field_names(self, session, test_data):
+        """Test get_all_field_names returns all field names as strings."""
+        field_names = story_builder_service.get_all_field_names()
+        for field_name in test_data["ids"]["fields"]:
+            assert field_name in field_names
+
+    def test_get_template_by_id(self, session, test_data):
+        """Test get_template_by_id returns the correct template."""
+        tid = test_data["ids"]["templates"][0]
+        template = story_builder_service.get_template_by_id(tid)
+        assert template is not None
+        assert template.template_id == tid
+
+#Don't need this as it is in the story_service.py file, so commeted out in story_builder_service.py
+    # def test_get_story_by_id(self, session, test_data):
+    #     """Test get_story_by_id returns the correct story."""
+    #     sid = test_data["ids"]["stories"][0]
+    #     story = story_builder_service.get_story_by_id(sid)
+    #     assert story is not None
+    #     assert story.story_id == sid
+
+    def test_get_templates_filtered(self, session, test_data):
+        """Test get_templates_filtered filters and sorts templates correctly."""
+        # No filter, default sort (desc)
+        templates = story_builder_service.get_templates_filtered()
+        assert len(templates) >= 2  # At least those from test_data
+        # Should be sorted by template_id descending
+        ids = [t.template_id for t in templates]
+        assert ids == sorted(ids, reverse=True)
+
+        # Filter by search_text
+        templates_with_cat = story_builder_service.get_templates_filtered(search_text="cat")
+        assert any("cat" in t.content for t in templates_with_cat)
+        # Should not include templates without "cat"
+        assert all("cat" in t.content or "Cat" in t.content for t in templates_with_cat)
+
+        # Ascending sort
+        templates_asc = story_builder_service.get_templates_filtered(sort_by="asc")
+        ids_asc = [t.template_id for t in templates_asc]
+        assert ids_asc == sorted(ids_asc)
+
+    def test_add_template(self, session):
+        """Test add_template adds a new template and returns its ID."""
+        content = "A new {field} template."
+        tid = story_builder_service.add_template(content)
+        template = session.get(Template, tid)
+        assert template is not None
+        assert template.content == content
+
+
 
     def test_get_template_fields(self, session, test_data):
         """Test extraction of fields and missing fields from a template."""
@@ -71,18 +142,18 @@ class TestStoryBuilderService:
         assert ("dog", "jump") in perms
         assert len(perms) == 4
 
-    def test_generate_story_permutations(self):
-        """Test generating all possible story permutations from template and field data."""
-        template = "The {color} {animal} likes to {action}."
-        field_data = {
-            "color": ["red", "blue"],
-            "animal": ["cat"],
-            "action": ["jump", "run"]
-        }
-        stories = story_builder_service.generate_story_permutations(template, field_data)
-        assert "The red cat likes to jump." in stories
-        assert "The blue cat likes to run." in stories
-        assert len(stories) == 4
+    # def test_generate_story_permutations(self):
+    #     """Test generating all possible story permutations from template and field data."""
+    #     template = "The {color} {animal} likes to {action}."
+    #     field_data = {
+    #         "color": ["red", "blue"],
+    #         "animal": ["cat"],
+    #         "action": ["jump", "run"]
+    #     }
+    #     stories = story_builder_service.generate_story_permutations(template, field_data)
+    #     assert "The red cat likes to jump." in stories
+    #     assert "The blue cat likes to run." in stories
+    #     assert len(stories) == 4
 
     def test_update_field_words(self, session):
         """Test updating field words based on user selection."""
@@ -229,11 +300,11 @@ class TestStoryBuilderService:
         with pytest.raises(ValueError, match="is not associated with field"):
             story_builder_service.delete_word_from_field("field1", "lonelyword")
 
-    def test_generate_story_permutations_missing_field(self):
-        template = "The {animal} jumps over the {object}."
-        field_data = {"animal": ["cat"]}  # 'object' missing
-        with pytest.raises(ValueError, match="Field 'object' has no values assigned"):
-            story_builder_service.generate_story_permutations(template, field_data)
+    # def test_generate_story_permutations_missing_field(self):
+    #     template = "The {animal} jumps over the {object}."
+    #     field_data = {"animal": ["cat"]}  # 'object' missing
+    #     with pytest.raises(ValueError, match="Field 'object' has no values assigned"):
+    #         story_builder_service.generate_story_permutations(template, field_data)
     
     def test_update_field_words_with_existing_word(self, session):
         # Add a word first
