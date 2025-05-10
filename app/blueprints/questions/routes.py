@@ -22,7 +22,8 @@ def add():
             except Exception as e:
                 flash(f"Error adding question: {e}", "danger")
         return redirect(url_for('questions.list'))
-    return render_template('add_question.html')
+    return render_template('see_all_questions_updated.html') #removed add_question after testing as no longer use it. 
+#Must not be hitting this part of the route as didn't see until now.
 
 @questions_bp.route('/select', methods=['GET', 'POST'])
 def select():
@@ -44,7 +45,7 @@ def update_selection():
     if data.get('clear'):
         if 'question_id' in session:
             session.pop('question_id')
-        if 'question_content' in session:
+        if 'question_content' in session: #shouldn't be needed any more since question_content no longer being added to session (I think)
             session.pop('question_content')
         return jsonify({'success': True})
     
