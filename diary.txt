@@ -1,4 +1,22 @@
 Notes:
+
+Checking coverage terminal commands:
+coverage run -m pytest
+coverage report -m
+coverage report --skip-covered -m
+coverage html
+
+To run all just pytest
+pytest tests/unit/test_services/test_story_builder_service.py -v
+pytest tests/unit/test_services/test_story_service.py -v
+pytest tests/functional/test_blueprints/test_main_routes.py -v
+pytest tests/functional/test_blueprints/test_question_routes.py -v
+pytest tests/unit/test_models/test_story.py -v
+pytest tests/unit/test_models/test_question.py -v
+pytest tests/unit/test_models/test_prompt_response.py -v
+pytest tests/unit/test_models/template/test_word.py -v
+pytest tests/unit/test_models/template/test_field.py -v
+
 Jobs list:
 Report - contents page (chronological vs categories?)
 Category functionality:

@@ -5,19 +5,18 @@
 {% block content %}
 <div class="container">
     <h1>Generated Stories</h1>
+
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{{ url_for('stories.select') }}" class="btn btn-success" id="proceed-selected-btn">
+            <i class="bi bi-arrow-right-circle"></i> Proceed
+        </a>
+    </div>
     <div class="list-group mb-4">
         {% for story in stories %}
-            <div class="list-group-item">
-                <p>{{ story.content }}</p>
-            </div>
+        <div class="list-group-item">
+            <p>{{ story.content }}</p>
+        </div>
         {% endfor %}
-    </div>
-    
-    <div class="d-flex justify-content-between">
-        <a href="{{ url_for('stories.select') }}" class="btn btn-primary">
-            Proceed with Selected Stories
-        </a>
-        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Home</a>
     </div>
 </div>
 {% endblock %}

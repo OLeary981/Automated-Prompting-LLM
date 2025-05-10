@@ -1,59 +1,54 @@
 from flask import flash, render_template, request, redirect, url_for, session, jsonify
+from sqlalchemy import select
 from ... import db
-from ...services import  story_builder_service,  category_service
+from ...services import  story_builder_service,  category_service, story_service
 from ...models import  Story,  Word, Field, Template
 from . import templates_bp
 import json
+from ...utils.pagination import Pagination
 
 #Notes for self - check for duplication of retrieval of words etc from database. 
 #I think maybe theres a mix/overlap between story_builder_service and routes etc
 
 @templates_bp.route('/list')
 def list():
-    # Current pagination and search code remains the same
     search_text = request.args.get('search_text', '')
     sort_by = request.args.get('sort_by', 'desc')
     page = request.args.get('page', 1, type=int)
     per_page = 10
-    
-    # Build the query
-    query = db.session.query(Template)
-    
-    # Apply search filter if provided
-    if search_text:
-        query = query.filter(Template.content.ilike(f'%{search_text}%'))
-    
-    # Apply sorting
-    if sort_by == 'asc':
-        query = query.order_by(Template.template_id.asc())
-    else:
-        query = query.order_by(Template.template_id.desc())
-    
-    # Apply pagination
-    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-    templates = pagination.items
-    
-    # Get all fields from the Field table
-    fields = db.session.query(Field.field).order_by(Field.field).all()
-    template_fields = [field[0] for field in fields]  # Extract field names from result tuples
-    
-    # Get currently selected template IDs from session
+
+    # stmt = select(Template)
+    # if search_text:
+    #     stmt = stmt.where(Template.content.ilike(f'%{search_text}%'))
+    # if sort_by == 'asc':
+    #     stmt = stmt.order_by(Template.template_id.asc())
+    # else:
+    #     stmt = stmt.order_by(Template.template_id.desc())
+
+    all_templates = story_builder_service.get_templates_filtered(search_text, sort_by)
+    total = len(all_templates)
+    start = (page - 1) * per_page
+    end = start + per_page
+    templates = all_templates[start:end]
+    pagination = Pagination(templates, page, per_page, total)
+
+    template_fields = story_builder_service.get_all_field_names()
     selected_template_ids = session.get('template_ids', [])
-    
-    return render_template('see_all_templates.html', 
-                          templates=templates, 
-                          pagination=pagination, 
-                          sort_by=sort_by,
-                          template_fields=template_fields,
-                          selected_template_ids=selected_template_ids)
+
+    return render_template(
+        'see_all_templates.html',
+        templates=templates,
+        pagination=pagination,
+        sort_by=sort_by,
+        template_fields=template_fields,
+        selected_template_ids=selected_template_ids
+    )
 
 @templates_bp.route('/add', methods=['POST'])
 def add():
     template_content = request.form.get('template_content')
     if template_content:
-        new_template = Template(content=template_content)
-        db.session.add(new_template)
-        db.session.commit()
+        story_builder_service.add_template(template_content)
     return redirect(url_for('templates.list'))
 
 @templates_bp.route('/update_template_selection', methods=['POST'])
@@ -135,9 +130,14 @@ def generate_stories():
                 
                 # Process existing categories
                 selected_categories = request.form.getlist('story_categories')
-                category_ids.extend([int(cat_id) for cat_id in selected_categories if cat_id])
-                
-                # Process new categories
+                for cat_id in selected_categories:
+                    try:
+                        category_ids.append(int(cat_id))
+                    except ValueError:
+                        # Not an int, so it's a new category name, will be handled below
+                        pass
+
+                # Process new categories (names)
                 new_categories = request.form.getlist('new_categories')
                 for new_cat in new_categories:
                     if new_cat.strip():
@@ -181,7 +181,7 @@ def generate_stories():
     template = None
     
     if template_id:
-        template = db.session.query(Template).get(template_id)
+        template = story_builder_service.get_template_by_id(template_id)
         fields, missing_fields = story_builder_service.get_template_fields(template_id)
 
         print("===== DEBUG INFO =====")
@@ -212,7 +212,7 @@ def display_generated_stories():
     session['story_ids'] = generated_story_ids
     
     # When querying, convert back to integers
-    stories = [db.session.query(Story).get(int(story_id)) for story_id in generated_story_ids]    
+    stories = [story_service.get_story_by_id(int(story_id)) for story_id in generated_story_ids]
     return render_template('display_generated_stories.html', stories=stories)
 
 @templates_bp.route('/add_word', methods=['POST'])

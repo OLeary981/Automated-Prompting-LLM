@@ -12,4 +12,4 @@ def add_question(content):
     return new_question.question_id
 
 def get_question_by_id(question_id):
-    return Question.query.get(question_id)
+    return db.session.get(Question, question_id)
