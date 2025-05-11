@@ -95,6 +95,7 @@ class TestResponseService:
 
     def test_get_responses_for_templates(self, session, test_data):
         """Test getting responses for a list of templates."""
+        print("TEMPLATE IDS:", test_data["ids"]["templates"])#investigateing if this is empty to see if that explains gap in coverage.
         template_ids = test_data["ids"]["templates"][:2]
         responses = response_service.get_responses_for_templates(template_ids)
         assert isinstance(responses, list)
@@ -131,72 +132,71 @@ class TestResponseService:
             assert str(resp.prompt.story_id) in story_ids
 
     def test_build_response_query_filters(self, session, test_data):
-
         # Test response_ids filter
         response_ids = test_data["ids"]["responses"][:2]
-        query = response_service.build_response_query(response_ids=response_ids)
-        results = query.all()
+        stmt = response_service.build_response_query(response_ids=response_ids)
+        results = session.execute(stmt).scalars().all()
         for resp in results:
             assert resp.response_id in response_ids
 
         # Test story_ids filter
         story_ids = test_data["ids"]["stories"][:2]
-        query = response_service.build_response_query(story_ids=story_ids)
-        results = query.all()
+        stmt = response_service.build_response_query(story_ids=story_ids)
+        results = session.execute(stmt).scalars().all()
         for resp in results:
             assert resp.prompt.story_id in story_ids
 
         # Test template_ids filter
         template_ids = test_data["ids"]["templates"][:2]
-        query = response_service.build_response_query(template_ids=template_ids)
-        results = query.all()
+        stmt = response_service.build_response_query(template_ids=template_ids)
+        results = session.execute(stmt).scalars().all()
         for resp in results:
             assert resp.prompt.story.template_id in template_ids
-            
+
         # Test provider filter
         provider_name = session.get(Provider, test_data["ids"]["providers"][0]).provider_name
-        query = response_service.build_response_query(provider=provider_name)
-        results = query.all()
+        stmt = response_service.build_response_query(provider=provider_name)
+        results = session.execute(stmt).scalars().all()
         for resp in results:
             assert resp.prompt.model.provider.provider_name == provider_name
 
         # Test model filter
         model_name = session.get(Model, test_data["ids"]["models"][0]).name
-        query = response_service.build_response_query(model=model_name)
-        results = query.all()
+        stmt = response_service.build_response_query(model=model_name)
+        results = session.execute(stmt).scalars().all()
         for resp in results:
             assert resp.prompt.model.name == model_name
 
         # Test flagged_only filter
-        query = response_service.build_response_query(flagged_only=True)
-        results = query.all()
+        stmt = response_service.build_response_query(flagged_only=True)
+        results = session.execute(stmt).scalars().all()
         for resp in results:
             assert resp.flagged_for_review is True
 
         # Test question_id filter
         qid = test_data["ids"]["questions"][0]
-        query = response_service.build_response_query(question_id=qid)
-        results = query.all()
+        stmt = response_service.build_response_query(question_id=qid)
+        results = session.execute(stmt).scalars().all()
         for resp in results:
             assert resp.prompt.question_id == qid
 
         # Test story_id filter
         sid = test_data["ids"]["stories"][0]
-        query = response_service.build_response_query(story_id=sid)
-        results = query.all()
+        stmt = response_service.build_response_query(story_id=sid)
+        results = session.execute(stmt).scalars().all()
         for resp in results:
             assert resp.prompt.story_id == sid
 
         # Test start_date and end_date filters
-        query = response_service.build_response_query(start_date="2020-01-01", end_date="2025-01-01")
-        results = query.all()
+        stmt = response_service.build_response_query(start_date="2020-01-01", end_date="2025-01-01")
+        results = session.execute(stmt).scalars().all()
         for resp in results:
             assert resp.timestamp >= datetime.datetime(2020, 1, 1)
             assert resp.timestamp < datetime.datetime(2025, 1, 2)
 
         # Test sort order (date_asc)
-        query = response_service.build_response_query(sort="date_asc")
-        results = query.all()
+        stmt = response_service.build_response_query(sort="date_asc")
+        results = session.execute(stmt).scalars().all()
         timestamps = [resp.timestamp for resp in results]
         assert timestamps == sorted(timestamps)
 
