@@ -68,11 +68,20 @@ def update_selection():
     """AJAX endpoint to update prompt selection in session"""
     if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({'success': False, 'message': 'Invalid request'}), 400
-    
+
     data = request.get_json()
     current_selection = session.get('prompt_ids', [])
-    
-    # Determine the action type
+
+    # Handle single-prompt selection for the "View All Responses for this Prompt" button
+    if data.get('action') == 'select_single' and data.get('prompt_id'):
+        session['prompt_ids'] = [str(data['prompt_id'])]
+        return jsonify({
+            'success': True,
+            'selected_count': 1,
+            'selected_ids': [str(data['prompt_id'])]
+        })
+
+    # Existing logic for other actions
     if data.get('action') == 'clear_all':
         action = 'clear_all'
     elif data.get('action') == 'select_multiple':
@@ -81,17 +90,15 @@ def update_selection():
         action = 'invert_selection'
     else:
         action = 'toggle'
-        
-    # Update the selection using the service
+
     updated_selection = prompt_service.update_prompt_selection(
         current_selection=current_selection,
         action=action,
         data=data
     )
-    
-    # Store updated selection in session
+
     session['prompt_ids'] = updated_selection
-    
+
     return jsonify({
         'success': True,
         'selected_count': len(updated_selection),
