@@ -134,9 +134,10 @@ def test_update_response_flag_invalid_request(client, test_data, responses_url_m
     assert json_data["success"] is False
 
 def test_view_prompt_responses_redirect(client, test_data, responses_url_map):
-    """Test /responses/view_prompt_responses/<int:prompt_id> redirects to list."""
-    prompt_id = test_data["ids"]["prompts"][0]
-    response = client.get(url_for(responses_url_map["view_prompt_responses"], prompt_id=prompt_id))
+    """Test /responses/view_prompt_responses redirects to list if prompts are selected."""
+    with client.session_transaction() as sess:
+        sess["prompt_ids"] = [str(test_data["ids"]["prompts"][0])]
+    response = client.get(url_for(responses_url_map["view_prompt_responses"]))
     assert response.status_code in (302, 303)
     assert "responses/list" in response.headers["Location"]
 
@@ -156,13 +157,10 @@ def test_view_template_responses_redirect(client, test_data, responses_url_map):
     assert response.status_code in (302, 303)
     assert "responses/list" in response.headers["Location"]
 
-def test_view_prompt_responses_batch_redirect(client, test_data):
-    """Test /responses/view_prompt_responses_batch redirects to list."""
-    with client.session_transaction() as sess:
-        sess["prompt_ids"] = [str(pid) for pid in test_data["ids"]["prompts"]]
-    response = client.get("/responses/view_prompt_responses_batch")
-    assert response.status_code in (302, 303)
-    assert "responses/list" in response.headers["Location"]
+def test_view_prompt_responses_no_selection(client, responses_url_map):
+    """Test /responses/view_prompt_responses with no prompts selected."""
+    response = client.get(url_for(responses_url_map["view_prompt_responses"]), follow_redirects=True)
+    assert b"No prompts selected" in response.data
 
 def test_view_story_responses_no_selection(client):
     """Test /responses/view_story_responses with no stories selected."""
@@ -174,7 +172,34 @@ def test_view_template_responses_no_selection(client):
     response = client.get("/responses/view_template_responses", follow_redirects=True)
     assert b"No templates selected" in response.data
 
-def test_view_prompt_responses_batch_no_selection(client):
-    """Test /responses/view_prompt_responses_batch with no prompts selected."""
-    response = client.get("/responses/view_prompt_responses_batch", follow_redirects=True)
-    assert b"No prompts selected" in response.data
+def test_view_prompt_responses_no_results(client, responses_url_map, mocker):
+    """Test /responses/view_prompt_responses with prompt_ids but no responses found."""
+    with client.session_transaction() as sess:
+        sess["prompt_ids"] = ["9999"]  # Use a prompt ID that will return no responses
+    # Mock the service to return an empty list
+    mocker.patch(
+        "app.services.response_service.get_responses_for_prompt",
+        return_value=[]
+    )
+    response = client.get(url_for(responses_url_map["view_prompt_responses"]), follow_redirects=True)
+    assert b"No responses found for the selected prompts" in response.data
+
+def test_view_story_responses_no_results(client, responses_url_map, mocker):
+    with client.session_transaction() as sess:
+        sess["story_ids"] = ["9999"]
+    mocker.patch(
+        "app.services.response_service.get_responses_for_stories",
+        return_value=[]
+    )
+    response = client.get(url_for(responses_url_map["view_story_responses"]), follow_redirects=True)
+    assert b"No responses found for the selected stories" in response.data
+
+def test_view_template_responses_no_results(client, responses_url_map, mocker):
+    with client.session_transaction() as sess:
+        sess["template_ids"] = ["9999"]
+    mocker.patch(
+        "app.services.response_service.get_responses_for_templates",
+        return_value=[]
+    )
+    response = client.get(url_for(responses_url_map["view_template_responses"]), follow_redirects=True)
+    assert b"No responses found for the selected templates" in response.data
