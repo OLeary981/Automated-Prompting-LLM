@@ -184,8 +184,8 @@ def export():
         filter_kwargs['template_ids'] = session.get('template_ids')
     
     # Build query and get all responses (no pagination needed for export)
-    query = response_service.build_response_query(**filter_kwargs)
-    responses = query.all()
+    stmt = response_service.build_response_query(**filter_kwargs)
+    responses = db.session.execute(stmt).scalars().all()
     
     # Generate CSV file
     csv_data = response_service.generate_csv_export(responses)
