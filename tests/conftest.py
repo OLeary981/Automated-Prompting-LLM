@@ -230,7 +230,7 @@ def test_data(session):
     
     #Flask session referred to as "sess" so renamed this 
     sess_data = {
-                'story_ids': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21'],
+                'story_ids': ['1', '2', '3'],
                 'question_id': '42',
                 'model': 'Test Model',
                 'provider': 'Test Provider',
@@ -275,7 +275,8 @@ def test_data(session):
         },
         "objects": {
             "template1": template1,  # Use with care: still session-bound
-            "story1": story1,
+            "stories": [story1, story2, story3, story4, story5, story6, story7, story8, story9, story10,
+                        story11, story12, story13, story14, story15, story16, story17, story18, story19, story20, story21], 
             "category1": category1,
             "question1": question1,
             # Add more if needed in specific test functions

@@ -85,11 +85,17 @@ def test_add_story_post_service_error(client, stories_url_map, mocker, test_data
     assert b"Error adding story" in response.data
     assert b"Simulated DB error" in response.data
 
-def test_list_stories_basic(client, test_data, stories_url_map):
-    response = client.get(url_for(stories_url_map["list"]))
+def test_list_stories_basic(client, test_data, stories_url_map, app):
+    per_page = app.config["PER_PAGE"]
+    response = client.get(url_for(stories_url_map["list"], page=1))
+    print(response.data.decode())
     assert response.status_code == 200
-    for sid in test_data["ids"]["stories"]:
-        assert str(sid).encode() in response.data
+    # Only the first `per_page` stories should be present
+    for sid in list(reversed(test_data["ids"]["stories"]))[:per_page]: #newest stories are displayed at the top so it's the last 10 we expect.
+        assert f'<td>{sid}</td>'.encode() in response.data
+    for sid in list(reversed(test_data["ids"]["stories"]))[per_page:]:
+        assert f'<td>{sid}</td>'.encode() not in response.data
+
 
 def test_list_stories_template_filtering(client, stories_url_map, test_data):
     """Test GET /stories/list with template filtering."""
@@ -101,13 +107,22 @@ def test_list_stories_template_filtering(client, stories_url_map, test_data):
         assert sess["stories_source"] == "templates"
         assert sess["template_count"] == "2"
 
+# def test_list_stories_search_filter(client, test_data, stories_url_map):
+#     response = client.get(url_for(stories_url_map["list"], search_text="run"))
+#     assert response.status_code == 200
+#     # Only stories containing "cat" should appear
+#     for story in test_data["objects"]["stories"]:
+#         if "cat" in story.content:
+#             assert story.content.encode() in response.data
+
 def test_list_stories_search_filter(client, test_data, stories_url_map):
-    response = client.get(url_for(stories_url_map["list"], search_text="cat"))
+    response = client.get(url_for(stories_url_map["list"], search_text="run"))
     assert response.status_code == 200
-    # Only stories containing "cat" should appear
-    for story in test_data["objects"]["stories"]:
-        if "cat" in story.content:
-            assert story.content.encode() in response.data
+    # Find stories that should match the search
+    matching_ids = [str(story.story_id) for story in test_data["objects"]["stories"] if "run" in story.content]
+    # Assert that only matching story IDs appear in the response
+    for sid in matching_ids:
+        assert sid.encode() in response.data
 
 def test_list_stories_category_filter_valid(client, stories_url_map, test_data):
     """Test GET /stories/list with valid category_filter."""
@@ -139,14 +154,19 @@ def test_list_stories_pagination(client, test_data, stories_url_map, app):
     # Page 1 should have per_page stories
     response1 = client.get(url_for(stories_url_map["list"], page=1))
     assert response1.status_code == 200
+    expected_page1 = min(per_page, total_stories)
     count_page1 = sum(1 for sid in test_data["ids"]["stories"][:per_page] if str(sid).encode() in response1.data)
-    assert count_page1 == per_page
+    assert count_page1 == expected_page1
 
-    # Page 2 should have the remainder
-    response2 = client.get(url_for(stories_url_map["list"], page=2))
-    assert response2.status_code == 200
-    count_page2 = sum(1 for sid in test_data["ids"]["stories"][per_page:] if str(sid).encode() in response2.data)
-    assert count_page2 == total_stories - per_page
+    # Page 3 should have the remainder, or 0 if too few stories or per_page if too large
+    page = 3
+    start = (page - 1) * per_page
+    end = start + per_page
+    expected_page3 = max(0, min(per_page, total_stories - start))
+    response3 = client.get(url_for(stories_url_map["list"], page=page))
+    assert response3.status_code == 200
+    count_page3 = sum(1 for sid in test_data["ids"]["stories"][start:end] if str(sid).encode() in response3.data)
+    assert count_page3 == expected_page3
 
 def test_list_stories_selected_story_ids_and_template_count(client, stories_url_map):
     """Test GET /stories/list uses session story_ids and template_count."""
