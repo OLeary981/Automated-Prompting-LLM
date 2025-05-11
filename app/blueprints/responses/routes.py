@@ -1,7 +1,7 @@
 import csv
 import datetime
 import io
-from flask import Response, flash, jsonify, redirect, request, send_file, session, url_for
+from flask import Response, current_app, flash, jsonify, redirect, request, send_file, session, url_for
 from . import responses_bp
 
 #previously view_resoponses
@@ -65,7 +65,7 @@ def list():
     
     # Get pagination parameters
     page = request.args.get('page', 1, type=int)
-    per_page = 20
+    per_page = request.args.get('per_page', current_app.config["PER_PAGE"], type=int)
     
     # SOURCE-based filtering (primary selection)
     source = request.args.get('source', '')

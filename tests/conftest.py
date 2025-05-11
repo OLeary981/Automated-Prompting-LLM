@@ -163,8 +163,26 @@ def test_data(session):
     story2 = Story(content="This is a dog template with jump.", template_id=template1.template_id)
     story3 = Story(content="The red ball is on the table.", template_id=template2.template_id)
     story4 = Story(content="The blue ball is on the floor.", template_id=template2.template_id)
-    story5 = Story(content="This is a story without a template and with no category associations.")
-    session.add_all([story1, story2, story3, story4, story5])
+    story5 = Story(content="This is a story5 without a template and with no category associations.")
+    story6 = Story(content="This is a story6 without a template and with no category associations.")
+    story7 = Story(content="This is a story7 without a template and with no category associations.")
+    story8 = Story(content="This is a story8 without a template and with no category associations.")
+    story9 = Story(content="This is a story9 without a template and with no category associations.")
+    story10 = Story(content="This is a story10 without a template and with no category associations.")
+    story11 = Story(content="This is a story11 without a template and with no category associations.")
+    story12 = Story(content="This is a story12 without a template and with no category associations.")
+    story13 = Story(content="This is a story13 without a template and with no category associations.")
+    story14 = Story(content="This is a story14 without a template and with no category associations.")
+    story15= Story(content="This is a story15 without a template and with no category associations.")
+    story16 = Story(content="This is a story16 without a template and with no category associations.")
+    story17 = Story(content="This is a story17 without a template and with no category associations.")
+    story18 = Story(content="This is a story18 without a template and with no category associations.")
+    story19 = Story(content="This is a story19 without a template and with no category associations.")
+    story20 = Story(content="This is a story20 without a template and with no category associations.")
+    story21 = Story(content="This is a story21 without a template and with no category associations.")
+    session.add_all([story1, story2, story3, story4, story5, story6, story7, story8, story9, story10,
+                     story11, story12, story13, story14, story15, story16, story17, story18, story19, story20,
+                     story21])
     session.commit()
 
     # Story-Category relationships
@@ -212,7 +230,7 @@ def test_data(session):
     
     #Flask session referred to as "sess" so renamed this 
     sess_data = {
-                'story_ids': ['1', '2', '3'],
+                'story_ids': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21'],
                 'question_id': '42',
                 'model': 'Test Model',
                 'provider': 'Test Provider',
@@ -230,7 +248,8 @@ def test_data(session):
             "models": [model1.model_id, model2.model_id],
             "templates": [template1.template_id, template2.template_id, template3.template_id],
             "categories": [category1.category_id, category2.category_id],
-            "stories": [story1.story_id, story2.story_id, story3.story_id, story4.story_id, story5.story_id],
+            "stories": [story1.story_id, story2.story_id, story3.story_id, story4.story_id, story5.story_id, story6.story_id, story7.story_id, story8.story_id, story9.story_id, story10.story_id,
+                        story11.story_id, story12.story_id, story13.story_id, story14.story_id, story15.story_id, story16.story_id, story17.story_id, story18.story_id, story19.story_id, story20.story_id, story21.story_id],
             "story_categories": [(sc1.story_id, sc1.category_id), (sc2.story_id, sc2.category_id), (sc3.story_id, sc3.category_id)],
             "questions": [question1.question_id, question2.question_id],
             "prompts": [prompt1.prompt_id, prompt2.prompt_id],

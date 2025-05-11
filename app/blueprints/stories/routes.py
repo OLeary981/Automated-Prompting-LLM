@@ -1,4 +1,4 @@
-from flask import flash, render_template, request, redirect, url_for, session, jsonify
+from flask import current_app, flash, render_template, request, redirect, url_for, session, jsonify
 from ... import db
 from ...services import story_service,  category_service
 from ...models import  Story,  StoryCategory
@@ -16,11 +16,9 @@ def add():
         if content:
             try:
                 story_id = story_service.add_story_with_categories(content, category_ids, new_category)
-                flash('Story added successfully!', 'success')
-                print(f"Story ID: {story_id}")
+                flash('Story added successfully!', 'success')                
             except Exception as e:
-                flash(f'Error adding story: {str(e)}', 'danger')
-                print(f"An error occurred: {e}")
+                flash(f'Error adding story: {str(e)}', 'danger')                
         return redirect(url_for('stories.list'))
     
     categories = category_service.get_all_categories()
@@ -48,7 +46,7 @@ def list():
     
     # Get the current page from the request, default to page 1
     page = request.args.get('page', 1, type=int)
-    per_page = 20  # Number of stories per page
+    per_page = request.args.get('per_page', current_app.config["PER_PAGE"], type=int)
 
     # Start building the query
     query = db.session.query(Story).options(

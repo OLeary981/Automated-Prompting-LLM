@@ -1,4 +1,4 @@
-from flask import flash, render_template, request, redirect, url_for, session, jsonify
+from flask import current_app, flash, render_template, request, redirect, url_for, session, jsonify
 from sqlalchemy import select
 from ... import db
 from ...services import  story_builder_service,  category_service, story_service
@@ -15,7 +15,7 @@ def list():
     search_text = request.args.get('search_text', '')
     sort_by = request.args.get('sort_by', 'desc')
     page = request.args.get('page', 1, type=int)
-    per_page = 10
+    per_page = request.args.get('per_page', current_app.config["PER_PAGE"], type=int)
 
     # stmt = select(Template)
     # if search_text:

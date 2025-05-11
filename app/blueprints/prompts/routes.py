@@ -1,5 +1,5 @@
 import datetime
-from flask import flash, render_template, request, redirect, url_for, session, jsonify
+from flask import flash, render_template, request, redirect, url_for, session, jsonify, current_app
 from ...services import prompt_service
 from . import prompts_bp
 
@@ -19,7 +19,7 @@ def list():
     end_date = request.args.get('end_date', '')
     sort = request.args.get('sort', 'date_desc')
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 20, type=int)
+    per_page = request.args.get('per_page', current_app.config["PER_PAGE"], type=int)
 
     # Validate date formats
     for date_param, label in [(start_date, "start date"), (end_date, "end date")]:
