@@ -216,7 +216,7 @@ def test_data(session):
     now = datetime.datetime.utcnow()
     response1 = Response(
         prompt_id=prompt1.prompt_id,
-        response_content="This story is about animals and their actions.",
+        response_content="conf_test_response_content",
         full_response="...", timestamp=now, flagged_for_review=False
     )
     response2 = Response(

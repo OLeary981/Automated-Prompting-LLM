@@ -20,8 +20,9 @@ def test_list_prompts_get(client, test_data, prompts_url_map):
     """Test GET /prompts/list returns the prompts list page."""
     response = client.get(url_for(prompts_url_map["list"]))
     assert response.status_code == 200
-    # Optionally check for prompt content or filter options in response
-
+    # Optionally check for prompt content or filter options in response - could use logic from tets_stories_routes.py for this 
+    # (but pagination won't be a big deal as not enough prompts)
+ 
 def test_list_prompts_post_redirect(client, prompts_url_map):
     """Test POST /prompts/list redirects to GET with args."""
     response = client.post(url_for(prompts_url_map["list"]), data={"provider": "Test Provider"})

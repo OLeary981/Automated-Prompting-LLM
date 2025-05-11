@@ -23,7 +23,7 @@ def test_list_responses_get(client, test_data, responses_url_map):
     """Test GET /responses/list returns the responses list page."""
     response = client.get(url_for(responses_url_map["list"]))
     assert response.status_code == 200
-    assert b"responses" in response.data or b"Response" in response.data
+    assert b"conf_test_response_content" in response.data or b"Response" in response.data
 
 def test_list_responses_post_update_flag(client, test_data, responses_url_map):
     """Test POST /responses/list updates a response's flag and review notes."""
