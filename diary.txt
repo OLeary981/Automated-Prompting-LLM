@@ -7,7 +7,10 @@ coverage report -m
 coverage report --skip-covered -m
 coverage html
 
+coverage run -m pytest tests/unit/test_services/test_response_service.py
+
 To run all just pytest
+pytest tests/unit/test_services/test_response_service.py -v
 pytest tests/unit/test_services/test_story_builder_service.py -v
 pytest tests/unit/test_services/test_story_service.py -v
 pytest tests/functional/test_blueprints/test_main_routes.py -v

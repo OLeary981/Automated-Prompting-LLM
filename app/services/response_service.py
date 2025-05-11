@@ -1,66 +1,47 @@
+from typing import Any, Dict, List, Optional, Tuple, Union
 import csv
 import datetime
 import io
 from sqlalchemy import func
-
 from ..models import Response, Prompt, Model, Provider, Story, Question, Template
 from .. import db
+from app.utils.pagination import Pagination
+
+def _to_int_list(id_list: List[Union[str, int]]) -> List[int]:
+    """Convert a list of IDs to integers."""
+    return [int(x) for x in id_list]
 
 def build_response_query(
-    provider=None, 
-    model=None, 
-    flagged_only=False, 
-    question_id=None, 
-    story_id=None, 
-    template_ids=None,
-    response_ids=None,
-    story_ids=None,
-    start_date=None, 
-    end_date=None, 
-    sort='date_desc'
+    provider: Optional[str] = None,
+    model: Optional[str] = None,
+    flagged_only: bool = False,
+    question_id: Optional[int] = None,
+    story_id: Optional[int] = None,
+    template_ids: Optional[List[Union[str, int]]] = None,
+    response_ids: Optional[List[Union[str, int]]] = None,
+    story_ids: Optional[List[Union[str, int]]] = None,
+    start_date: Optional[Union[str, datetime.datetime]] = None,
+    end_date: Optional[Union[str, datetime.datetime]] = None,
+    sort: str = 'date_desc'
 ):
     """
-    Build a query for responses with all filters applied
+    Build a query for responses with all filters applied.
     """
-    # Base query with all necessary joins
     query = db.session.query(Response).\
         join(Prompt, Response.prompt_id == Prompt.prompt_id).\
         join(Model, Prompt.model_id == Model.model_id).\
         join(Provider, Model.provider_id == Provider.provider_id).\
         join(Story, Prompt.story_id == Story.story_id).\
         join(Question, Prompt.question_id == Question.question_id)
-    
-    # Apply filters based on specific response IDs (highest priority)
+
     if response_ids:
-        # Convert string IDs to integers if necessary
-        if isinstance(response_ids[0], str):
-            int_response_ids = [int(rid) for rid in response_ids]
-        else:
-            int_response_ids = response_ids
-        query = query.filter(Response.response_id.in_(int_response_ids))
-        
-    # Filter by story IDs
+        query = query.filter(Response.response_id.in_(_to_int_list(response_ids)))
     elif story_ids:
-        # Convert string IDs to integers if necessary
-        if isinstance(story_ids[0], str):
-            int_story_ids = [int(sid) for sid in story_ids]
-        else:
-            int_story_ids = story_ids
-        query = query.filter(Prompt.story_id.in_(int_story_ids))
-        
-    # Filter by template IDs - stories that use these templates
+        query = query.filter(Prompt.story_id.in_(_to_int_list(story_ids)))
     elif template_ids:
-        # Convert string IDs to integers if necessary
-        if isinstance(template_ids[0], str):
-            int_template_ids = [int(tid) for tid in template_ids]
-        else:
-            int_template_ids = template_ids
-        # First, get stories that use these templates
-        story_subquery = db.session.query(Story.story_id).filter(Story.template_id.in_(int_template_ids))
-        # Then filter prompts by those stories
+        story_subquery = db.session.query(Story.story_id).filter(Story.template_id.in_(_to_int_list(template_ids)))
         query = query.filter(Prompt.story_id.in_(story_subquery))
-    
-    # Apply standard filters
+
     if provider:
         query = query.filter(Provider.provider_name.ilike(f'%{provider}%'))
     if model:
@@ -71,102 +52,93 @@ def build_response_query(
         query = query.filter(Prompt.question_id == question_id)
     if story_id:
         query = query.filter(Prompt.story_id == story_id)
-    
-    # Apply date range filters
+
     if start_date:
         try:
-            if isinstance(start_date, str):
-                start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-            else:
-                start_date_obj = start_date
+            start_date_obj = datetime.datetime.strptime(start_date, '%Y-%m-%d') if isinstance(start_date, str) else start_date
             query = query.filter(Response.timestamp >= start_date_obj)
         except ValueError:
             pass
-    
+
     if end_date:
         try:
-            if isinstance(end_date, str):
-                # Add one day to include the end date fully
-                end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
-            else:
-                end_date_obj = end_date + datetime.timedelta(days=1)
+            end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1) if isinstance(end_date, str) else end_date + datetime.timedelta(days=1)
             query = query.filter(Response.timestamp < end_date_obj)
         except ValueError:
             pass
-    
-    # Apply sorting
+
     if sort == 'date_asc':
         query = query.order_by(Response.timestamp.asc())
-    else:  # Default to date_desc
+    else:
         query = query.order_by(Response.timestamp.desc())
-    
+
     return query
 
 def get_responses_paginated(
-    page=1, 
-    per_page=20, 
+    page: int = 1,
+    per_page: int = 20,
     **filter_params
-):
+) -> Pagination:
     """
-    Get paginated responses with all filters applied
+    Get paginated responses with all filters applied, using custom Pagination class.
     """
     query = build_response_query(**filter_params)
-    return query.paginate(page=page, per_page=per_page, error_out=False)
+    total = query.count()
+    items = query.offset((page - 1) * per_page).limit(per_page).all()
+    return Pagination(items, page, per_page, total)
 
-def get_filter_options():
+def get_filter_options() -> Dict[str, Any]:
     """
-    Get all available filter options for the responses list
+    Get all available filter options for the responses list.
     """
     providers = db.session.query(Provider).all()
     models = db.session.query(Model).all()
     questions = db.session.query(Question).all()
-    
     return {
         'providers': providers,
         'models': models,
         'questions': questions
     }
 
-def get_source_info(source, source_id=None, source_count=None):
+def get_source_info(source: str, source_id: Optional[int] = None, source_count: Optional[int] = None) -> Optional[str]:
     """
-    Get display information about the source of responses
+    Get display information about the source of responses.
     """
     if not source:
         return None
-    
+
     if source == 'prompt' and source_id:
-        prompt = db.session.query(Prompt).get(int(source_id))
+        prompt = db.session.get(Prompt, int(source_id))
         if prompt:
             return f"Prompt #{source_id} ({prompt.model.name})"
-    
+
     elif source == 'story':
         if source_count and int(source_count) > 1:
             return f"{source_count} Selected Stories"
         elif source_id:
-            story = db.session.query(Story).get(int(source_id))
+            story = db.session.get(Story, int(source_id))
             if story:
                 content_preview = story.content[:50] + '...' if len(story.content) > 50 else story.content
                 return f"Story #{source_id} ({content_preview})"
-    
+
     elif source == 'template':
         if source_count and int(source_count) > 1:
             return f"{source_count} Selected Templates"
         elif source_id:
-            template = db.session.query(Template).get(int(source_id))
+            template = db.session.get(Template, int(source_id))
             if template:
                 content_preview = template.content[:50] + '...' if len(template.content) > 50 else template.content
                 return f"Template #{source_id} ({content_preview})"
-    
+
     return None
 
-def update_response_flag(response_id, flagged):
+def update_response_flag(response_id: int, flagged: bool) -> Tuple[bool, Optional[str]]:
     """
-    Update a response's flag status
+    Update a response's flag status.
     """
-    response = db.session.query(Response).get(response_id)
+    response = db.session.get(Response, response_id)
     if not response:
         return False, "Response not found"
-    
     try:
         response.flagged_for_review = flagged
         db.session.commit()
@@ -175,14 +147,13 @@ def update_response_flag(response_id, flagged):
         db.session.rollback()
         return False, str(e)
 
-def update_response_review(response_id, flagged_for_review, review_notes):
+def update_response_review(response_id: int, flagged_for_review: bool, review_notes: str) -> Tuple[bool, Optional[str]]:
     """
-    Update a response's flag status and review notes
+    Update a response's flag status and review notes.
     """
-    response = db.session.query(Response).get(response_id)
+    response = db.session.get(Response, response_id)
     if not response:
         return False, "Response not found"
-    
     try:
         response.flagged_for_review = flagged_for_review
         response.review_notes = review_notes
