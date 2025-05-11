@@ -145,9 +145,7 @@ def generate_stories():
                             cat_id = category_service.add_category(new_cat.strip())
                             category_ids.append(cat_id)
                         except Exception as e:
-                            print(f"Warning: Failed to add category '{new_cat}': {str(e)}")
-                
-                print(f"Applying categories {category_ids} to generated stories")
+                            flash(f"Could not add category '{new_cat}': {str(e)}", "danger")                             
                 
                 # Pass the field data and category_ids to the generate_stories function
                 generated_story_ids = story_builder_service.generate_stories(template_id, field_data, category_ids)

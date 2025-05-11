@@ -178,8 +178,9 @@ def template_filler(template, template_id, field_data=None, category_ids=None):
 def generate_stories(template_id, field_data, category_ids=None):
     """Generate stories from a template and field data, with optional categories"""
     template = get_template_by_id( template_id)
-    if not template:
-        raise ValueError(f"Template with ID {template_id} not found")
+    #don't need code below as get_template_by_id handles it with 404
+    # if not template:
+    #     raise ValueError(f"Template with ID {template_id} not found")
     
     # Use the existing template_filler function with category support
     return template_filler(template, template_id, field_data, category_ids)
