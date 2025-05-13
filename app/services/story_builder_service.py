@@ -1,10 +1,14 @@
 import itertools
 import re
-from app import db
-from app.models import Template, Story, Word, Field, StoryCategory
-from ..services import story_service
-from sqlalchemy import select
+
 from flask import abort
+from sqlalchemy import select
+
+from app import db
+from app.models import Field, Story, StoryCategory, Template, Word
+
+from ..services import story_service
+
 
 def get_all_templates():
     return db.session.execute(select(Template)).scalars().all()
