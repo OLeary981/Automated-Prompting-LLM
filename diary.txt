@@ -1,4 +1,5 @@
 Notes:
+basic change to diary to check publishing to new testing number 2 branch is ok 
 
 Checking coverage terminal commands:
 coverage run -m pytest
@@ -6,7 +7,15 @@ coverage report -m
 coverage report --skip-covered -m
 coverage html
 
+coverage run -m pytest tests/unit/test_services/test_response_service.py
+
 To run all just pytest
+#-s disables output capturing so we can see print statements.
+
+pytest tests/functional/test_blueprints/test_stories_routes.py 
+pytest tests/functional/test_blueprints/test_templates_routes.py 
+pytest -s tests/unit/test_services/test_response_service.py 
+pytest tests/unit/test_services/test_response_service.py -v
 pytest tests/unit/test_services/test_story_builder_service.py -v
 pytest tests/unit/test_services/test_story_service.py -v
 pytest tests/functional/test_blueprints/test_main_routes.py -v

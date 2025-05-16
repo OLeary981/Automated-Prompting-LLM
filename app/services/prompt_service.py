@@ -31,8 +31,8 @@ def _apply_filters(stmt, provider, model, question_id, story_id, start_date, end
 
 
 def get_filtered_prompts(
-    page=1, 
-    per_page=20, 
+    page = None, 
+    per_page = None, 
     provider=None, 
     model=None, 
     question_id=None, 
@@ -47,6 +47,12 @@ def get_filtered_prompts(
     Returns:
         Pagination: Custom pagination object with items and metadata
     """
+    #couldn't set defaults in function declaration due to wanting to use app config as default. 
+    page = page or 1
+    if per_page is None:
+        from flask import current_app
+        per_page = current_app.config["PER_PAGE"]
+
     stmt = (
         select(Prompt, func.max(Response.timestamp).label('last_used'))
         .join(Model, Prompt.model_id == Model.model_id)

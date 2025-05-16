@@ -1,4 +1,5 @@
 import pytest
+import werkzeug
 from app.services import story_builder_service
 from app.models import Template, Story, Field, Word, StoryCategory, Category
 
@@ -190,9 +191,9 @@ class TestStoryBuilderService:
             assert "table" in story.content
 
     def test_generate_stories_invalid_template(self, app):
-        """Test generate_stories raises ValueError for missing template."""
+        """Test generate_stories raises NotFound for missing template."""
         with app.app_context():
-            with pytest.raises(ValueError):
+            with pytest.raises(werkzeug.exceptions.NotFound):
                 story_builder_service.generate_stories(999999, {"animal": ["cat"]})
 
     

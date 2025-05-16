@@ -1,22 +1,30 @@
 import itertools
 import re
-from app import db
-from app.models import Template, Story, Word, Field, StoryCategory
-from ..services import story_service
+
+from flask import abort
 from sqlalchemy import select
 
+from app import db
+from app.models import Field, Story, StoryCategory, Template, Word
+
+from ..services import story_service
+
+
 def get_all_templates():
-    return db.session.query(Template).all()
+    return db.session.execute(select(Template)).scalars().all()
 
 # def get_all_fields():
 #     return db.session.query(Field.field).order_by(Field.field).all()
 
 def get_all_field_names():
-    """Return a flat list of all field names as strings."""
-    return [f[0] for f in db.session.query(Field.field).order_by(Field.field).all()]
+    stmt = select(Field.field).order_by(Field.field)
+    return [f[0] for f in db.session.execute(stmt).all()]
 
 def get_template_by_id(template_id):
-    return db.session.get(Template, template_id)
+    template = db.session.get(Template, template_id)
+    if template is None:
+        abort(404)
+    return template
 
 def get_templates_filtered(search_text='', sort_by='desc'):
     stmt = select(Template)
@@ -45,7 +53,8 @@ def get_template_fields(template_id):
     fields = {}
     missing_fields = []
     for field_name in field_names:
-        field = db.session.query(Field).filter_by(field=field_name).first()
+        stmt = select(Field).filter_by(field=field_name)
+        field = db.session.execute(stmt).scalars().first()
         if field:
             words = [word.word for word in field.words]
             fields[field_name] = words
@@ -61,7 +70,8 @@ def add_words_to_field(field_name, new_words):
         db.session.commit()
     words = [word.strip() for word in new_words.split(',')]
     for word in words:
-        existing_word = db.session.query(Word).filter_by(word=word).first()
+        stmt = select(Word).filter_by(word=word)
+        existing_word = db.session.execute(stmt).scalars().first()
         if not existing_word:
             new_word = Word(word=word)
             field.words.append(new_word)
@@ -172,8 +182,9 @@ def template_filler(template, template_id, field_data=None, category_ids=None):
 def generate_stories(template_id, field_data, category_ids=None):
     """Generate stories from a template and field data, with optional categories"""
     template = get_template_by_id( template_id)
-    if not template:
-        raise ValueError(f"Template with ID {template_id} not found")
+    #don't need code below as get_template_by_id handles it with 404
+    # if not template:
+    #     raise ValueError(f"Template with ID {template_id} not found")
     
     # Use the existing template_filler function with category support
     return template_filler(template, template_id, field_data, category_ids)
@@ -219,7 +230,8 @@ def update_field_words(field_data):
         
         # Add selected words
         for word in words:
-            existing_word = db.session.query(Word).filter_by(word=word).first()
+            stmt = select(Word).filter_by(word=word)
+            existing_word = db.session.execute(stmt).scalars().first()
             if not existing_word:
                 new_word = Word(word=word)
                 field.words.append(new_word)

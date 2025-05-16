@@ -1,7 +1,7 @@
 import csv
 import datetime
 import io
-from flask import Response, flash, jsonify, redirect, request, send_file, session, url_for
+from flask import Response, current_app, flash, jsonify, redirect, request, send_file, session, url_for
 from . import responses_bp
 
 #previously view_resoponses
@@ -51,6 +51,8 @@ def list():
     
     if 'clear_templates' in request.args and 'template_ids' in session:
         session.pop('template_ids')
+    if 'clear_prompts' in request.args and 'prompt_ids' in session:
+        session.pop('prompt_ids')
 
     # Get all filter parameters
     provider = request.args.get('provider', '')
@@ -63,7 +65,7 @@ def list():
     
     # Get pagination parameters
     page = request.args.get('page', 1, type=int)
-    per_page = 20
+    per_page = request.args.get('per_page', current_app.config["PER_PAGE"], type=int)
     
     # SOURCE-based filtering (primary selection)
     source = request.args.get('source', '')
@@ -184,8 +186,8 @@ def export():
         filter_kwargs['template_ids'] = session.get('template_ids')
     
     # Build query and get all responses (no pagination needed for export)
-    query = response_service.build_response_query(**filter_kwargs)
-    responses = query.all()
+    stmt = response_service.build_response_query(**filter_kwargs)
+    responses = db.session.execute(stmt).scalars().all()
     
     # Generate CSV file
     csv_data = response_service.generate_csv_export(responses)
@@ -198,54 +200,82 @@ def export():
         download_name=f'responses_export_{datetime.datetime.now().strftime("%Y%m%d")}.csv'
     )
 
-@responses_bp.route('/view_prompt_responses/<int:prompt_id>')
-def view_prompt_responses(prompt_id):
-    """View all responses for a specific prompt"""
-    # Get all responses for this prompt
-    responses = response_service.get_responses_for_prompt(prompt_id)
+# @responses_bp.route('/view_prompt_responses/<int:prompt_id>')
+# def view_prompt_responses(prompt_id):
+#     """View all responses for a specific prompt"""
+#     # Get all responses for this prompt
+#     responses = response_service.get_responses_for_prompt(prompt_id)
     
-    if not responses:
-        flash(f'No responses found for prompt ID {prompt_id}', 'info')
-        return redirect(url_for('prompts.list'))
+#     if not responses:
+#         flash(f'No responses found for prompt ID {prompt_id}', 'info')
+#         return redirect(url_for('prompts.list'))
     
-    # Clear any existing response filters first
-    if 'response_ids' in session:
-        session.pop('response_ids')
+#     # Clear any existing response filters first
+#     if 'response_ids' in session:
+#         session.pop('response_ids')
     
-    # Store response IDs as strings in session
-    session['response_ids'] = [str(r.response_id) for r in responses]
+#     # Store response IDs as strings in session
+#     session['response_ids'] = [str(r.response_id) for r in responses]
     
-    # Add a query parameter to indicate source
-    return redirect(url_for('responses.list', source='prompt', prompt_id=prompt_id))
+#     # Add a query parameter to indicate source
+#     return redirect(url_for('responses.list', source='prompt', prompt_id=prompt_id))
 
 
-@responses_bp.route('/view_prompt_responses_batch')
-def view_prompt_responses_batch():
+# @responses_bp.route('/view_prompt_responses_batch')
+# def view_prompt_responses_batch():
+#     """View all responses for the selected prompts in session"""
+#     # Get prompt IDs from session
+#     prompt_ids = session.get('prompt_ids', [])
+    
+#     if not prompt_ids:
+#         flash('No prompts selected. Please select at least one prompt.', 'warning')
+#         return redirect(url_for('prompts.list'))
+    
+#     # Get all responses for these prompts
+#     responses = []
+#     for prompt_id in prompt_ids:
+#         prompt_responses = response_service.get_responses_for_prompt(int(prompt_id))
+#         responses.extend(prompt_responses)
+    
+#     if not responses:
+#         flash('No responses found for the selected prompts', 'info')
+#         return redirect(url_for('prompts.list'))
+    
+#     # Clear any existing response filters first
+#     if 'response_ids' in session:
+#         session.pop('response_ids')
+    
+#     # Store response IDs as strings in session
+#     session['response_ids'] = [str(r.response_id) for r in responses]
+    
+#     # Use a redirect approach with appropriate source info
+#     return redirect(url_for('responses.list', 
+#                            source='prompt_batch', 
+#                            prompt_count=len(prompt_ids)))
+
+@responses_bp.route('/view_prompt_responses')
+def view_prompt_responses():
     """View all responses for the selected prompts in session"""
-    # Get prompt IDs from session
     prompt_ids = session.get('prompt_ids', [])
-    
+    # If only one prompt_id, allow for int or str
+    if isinstance(prompt_ids, (str, int)):
+        prompt_ids = [prompt_ids]
     if not prompt_ids:
         flash('No prompts selected. Please select at least one prompt.', 'warning')
         return redirect(url_for('prompts.list'))
-    
     # Get all responses for these prompts
     responses = []
     for prompt_id in prompt_ids:
         prompt_responses = response_service.get_responses_for_prompt(int(prompt_id))
         responses.extend(prompt_responses)
-    
     if not responses:
         flash('No responses found for the selected prompts', 'info')
         return redirect(url_for('prompts.list'))
-    
     # Clear any existing response filters first
     if 'response_ids' in session:
         session.pop('response_ids')
-    
     # Store response IDs as strings in session
     session['response_ids'] = [str(r.response_id) for r in responses]
-    
     # Use a redirect approach with appropriate source info
     return redirect(url_for('responses.list', 
                            source='prompt_batch', 

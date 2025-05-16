@@ -20,3 +20,5 @@ class Config:
 
     # API key for accessing the LLMs
     GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
+
+    PER_PAGE = 10  # Number of items per page for pagination (NEED TO GO THROUGH ROUTES TO APPLY!)
