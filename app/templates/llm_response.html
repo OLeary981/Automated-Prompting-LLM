@@ -7,44 +7,42 @@
     <h1>LLM Responses</h1>
 
     {% if is_batch_rerun %}
-        <div class="alert alert-info">
-            <strong>Batch Rerun:</strong> Showing results from multiple prompts with different configurations.
-        </div>
+    <div class="alert alert-info">
+        <strong>Batch Rerun:</strong> Showing results from multiple prompts with different configurations.
+    </div>
     {% else %}
-        <!-- Display unified model, provider, and question at the top -->
-        <div class="card mt-4 mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Model and Provider</span>
-                <a href="{{ url_for('llm.select_model') }}" class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-arrow-repeat"></i> Try with Different Model
-                </a>
-            </div>
-            <div class="card-body">
-                <p><strong>Model:</strong> {{ model }}</p>
-                <p><strong>Provider:</strong> {{ provider }}</p>
-                <p><strong>Question:</strong> {{ question }}</p>
-            </div>
+    <div class="card mt-4 mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Model and Provider</span>
+            <a href="{{ url_for('llm.select_model') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-arrow-repeat"></i> Try with Different Model
+            </a>
         </div>
+        <div class="card-body">
+            <p><strong>Model:</strong> {{ model }}</p>
+            <p><strong>Provider:</strong> {{ provider }}</p>
+            <p><strong>Question:</strong> {{ question }}</p>
+        </div>
+    </div>
     {% endif %}
 
-    <!-- Card-Based Responses -->
     <div class="row">
         {% for response_data in response_list %}
         <div class="col-lg-6 mb-4">
             <div class="card h-100 {% if response_data.flagged_for_review %}border border-danger{% endif %}">
-                <div class="card-header d-flex justify-content-between align-items-center {% if response_data.flagged_for_review %}bg-light text-danger{% endif %}">
+                <div
+                    class="card-header d-flex justify-content-between align-items-center {% if response_data.flagged_for_review %}bg-light text-danger{% endif %}">
                     <div>
                         <strong>Story ID:</strong> {{ response_data.story.story_id }}
                     </div>
                     <div>
                         {% if response_data.flagged_for_review %}
-                            <span class="badge badge-danger">Flagged</span>
+                        <span class="badge badge-danger">Flagged</span>
                         {% endif %}
                     </div>
                 </div>
-                
+
                 {% if is_batch_rerun %}
-                <!-- Per-response configuration details (shown only in batch rerun mode) -->
                 <div class="card-text p-2 bg-light border-bottom">
                     <div class="row small">
                         <div class="col-md-4"><strong>Model:</strong> {{ response_data.model }}</div>
@@ -65,7 +63,7 @@
                     </div>
                 </div>
                 {% endif %}
-                
+
                 <div class="card-body">
                     <div class="row mb-3">
                         <div class="col-md-12">
@@ -79,7 +77,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="row mb-3">
                         <div class="col-md-12">
                             <div class="mb-1"><strong>Response:</strong></div>
@@ -92,37 +90,32 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <form method="POST" action="{{ url_for('llm.llm_response') }}">
-                        <input type="hidden" id="flag_hidden_{{ response_data.response_id }}" 
-                               name="flagged_for_review_{{ response_data.response_id }}" 
-                               value="{% if response_data.flagged_for_review %}true{% else %}false{% endif %}">
                         <input type="hidden" name="response_id" value="{{ response_data.response_id }}">
-                        
+
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <div class="form-check mb-2">
-                                    <input type="checkbox" id="flag_{{ response_data.response_id }}" 
-                                           name="flag_{{ response_data.response_id }}" 
-                                           class="form-check-input"
-                                           {% if response_data.flagged_for_review %}checked{% endif %}
-                                           onchange="document.getElementById('flag_hidden_{{ response_data.response_id }}').value = this.checked">
-                                    <label class="form-check-label" for="flag_{{ response_data.response_id }}">
+                                    <input type="checkbox" id="flagged_{{ response_data.response_id }}"
+                                        name="flagged_for_review_{{ response_data.response_id }}"
+                                        class="form-check-input" {% if response_data.flagged_for_review %}checked{%
+                                        endif %} onchange="toggleFlag({{ response_data.response_id }}, this.checked)">
+                                    <label class="form-check-label" for="flagged_{{ response_data.response_id }}">
                                         Flag for review
                                     </label>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-12">
-                                <label for="notes_{{ response_data.response_id }}" class="form-label">Review Notes:</label>
-                                <textarea name="review_notes_{{ response_data.response_id }}" 
-                                          id="notes_{{ response_data.response_id }}"
-                                          class="form-control review-notes-area" 
-                                          rows="2"
-                                          spellcheck="true"
-                                          lang="en-GB">{{ response_data.review_notes or '' }}</textarea>
+                                <label for="notes_{{ response_data.response_id }}" class="form-label">Review
+                                    Notes:</label>
+                                <textarea name="review_notes_{{ response_data.response_id }}"
+                                    id="notes_{{ response_data.response_id }}" class="form-control review-notes-area"
+                                    rows="2" spellcheck="true"
+                                    lang="en-GB">{{ response_data.review_notes or '' }}</textarea>
                                 <button type="submit" class="btn btn-primary mt-2 w-100">Save</button>
                             </div>
                         </div>
@@ -133,4 +126,37 @@
         {% endfor %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Function to quickly toggle flag status
+    function toggleFlag(responseId, flagged) {
+        // Send AJAX request to update flag status
+        fetch('{{ url_for("responses.update_response_flag") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                response_id: responseId,
+                flagged: flagged
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload the page to show updated data
+                    location.reload();
+                } else {
+                    alert('Error updating flag status: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the flag status');
+            });
+    }
+</script>
 {% endblock %}

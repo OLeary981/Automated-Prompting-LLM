@@ -133,7 +133,7 @@ def list():
 
 @responses_bp.route('/update_response_flag', methods=['POST'])
 def update_response_flag():
-    """AJAX endpoint to quickly toggle a response's flag status"""
+    """AJAX endpoint to quickly toggle a response's flag status - without reloading the page"""
     if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({'success': False, 'message': 'Invalid request'}), 400
     

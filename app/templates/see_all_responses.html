@@ -304,7 +304,8 @@
                                             <input type="checkbox" id="flagged_{{ response.response_id }}"
                                                 name="flagged_for_review_{{ response.response_id }}"
                                                 class="form-check-input" {% if response.flagged_for_review %}checked{%
-                                                endif %}>
+                                                endif %}
+                                                onchange="toggleFlag({{ response.response_id }}, this.checked)">
                                             <label class="form-check-label" for="flagged_{{ response.response_id }}">
                                                 Flag for review
                                             </label>
