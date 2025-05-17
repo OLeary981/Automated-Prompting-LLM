@@ -10,9 +10,9 @@
                 <div class="col-md-4">
                     <div class="card mb-4">
                         <div class="card-body">
-                            <h5 class="card-title">{{ model.name }}</h5>
-                            <p class="card-text">Provider: {{ model.provider.provider_name }}</p>
-                            <button type="submit" name="model_id" value="{{ model.model_id }}" class="btn btn-primary">Select</button>
+                            <h5 class="card-title">{{ model["name"] }}</h5>
+                            <p class="card-text">Provider: {{ model ["provider"] }}</p>
+                            <button type="submit" name="model_id" value="{{ model['id'] }}" class="btn btn-primary">Select</button>
                         </div>
                     </div>
                 </div>

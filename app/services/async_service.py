@@ -71,6 +71,8 @@ def get_event_loop():
 
 def create_job(model_id, story_ids, question_id, parameters):
     """Create a new processing job and return its ID"""
+    
+    logger.info("In async_service, create_job (line 75) creating job:")
     job_id = str(uuid.uuid4())
     with processing_jobs_lock:
         processing_jobs[job_id] = {
@@ -88,7 +90,8 @@ def create_job(model_id, story_ids, question_id, parameters):
                 "parameters": parameters
             }
         }
-    
+    logger.info(f"In async_service, job created: {job_id}")
+
     return job_id
 
 
@@ -109,63 +112,67 @@ def can_start_new_job():
 async def process_llm_requests(app, job_id, model_id=None, story_ids=None, question_id=None, parameters=None):
     """Process all LLM requests for the given job"""
     from app.services import llm_service  # Import here to avoid circular imports
-    logger.info(f"Starting process_llm_requests for job: {job_id}")
-    with app.app_context():
-        with processing_jobs_lock:
-            job = processing_jobs[job_id]
-            
-           # Initialize job status
-            job["status"] = "running"
-            job["completed"] = 0
-            job["results"] = {}
-            job["progress"] = 0
-            logger.info(f"Job initialized: {job}")
+
+    logger.info(f"In async_service process_llm_requests (line116) START for job: {job_id}, check on model id: {model_id}")
+    
+    try:
+        with app.app_context():
+            with processing_jobs_lock:
+                job = processing_jobs.get(job_id)
+                if not job:
+                    logger.error(f"Job ID {job_id} not found in processing_jobs")
+                    return
+
+                # Initialize job status
+                job["status"] = "running"
+                job["completed"] = 0
+                job["results"] = {}
+                job["progress"] = 0
+                logger.info(f"Job initialized: {job}")
+
             try:
-                # Check if this is a rerun job
                 is_rerun = job.get("params", {}).get("is_rerun", False)
                 prompts_data = job.get("params", {}).get("prompts_data", [])
-                
+
                 if is_rerun and prompts_data:
-                    # Process each prompt for rerun
+                    logger.info("Detected rerun prompts. Processing...")
                     await process_rerun_prompts(app, job_id, prompts_data)
                 else:
-                    # Original story-by-story processing
+                    logger.info(f"Processing {len(story_ids)} stories...")
                     await process_stories(app, job_id, model_id, story_ids, question_id, parameters)
-                
-                # Extract all response IDs from results and store in a consistent place
+
+                # Extract response IDs
                 response_ids = []
                 for result_data in job["results"].values():
                     if isinstance(result_data, dict) and "response_id" in result_data:
                         response_ids.append(str(result_data["response_id"]))
-
-                # Store response IDs in the job in a standard way
                 job["response_ids"] = response_ids
 
-                # Mark job as completed
                 job["status"] = "completed"
                 job["progress"] = 100
-                
-                # Keep the results in memory for a few minutes
-                await asyncio.sleep(300)  # 5 minutes
-                
+                logger.info(f"Job {job_id} completed with {len(response_ids)} responses.")
+
+                await asyncio.sleep(300)  # 5 mins to keep job alive
+
             except Exception as e:
-                logger.error(f"Error in LLM processing: {str(e)}")
-                import traceback
-                traceback.print_exc()
-                
-                # Update job with error info
+                logger.error(f"Error inside LLM processing block: {str(e)}", exc_info=True)
                 job["status"] = "error"
                 job["error"] = str(e)
-                
-            finally:
-                # Clean up if job still exists
-                if job_id in processing_jobs:
-                    # Don't delete yet, just mark status
-                    job["processing"] = False
 
-                    
+            finally:
+                with processing_jobs_lock:
+                    if job_id in processing_jobs:
+                        job["processing"] = False
+                        logger.info(f" Job {job_id} marked as not processing.")
+
+    except Exception as outer_ex:
+        logger.exception(f"Unhandled exception in process_llm_requests({job_id}): {outer_ex}")
+
+
 async def process_rerun_prompts(app, job_id, prompts_data):
     """Process a batch of prompts for rerunning"""
+
+    logger.info(f"In async_service process_rerun_prompts (line 175) START for job: {job_id}")
     from app.services import (
         llm_service,
         question_service,
@@ -229,13 +236,25 @@ async def process_rerun_prompts(app, job_id, prompts_data):
                 await asyncio.sleep(request_delay)
 
             # Make the actual API call through the service layer
+            # response = await run_llm_call_in_executor(
+            #     provider_name=provider_name,  # these can be overridden inside call_llm
+            #     story=None,
+            #     question=None,
+            #     story_id=prompt_data["story_id"],
+            #     question_id=prompt_data["question_id"],
+            #     model_name=model_name,
+            #     model_id=model_id,
+            #     prompt_id=prompt_id,
+            #     **parameters  #suggested alternative is **{} unpacking syntax
+            # )
+
             response = await run_llm_call_in_executor(
                 app,
                 provider_name,
                 story.content,
                 question.content,
-                story_id,
-                question_id,
+                prompt_data["story_id"],
+                prompt_data["question_id"],
                 model_name,
                 model_id,
                 prompt_id=prompt_id,
@@ -272,77 +291,85 @@ async def process_rerun_prompts(app, job_id, prompts_data):
 async def process_stories(app, job_id, model_id, story_ids, question_id, parameters):
     """Process each story in the job"""
     from app.services import llm_service, question_service, story_service
-    
+    logger.info(f"In async_service process_stories (line 281) START for job: {job_id}")
     if not story_ids:
         logger.warning(f"No story IDs provided for job {job_id}")
         return
-    with processing_jobs_lock:    
+
+    with processing_jobs_lock:
         job = processing_jobs[job_id]
-        
-        for i, story_id in enumerate(story_ids):
+        total_stories = len(story_ids)
+
+    for i, story_id in enumerate(story_ids):
+        with processing_jobs_lock: #move inside the loop as otherwise loop locks up
             if job_id not in processing_jobs:
                 return
-                
-            try:
-                # Get all needed data within app context
-                with app.app_context():
-                    story = story_service.get_story_by_id(story_id)
-                    question = question_service.get_question_by_id(question_id)
-                    provider_name = llm_service.get_provider_name_by_model_id(model_id)
-                    model_name = llm_service.get_model_name_by_id(model_id)
-                    request_delay = llm_service.get_request_delay_by_model_id(model_id)
-                    
-                    if not story or not question:
-                        logger.error(f"Story or question not found for story_id {story_id}")
+            logger.info(f"Processing story {i+1}/{total_stories} — story_id: {story_id}")
+
+        try:
+            # Get all needed data within app context
+            with app.app_context():
+                story = story_service.get_story_by_id(story_id)
+                question = question_service.get_question_by_id(question_id)
+                provider_name = llm_service.get_provider_name_by_model_id(model_id)
+                model_name = llm_service.get_model_name_by_id(model_id)
+                request_delay = llm_service.get_request_delay_by_model_id(model_id)
+
+                if not story or not question:
+                    logger.error(f"Story or question not found for story_id {story_id}")
+                    with processing_jobs_lock:
                         job["results"][story_id] = {'error': 'Story or question not found'}
-                        continue
-                
-                # Rate limiting delay outside of context manager
-                if i > 0 and request_delay > 0:
-                    await asyncio.sleep(request_delay)
-                
-                # Make the actual API call through the service layer
-                response = await run_llm_call_in_executor(
-                    app,
-                    provider_name,
-                    story.content,
-                    question.content,
-                    story_id,
-                    question_id,
-                    model_name,
-                    model_id,
-                    **parameters
-                )
-                    
-                with processing_jobs_lock:    # Update job state
-                    job["completed"] += 1
-                    if response:
-                        if isinstance(response, dict) and "response_id" in response:
-                            job["results"][story_id] = {'response_id': response["response_id"]}
-                        elif hasattr(response, 'response_id'):
-                            job["results"][story_id] = {'response_id': response.response_id}
-                        else:
-                            logger.warning(f"Unexpected response format: {type(response)}")
-                            job["results"][story_id] = {'error': 'Invalid response format'}
+                    continue
+
+            # Rate limiting delay outside of context manager
+            if i > 0 and request_delay > 0:
+                await asyncio.sleep(request_delay)
+
+            # Make the actual API call through the service layer
+            logger.info(f"Calling LLM for story {story_id}")
+            response = await run_llm_call_in_executor(
+                app,
+                provider_name,
+                story.content,
+                question.content,
+                story_id,
+                question_id,
+                model_name,
+                model_id,
+                **parameters
+            )
+
+            with processing_jobs_lock:
+                job["completed"] += 1
+                if response:
+                    logger.info(f"In async_service process_stories (line 328) check on response_id: {response['response_id']}")
+                    if isinstance(response, dict) and "response_id" in response:
+                        job["results"][story_id] = {'response_id': response["response_id"]}
+                    elif hasattr(response, 'response_id'):
+                        job["results"][story_id] = {'response_id': response.response_id}
                     else:
-                        logger.warning(f"Empty response received for story {story_id}")
-                        job["results"][story_id] = {'error': 'Empty response'}
-                        
-            except Exception as e:
-                logger.error(f"Error processing story {story_id}: {str(e)}")
-                import traceback
-                traceback.print_exc()
+                        logger.warning(f"Unexpected response format: {type(response)}")
+                        job["results"][story_id] = {'error': 'Invalid response format'}
+                else:
+                    logger.warning(f"Empty response received for story {story_id}")
+                    job["results"][story_id] = {'error': 'Empty response'}
+
+                # Calculate and update progress percentage
+                progress = int((job["completed"] / job["total"]) * 100)
+                job["progress"] = progress
+                job["last_activity"] = time.time()
+
+        except Exception as e:
+            logger.error(f"Error processing story {story_id}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            with processing_jobs_lock:
                 job["results"][story_id] = {'error': str(e)}
-            
-            # Calculate and update progress percentage
-            progress = int((job["completed"] / job["total"]) * 100)
-            job["progress"] = progress
-            job["last_activity"] = time.time()
 
 async def run_llm_call_in_executor(app, provider_name, story_content, question_content, story_id, question_id, model_name, model_id, **parameters):
     """Run a synchronous LLM call in an executor thread"""
     from app.services import llm_service  # Import here to avoid circular imports
-    
+    logger.info(f"In async_service run_llm_call_in_executor (line 353) check on model id: {model_id}")
     def call_llm_with_context():
         with app.app_context():
             return llm_service.call_llm(

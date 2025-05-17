@@ -1,14 +1,26 @@
-from flask import flash, render_template, request, redirect, url_for, session, jsonify, Response as FlaskResponse, current_app
-from ...services import  question_service, llm_service, async_service
-from . import llm_bp
-from ...models import Response, Prompt, Model, Question
+import asyncio
+import json
 import logging
 import time
-from ... import db
-import json
-import asyncio
 import uuid
 from threading import Thread
+
+from flask import Response as FlaskResponse
+from flask import (
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+
+from ... import db
+from ...models import Model, Prompt, Question, Response
+from ...services import async_service, llm_service, question_service
+from . import llm_bp
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +38,25 @@ def select_model():
         flash('Please select a question to ask about your stories.', 'info')
         return redirect(url_for('questions.list'))
 
+    # --- Preserve previous parameters if present ---
+    previous_parameters = session.get('parameters')
+
+    # Clear job/session data except parameters
+    for key in ['job_id', 'model_id', 'model', 'provider', 'response_ids']:
+        session.pop(key, None)
+    if previous_parameters:
+
+        session['parameters'] = previous_parameters
+        flash("Your previous parameter settings have been loaded. You can adjust them below.", "info")
+
     if request.method == 'POST':
         model_id = request.form.get('model_id')
         model = llm_service.get_model_by_id(model_id)
         if model:
             logger.debug("Model found, setting model and provider in session")
             session['model_id'] = model_id
-            session['model'] = model.name
-            session['provider'] = model.provider.provider_name
+            session['model'] = model['name']
+            session['provider'] = model['provider'] 
             logger.debug(session)
         return redirect(url_for('llm.select_parameters'))  # Updated to use llm blueprint
     else:
@@ -56,10 +79,14 @@ def select_parameters():
     # GET request - show parameter form
     model_id = session.get('model_id')
     saved_parameters = session.get('parameters', {})
-    
+    # Log parameter details for debugging
+    for name, value in saved_parameters.items():
+        logger.info(f"SAVED PARAM DEBUG: {name} = {value} (type: {type(value)})")
     # Use service to handle parameter logic
     parameters = llm_service.get_model_parameters(model_id, saved_parameters)
-    
+    # Log parameter details for debugging
+    for name, details in parameters.items():
+        logger.info(f"PARAM DEBUG: {name} | type: {details.get('type')} | default: {details.get('default')} | min: {details.get('min_value')} | max: {details.get('max_value')}")
     return render_template('select_parameters.html', parameters=parameters)
 
 # Routes for the progress tracking system
@@ -67,13 +94,13 @@ def select_parameters():
 def loading():
     """Show loading screen while waiting for LLM processing to complete"""
     job_id = session.get('job_id')
-    
+    logger.info(f"In the laoding route, with job: {job_id}")
     # If no job ID in session (or it's invalid), generate a new one
     if not job_id or job_id not in async_service.processing_jobs:
         # Extract necessary session data
-        model_id = session.get('model_id')
-        story_ids = session.get('story_ids', [])
-        question_id = session.get('question_id')
+        story_ids = [int(sid) for sid in session.get("story_ids", [])]
+        question_id = int(session.get("question_id"))
+        model_id = int(session.get("model_id"))
         parameters = session.get('parameters', {})
         
         # Use the service to create a new job
@@ -97,7 +124,7 @@ def loading():
 
 @llm_bp.route('/start_processing/<job_id>')
 def start_processing(job_id):
-    logger.info(f"Starting processing for job: {job_id}")
+    logger.info(f"In the start processing route, Starting processing for job: {job_id}")
     if job_id not in async_service.processing_jobs:
         return jsonify({"status": "error", "message": "Invalid job ID"}), 404
     
@@ -153,6 +180,7 @@ def start_processing(job_id):
 @llm_bp.route('/progress_stream/<job_id>')
 def progress_stream(job_id):
     print(f"SSE connection requested for job: {job_id}")
+    logger.info(f"In the progress_stream route for : {job_id}")
     if job_id not in async_service.processing_jobs:
         print(f"Job ID not found: {job_id}")
         return jsonify({"status": "error", "message": "Invalid job ID"}), 404
@@ -270,7 +298,8 @@ def cancel_processing(job_id):
 @llm_bp.route('/rerun_prompts', methods=['POST'])
 def rerun_prompts():
     """Endpoint to rerun selected prompts"""
-    # Get selected prompt IDs from session
+    
+    logger.info("In the rerun_prompts route")
     print("==== RERUN PROMPTS CALLED ====")
     
     # Get selected prompt IDs from session
