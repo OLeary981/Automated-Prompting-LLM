@@ -20,7 +20,7 @@ from flask import Response as FlaskResponse
 
 from ... import db
 from ...models import Model, Prompt, Provider, Question, Response, Story, Template
-from ...services import response_service, async_service
+from ...services import async_service, response_service
 from . import responses_bp
 
 
@@ -67,7 +67,7 @@ def list():
     # Get all filter parameters
     provider = request.args.get('provider', '')
     model = request.args.get('model', '')
-    flagged_only = 'flagged_only' in request.args
+    flagged_only = bool(request.args.get('flagged_only'))
     question_id = request.args.get('question_id', '')
     start_date = request.args.get('start_date', '')
     end_date = request.args.get('end_date', '')
