@@ -8,27 +8,42 @@ import os
 # Initialize the database
 db = SQLAlchemy()
 
-
-
 def configure_logging(app):
-    """Set up logging for the application"""
     log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
     os.makedirs(log_dir, exist_ok=True)
     log_file = os.path.join(log_dir, 'app.log')
-    
-    # Create a file handler
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setLevel(logging.DEBUG)
-    
-    # Create a formatter
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    file_handler.setFormatter(formatter)
-    
-    # Add the handler to the root logger
-    logging.getLogger().addHandler(file_handler)
-    logging.getLogger().setLevel(logging.DEBUG)
-    
+
+    # Prevent duplicate handlers
+    root_logger = logging.getLogger()
+    if not any(isinstance(h, logging.FileHandler) and getattr(h, 'baseFilename', None) == log_file for h in root_logger.handlers):
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(formatter)
+        root_logger.addHandler(file_handler)
+    root_logger.setLevel(logging.DEBUG)
     app.logger.info(f"Logging to {log_file}")
+
+
+# def configure_logging(app):
+#     """Set up logging for the application"""
+#     log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+#     os.makedirs(log_dir, exist_ok=True)
+#     log_file = os.path.join(log_dir, 'app.log')
+    
+#     # Create a file handler
+#     file_handler = logging.FileHandler(log_file)
+#     file_handler.setLevel(logging.DEBUG)
+    
+#     # Create a formatter
+#     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+#     file_handler.setFormatter(formatter)
+    
+#     # Add the handler to the root logger
+#     logging.getLogger().addHandler(file_handler)
+#     logging.getLogger().setLevel(logging.DEBUG)
+    
+#     app.logger.info(f"Logging to {log_file}")
 
 def create_app(config=None): 
     # Create the Flask app
@@ -54,6 +69,7 @@ def create_app(config=None):
     # Initialize the async service ONLY ONCE, outside app context
     from .services import async_service
     async_service.init_async_service(app)
+    app.async_loop = async_service.get_event_loop() #coordinates async loops avoids duplications. can now use app.async_loop throughout the app
 
     # Register template filters
     @app.template_filter('fromjson')
@@ -69,7 +85,7 @@ def create_app(config=None):
     @app.teardown_appcontext
     def cleanup_on_shutdown(exception=None):
         """Just log shutdown, don't restart services"""
-        app.logger.info("App context shutting down")
+        app.logger.debug("App context shutting down") #downgrading to debug as it was spamming
 
     @app.errorhandler(404)
     def not_found_error(error):
