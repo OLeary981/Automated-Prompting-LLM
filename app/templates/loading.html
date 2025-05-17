@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('cancel-button').style.display = 'none';
             // Redirect to results page after a short delay
             setTimeout(() => {
-                window.location.href = '{{ url_for('llm.llm_response') }}';
+                window.location.href = '{{ url_for('responses.responses_for_run') }}';
             }, 1500);
         });
         
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('cancel-button').style.display = 'none';
                 // Redirect to results page after a short delay
                 setTimeout(() => {
-                    window.location.href = '{{ url_for('llm.llm_response') }}';
+                    window.location.href = '{{ url_for('responses.responses_for_run') }}';
                 }, 1500);
                 break;
             

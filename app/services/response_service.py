@@ -11,6 +11,74 @@ def _to_int_list(id_list: List[Union[str, int]]) -> List[int]:
     """Convert a list of IDs to integers."""
     return [int(x) for x in id_list]
 
+def update_response_flag_and_notes(response_id, flagged_for_review, review_notes):
+    """Update the flagged_for_review and review_notes fields for a single response."""
+    
+    try:
+        response = db.session.query(Response).get(response_id)
+        if response:
+            response.flagged_for_review = flagged_for_review
+            response.review_notes = review_notes
+            db.session.commit()
+            return True, f'Response {response_id} updated successfully!'
+        else:
+            return False, f'Error: Response {response_id} not found.'
+    except Exception as e:
+        db.session.rollback()
+        return False, f'Error updating response: {str(e)}'
+
+def get_response_ids_for_run(session, async_service):
+    """Get response IDs for the current run from async_service or session."""
+    response_ids = []
+    job_id = session.get('job_id')
+    if job_id and job_id in async_service.processing_jobs:
+        job = async_service.processing_jobs[job_id]
+        for result_data in job["results"].values():
+            if isinstance(result_data, dict) and "response_id" in result_data:
+                response_ids.append(str(result_data["response_id"]))
+        job["response_ids"] = response_ids
+        if response_ids:
+            session['response_ids'] = response_ids
+    if not response_ids:
+        response_ids = session.get('response_ids', [])
+    return response_ids
+
+def build_response_list(response_ids):
+    """Build a list of response data dicts for the template and detect batch rerun."""
+    
+    response_list = []
+    unique_models = set()
+    unique_providers = set()
+    unique_questions = set()
+    for response_id in response_ids:
+        response = db.session.query(Response).get(response_id)
+        if response:
+            prompt = response.prompt
+            story = prompt.story
+            question = prompt.question
+            model = prompt.model
+            unique_models.add(model.name)
+            unique_providers.add(model.provider.provider_name)
+            unique_questions.add(question.content)
+            response_data = {
+                'response_id': response.response_id,
+                'response_content': response.response_content,
+                'flagged_for_review': response.flagged_for_review,
+                'review_notes': response.review_notes,
+                'story': story,
+                'question': question.content,
+                'model': model.name,
+                'provider': model.provider.provider_name,
+                'temperature': prompt.temperature,
+                'max_tokens': prompt.max_tokens,
+                'top_p': prompt.top_p
+            }
+            response_list.append(response_data)
+    is_batch_rerun = (len(unique_models) > 1 or len(unique_providers) > 1 or len(unique_questions) > 1)
+    return response_list, is_batch_rerun
+
+
+
 def build_response_query(
     provider: Optional[str] = None,
     model: Optional[str] = None,

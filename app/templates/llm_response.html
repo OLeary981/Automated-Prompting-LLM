@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container">
-    <h1>LLM Responses</h1>
+    <h1>LLM Responses for the most recent run</h1>
 
     {% if is_batch_rerun %}
     <div class="alert alert-info">
@@ -91,7 +91,7 @@
                         </div>
                     </div>
 
-                    <form method="POST" action="{{ url_for('llm.llm_response') }}">
+                    <form method="POST" action="{{ url_for('responses.responses_for_run') }}">
                         <input type="hidden" name="response_id" value="{{ response_data.response_id }}">
 
                         <div class="row mb-3">

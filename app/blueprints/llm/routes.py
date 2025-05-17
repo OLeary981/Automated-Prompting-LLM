@@ -402,100 +402,101 @@ def rerun_prompts():
     except Exception as e:
         flash(f'Error setting up prompt rerun: {str(e)}', 'danger')
         return redirect(url_for('prompts.list'))
-    
-@llm_bp.route('/llm_response', methods=['GET', 'POST'])
-def llm_response():
-    if request.method == 'POST':
-        # The POST handling is already fine - keep it as is
-        response_id = request.form.get('response_id')
-        if response_id:
-            flagged_for_review = f'flagged_for_review_{response_id}' in request.form
-            review_notes = request.form.get(f'review_notes_{response_id}', '')
+
+# #working on a refactored version of this for responses_routes.    
+# @llm_bp.route('/llm_response', methods=['GET', 'POST'])
+# def llm_response():
+#     if request.method == 'POST':
+#         # The POST handling is already fine - keep it as is
+#         response_id = request.form.get('response_id')
+#         if response_id:
+#             flagged_for_review = f'flagged_for_review_{response_id}' in request.form
+#             review_notes = request.form.get(f'review_notes_{response_id}', '')
             
-            try:
-                response = db.session.query(Response).get(response_id)
-                if response:
-                    response.flagged_for_review = flagged_for_review
-                    response.review_notes = review_notes
-                    db.session.commit()
-                    flash(f'Response {response_id} updated successfully!', 'success')
-                else:
-                    flash(f'Error: Response {response_id} not found.', 'danger')
-            except Exception as e:
-                db.session.rollback()
-                flash(f'Error updating response: {str(e)}', 'danger')
+#             try:
+#                 response = db.session.query(Response).get(response_id)
+#                 if response:
+#                     response.flagged_for_review = flagged_for_review
+#                     response.review_notes = review_notes
+#                     db.session.commit()
+#                     flash(f'Response {response_id} updated successfully!', 'success')
+#                 else:
+#                     flash(f'Error: Response {response_id} not found.', 'danger')
+#             except Exception as e:
+#                 db.session.rollback()
+#                 flash(f'Error updating response: {str(e)}', 'danger')
 
-        return redirect(url_for('llm.llm_response'))
+#         return redirect(url_for('llm.llm_response'))
 
-    # Get response_ids as before
-    response_ids = []
-    job_id = session.get('job_id')
+#     # Get response_ids as before
+#     response_ids = []
+#     job_id = session.get('job_id')
     
-    if job_id and job_id in async_service.processing_jobs:
-        job = async_service.processing_jobs[job_id]
-        for result_data in job["results"].values():
-            if isinstance(result_data, dict) and "response_id" in result_data:
-                response_ids.append(str(result_data["response_id"]))
+#     if job_id and job_id in async_service.processing_jobs:
+#         job = async_service.processing_jobs[job_id]
+#         for result_data in job["results"].values():
+#             if isinstance(result_data, dict) and "response_id" in result_data:
+#                 response_ids.append(str(result_data["response_id"]))
         
-        job["response_ids"] = response_ids
-        if response_ids:
-            session['response_ids'] = response_ids
+#         job["response_ids"] = response_ids
+#         if response_ids:
+#             session['response_ids'] = response_ids
     
-    if not response_ids:
-        response_ids = session.get('response_ids', [])
+#     if not response_ids:
+#         response_ids = session.get('response_ids', [])
     
-    # Detect if we're dealing with a batch rerun
-    is_batch_rerun = False
+#     # Detect if we're dealing with a batch rerun
+#     is_batch_rerun = False
     
-    # Fetch responses with their related data
-    response_list = []
-    unique_models = set()
-    unique_providers = set()
-    unique_questions = set()
+#     # Fetch responses with their related data
+#     response_list = []
+#     unique_models = set()
+#     unique_providers = set()
+#     unique_questions = set()
     
-    for response_id in response_ids:
-        response = db.session.query(Response).get(response_id)
-        if response:
-            # Get the prompt associated with this response
-            prompt = response.prompt
-            story = prompt.story
-            question = prompt.question
-            model = prompt.model
+#     for response_id in response_ids:
+#         response = db.session.query(Response).get(response_id)
+#         if response:
+#             # Get the prompt associated with this response
+#             prompt = response.prompt
+#             story = prompt.story
+#             question = prompt.question
+#             model = prompt.model
             
-            # Track unique values to determine if we have a batch with different configs
-            unique_models.add(model.name)
-            unique_providers.add(model.provider.provider_name)
-            unique_questions.add(question.content)
+#             # Track unique values to determine if we have a batch with different configs
+#             unique_models.add(model.name)
+#             unique_providers.add(model.provider.provider_name)
+#             unique_questions.add(question.content)
             
-            # Create a response data object with all needed information
-            response_data = {
-                'response_id': response.response_id,
-                'response_content': response.response_content,
-                'flagged_for_review': response.flagged_for_review,
-                'review_notes': response.review_notes,
-                'story': story,
-                'question': question.content,
-                'model': model.name,
-                'provider': model.provider.provider_name,
-                'temperature': prompt.temperature,
-                'max_tokens': prompt.max_tokens,
-                'top_p': prompt.top_p
-            }
+#             # Create a response data object with all needed information
+#             response_data = {
+#                 'response_id': response.response_id,
+#                 'response_content': response.response_content,
+#                 'flagged_for_review': response.flagged_for_review,
+#                 'review_notes': response.review_notes,
+#                 'story': story,
+#                 'question': question.content,
+#                 'model': model.name,
+#                 'provider': model.provider.provider_name,
+#                 'temperature': prompt.temperature,
+#                 'max_tokens': prompt.max_tokens,
+#                 'top_p': prompt.top_p
+#             }
             
-            response_list.append(response_data)
+#             response_list.append(response_data)
     
-    # Set batch_rerun flag if we have multiple different models, providers, or questions
-    is_batch_rerun = (len(unique_models) > 1 or len(unique_providers) > 1 or len(unique_questions) > 1)
+#     # Set batch_rerun flag if we have multiple different models, providers, or questions
+#     is_batch_rerun = (len(unique_models) > 1 or len(unique_providers) > 1 or len(unique_questions) > 1)
     
-    # Get common values for the case where we're not in batch mode
-    model = session.get('model') if not is_batch_rerun else None
-    provider = session.get('provider') if not is_batch_rerun else None
-    question_id = session.get('question_id')
-    question = db.session.query(Question).get(question_id).content if question_id and not is_batch_rerun else None
+#     # Get common values for the case where we're not in batch mode
+#     model = session.get('model') if not is_batch_rerun else None
+#     provider = session.get('provider') if not is_batch_rerun else None
+#     question_id = session.get('question_id')
+#     question = db.session.query(Question).get(question_id).content if question_id and not is_batch_rerun else None
 
-    return render_template('llm_response.html', 
-                         response_list=response_list,
-                         is_batch_rerun=is_batch_rerun,
-                         model=model, 
-                         provider=provider, 
-                         question=question)
+#     return render_template('llm_response.html', 
+#                          response_list=response_list,
+#                          is_batch_rerun=is_batch_rerun,
+#                          model=model, 
+#                          provider=provider, 
+#                          question=question)
