@@ -120,6 +120,183 @@ def loading():
 
 
 
+# @llm_bp.route('/rerun_prompts', methods=['POST'])
+# def rerun_prompts():
+#     """Endpoint to rerun selected prompts"""
+    
+#     logger.info("In the rerun_prompts route")
+#     print("==== RERUN PROMPTS CALLED ====")
+    
+#     # Get selected prompt IDs from session
+#     prompt_ids = session.get('prompt_ids', [])
+#     print(f"Prompt IDs in session: {prompt_ids}")
+    
+#     if not prompt_ids:
+#         print("No prompts selected to rerun.")
+#         flash('No prompts selected to rerun.', 'warning')
+#         return redirect(url_for('prompts.list'))
+    
+#     # Create a new job for rerunning these prompts
+#     # job_id = str(uuid.uuid4())
+#     # print(f"Created rerun job ID: {job_id}")
+    
+#     # try:
+#     #     int_prompt_ids = [int(pid) for pid in prompt_ids]
+        
+#     #     # Clear any existing response IDs to avoid showing old responses
+#     #     if 'response_ids' in session:
+#     #         session.pop('response_ids')
+            
+#     #     # Collect all the data needed for rerunning
+#     #     prompts_data = []
+        
+#     #     # Process only the first prompt to get model/question data (all prompts must share this)
+#     #     first_prompt = db.session.query(Prompt).get(int_prompt_ids[0])
+#     #     if not first_prompt:
+#     #         flash('Selected prompt not found.', 'warning')
+#     #         return redirect(url_for('prompts.list'))
+
+#     #     # Get model and provider info for display context
+#     #     model = db.session.query(Model).get(first_prompt.model_id)
+#     #     if model:
+#     #         session['model_id'] = model.model_id
+#     #         session['model'] = model.name
+#     #         session['provider'] = model.provider.provider_name
+        
+#     #     # Set question ID for context
+#     #     session['question_id'] = first_prompt.question_id
+        
+#     #     # Collect all story IDs
+#     #     story_ids = []
+        
+#     #     for prompt_id in int_prompt_ids:
+#     #         prompt = db.session.query(Prompt).get(prompt_id)
+#     #         if prompt:
+#     #             if prompt.story_id not in story_ids:
+#     #                 story_ids.append(str(prompt.story_id))
+                
+#     #             prompts_data.append({
+#     #                 'prompt_id': prompt.prompt_id,
+#     #                 'model_id': prompt.model_id,
+#     #                 'story_id': prompt.story_id,
+#     #                 'question_id': prompt.question_id,
+#     #                 'parameters': {
+#     #                     'temperature': prompt.temperature,
+#     #                     'max_tokens': prompt.max_tokens,
+#     #                     'top_p': prompt.top_p
+#     #                 }
+#     #             })
+        
+#     #     # Set story IDs for context
+#     #     session['story_ids'] = story_ids
+        
+#     #     # Store job info in a way that matches standard jobs
+#     #     async_service.processing_jobs[job_id] = {
+#     #         "status": "initializing",
+#     #         "progress": 0,
+#     #         "total": len(prompts_data),
+#     #         "completed": 0,
+#     #         "results": {},
+#     #         "response_ids": [],
+#     #         "processing": True,
+#     #         "last_activity": time.time(),
+#     #         "params": {
+#     #             # Match standard job structure but add rerun info
+#     #             "model_id": first_prompt.model_id,
+#     #             "story_ids": story_ids,
+#     #             "question_id": first_prompt.question_id,
+#     #             "parameters": {
+#     #                 'temperature': first_prompt.temperature,
+#     #                 'max_tokens': first_prompt.max_tokens,
+#     #                 'top_p': first_prompt.top_p
+#     #             },
+#     #             # Additional rerun-specific info
+#     #             "prompts_data": prompts_data,
+#     #             "is_rerun": True
+#     #         }
+#     #     }
+#     job_id = async_service.create_job(
+#         model_id=first_prompt.model_id,
+#         story_ids=story_ids,
+#         question_id=first_prompt.question_id,
+#         parameters={
+#             'temperature': first_prompt.temperature,
+#             'max_tokens': first_prompt.max_tokens,
+#             'top_p': first_prompt.top_p
+#         },
+#         prompts_data=prompts_data
+#         )
+#         # Store job ID in session
+#         session['job_id'] = job_id
+        
+#         # Clean up old jobs
+#         async_service.cleanup_old_jobs()
+        
+#         return redirect(url_for('llm.loading'))
+        
+#     except Exception as e:
+#         flash(f'Error setting up prompt rerun: {str(e)}', 'danger')
+#         return redirect(url_for('prompts.list'))
+
+
+@llm_bp.route('/rerun_prompts', methods=['POST'])
+def rerun_prompts():
+    logger.info("In the rerun_prompts route")
+    prompt_ids = session.get('prompt_ids', [])
+    if not prompt_ids:
+        flash('No prompts selected to rerun.', 'warning')
+        return redirect(url_for('prompts.list'))
+
+    try:
+        int_prompt_ids = [int(pid) for pid in prompt_ids]
+        prompts = [db.session.query(Prompt).get(pid) for pid in int_prompt_ids if db.session.query(Prompt).get(pid)]
+        if not prompts:
+            flash('Selected prompts not found.', 'warning')
+            return redirect(url_for('prompts.list'))
+
+        # Use the first prompt for shared fields
+        first_prompt = prompts[0]
+        story_ids = []
+        prompts_data = []
+        for prompt in prompts:
+            if prompt.story_id not in story_ids:
+                story_ids.append(prompt.story_id)
+            prompts_data.append({
+                'prompt_id': prompt.prompt_id,
+                'model_id': prompt.model_id,
+                'story_id': prompt.story_id,
+                'question_id': prompt.question_id,
+                'parameters': {
+                    'temperature': prompt.temperature,
+                    'max_tokens': prompt.max_tokens,
+                    'top_p': prompt.top_p
+                }
+            })
+
+        # Optionally update session for context
+        session['model_id'] = first_prompt.model_id
+        session['question_id'] = first_prompt.question_id
+        session['story_ids'] = [str(sid) for sid in story_ids]
+
+        # Create the job using the shared fields from the first prompt
+        job_id = async_service.create_job(
+            model_id=first_prompt.model_id,
+            story_ids=story_ids,
+            question_id=first_prompt.question_id,
+            parameters={
+                'temperature': first_prompt.temperature,
+                'max_tokens': first_prompt.max_tokens,
+                'top_p': first_prompt.top_p
+            },
+            prompts_data=prompts_data
+        )
+        session['job_id'] = job_id
+        async_service.cleanup_old_jobs()
+        return redirect(url_for('llm.loading'))
+
+    except Exception as e:
+        flash(f'Error setting up prompt rerun: {str(e)}', 'danger')
+        return redirect(url_for('prompts.list'))
 
 
 @llm_bp.route('/start_processing/<job_id>')
@@ -294,114 +471,6 @@ def cancel_processing(job_id):
     return jsonify({"status": "error", "message": "Job not found"}), 404
 
 
-
-@llm_bp.route('/rerun_prompts', methods=['POST'])
-def rerun_prompts():
-    """Endpoint to rerun selected prompts"""
-    
-    logger.info("In the rerun_prompts route")
-    print("==== RERUN PROMPTS CALLED ====")
-    
-    # Get selected prompt IDs from session
-    prompt_ids = session.get('prompt_ids', [])
-    print(f"Prompt IDs in session: {prompt_ids}")
-    
-    if not prompt_ids:
-        print("No prompts selected to rerun.")
-        flash('No prompts selected to rerun.', 'warning')
-        return redirect(url_for('prompts.list'))
-    
-    # Create a new job for rerunning these prompts
-    job_id = str(uuid.uuid4())
-    print(f"Created rerun job ID: {job_id}")
-    
-    try:
-        int_prompt_ids = [int(pid) for pid in prompt_ids]
-        
-        # Clear any existing response IDs to avoid showing old responses
-        if 'response_ids' in session:
-            session.pop('response_ids')
-            
-        # Collect all the data needed for rerunning
-        prompts_data = []
-        
-        # Process only the first prompt to get model/question data (all prompts must share this)
-        first_prompt = db.session.query(Prompt).get(int_prompt_ids[0])
-        if not first_prompt:
-            flash('Selected prompt not found.', 'warning')
-            return redirect(url_for('prompts.list'))
-
-        # Get model and provider info for display context
-        model = db.session.query(Model).get(first_prompt.model_id)
-        if model:
-            session['model_id'] = model.model_id
-            session['model'] = model.name
-            session['provider'] = model.provider.provider_name
-        
-        # Set question ID for context
-        session['question_id'] = first_prompt.question_id
-        
-        # Collect all story IDs
-        story_ids = []
-        
-        for prompt_id in int_prompt_ids:
-            prompt = db.session.query(Prompt).get(prompt_id)
-            if prompt:
-                if prompt.story_id not in story_ids:
-                    story_ids.append(str(prompt.story_id))
-                
-                prompts_data.append({
-                    'prompt_id': prompt.prompt_id,
-                    'model_id': prompt.model_id,
-                    'story_id': prompt.story_id,
-                    'question_id': prompt.question_id,
-                    'parameters': {
-                        'temperature': prompt.temperature,
-                        'max_tokens': prompt.max_tokens,
-                        'top_p': prompt.top_p
-                    }
-                })
-        
-        # Set story IDs for context
-        session['story_ids'] = story_ids
-        
-        # Store job info in a way that matches standard jobs
-        async_service.processing_jobs[job_id] = {
-            "status": "initializing",
-            "progress": 0,
-            "total": len(prompts_data),
-            "completed": 0,
-            "results": {},
-            "response_ids": [],
-            "processing": True,
-            "last_activity": time.time(),
-            "params": {
-                # Match standard job structure but add rerun info
-                "model_id": first_prompt.model_id,
-                "story_ids": story_ids,
-                "question_id": first_prompt.question_id,
-                "parameters": {
-                    'temperature': first_prompt.temperature,
-                    'max_tokens': first_prompt.max_tokens,
-                    'top_p': first_prompt.top_p
-                },
-                # Additional rerun-specific info
-                "prompts_data": prompts_data,
-                "is_rerun": True
-            }
-        }
-        
-        # Store job ID in session
-        session['job_id'] = job_id
-        
-        # Clean up old jobs
-        async_service.cleanup_old_jobs()
-        
-        return redirect(url_for('llm.loading'))
-        
-    except Exception as e:
-        flash(f'Error setting up prompt rerun: {str(e)}', 'danger')
-        return redirect(url_for('prompts.list'))
 
 # #working on a refactored version of this for responses_routes.    
 # @llm_bp.route('/llm_response', methods=['GET', 'POST'])

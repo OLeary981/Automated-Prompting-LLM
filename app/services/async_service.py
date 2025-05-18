@@ -6,6 +6,11 @@ import time
 import uuid
 from threading import Thread
 
+from app import db
+
+#New imports to enable run_id to be created and added as required
+from app.models import Run
+
 logger = logging.getLogger(__name__) 
 
 processing_jobs = {}
@@ -68,30 +73,53 @@ def get_event_loop():
             raise RuntimeError("Event loop not initialized")
         return _event_loop
 
+def create_run_for_job(description=None):
+    run = Run(description=description)
+    db.session.add(run)
+    db.session.commit()
+    return run.run_id
 
-def create_job(model_id, story_ids, question_id, parameters):
-    """Create a new processing job and return its ID"""
-    
-    logger.info("In async_service, create_job (line 75) creating job:")
+def create_job(model_id, story_ids, question_id, parameters, prompts_data=None):
     job_id = str(uuid.uuid4())
     with processing_jobs_lock:
-        processing_jobs[job_id] = {
-            "status": "initializing",
-            "progress": 0,
-            "total": len(story_ids),
-            "completed": 0,
-            "results": {},
-            "processing": True,
-            "last_activity": time.time(),
-            "params": {
-                "model_id": model_id,
-                "story_ids": story_ids,
-                "question_id": question_id,
-                "parameters": parameters
+        if prompts_data:
+            processing_jobs[job_id] = {
+                "status": "initializing",
+                "progress": 0,
+                "total": len(prompts_data),
+                "completed": 0,
+                "results": {},
+                "response_ids": [],
+                "processing": True,
+                "last_activity": time.time(),
+                "params": {
+                    "model_id": model_id,
+                    "story_ids": story_ids,
+                    "question_id": question_id,
+                    "parameters": parameters,
+                    "prompts_data": prompts_data,
+                    "is_rerun": True
+                }
             }
-        }
-    logger.info(f"In async_service, job created: {job_id}")
-
+        else:
+            processing_jobs[job_id] = {
+                "status": "initializing",
+                "progress": 0,
+                "total": len(story_ids),
+                "completed": 0,
+                "results": {},
+                "response_ids": [],
+                "processing": True,
+                "last_activity": time.time(),
+                "params": {
+                    "model_id": model_id,
+                    "story_ids": story_ids,
+                    "question_id": question_id,
+                    "parameters": parameters
+                }
+            }
+    run_id = create_run_for_job(description=f"Job {job_id} for model {model_id}")
+    processing_jobs[job_id]["run_id"] = run_id
     return job_id
 
 
@@ -190,6 +218,8 @@ async def process_rerun_prompts(app, job_id, prompts_data):
 
     with processing_jobs_lock:
         job = processing_jobs[job_id]
+        run_id = job.get("run_id")
+        app.logger.info(f"async_service line 206 Job {job_id} run_id: {run_id}")
 
     for i, prompt_data in enumerate(prompts_data):
         with processing_jobs_lock:
@@ -258,6 +288,7 @@ async def process_rerun_prompts(app, job_id, prompts_data):
                 model_name,
                 model_id,
                 prompt_id=prompt_id,
+                run_id = run_id,
                 **parameters
             )
 
@@ -298,6 +329,8 @@ async def process_stories(app, job_id, model_id, story_ids, question_id, paramet
 
     with processing_jobs_lock:
         job = processing_jobs[job_id]
+        run_id = job.get("run_id")
+        app.logger.info(f"async_service line 317 Job {job_id} run_id: {run_id}")
         total_stories = len(story_ids)
 
     for i, story_id in enumerate(story_ids):
@@ -336,6 +369,7 @@ async def process_stories(app, job_id, model_id, story_ids, question_id, paramet
                 question_id,
                 model_name,
                 model_id,
+                run_id=run_id,
                 **parameters
             )
 
@@ -366,7 +400,7 @@ async def process_stories(app, job_id, model_id, story_ids, question_id, paramet
             with processing_jobs_lock:
                 job["results"][story_id] = {'error': str(e)}
 
-async def run_llm_call_in_executor(app, provider_name, story_content, question_content, story_id, question_id, model_name, model_id, **parameters):
+async def run_llm_call_in_executor(app, provider_name, story_content, question_content, story_id, question_id, model_name, model_id, run_id=None, **parameters):
     """Run a synchronous LLM call in an executor thread"""
     from app.services import llm_service  # Import here to avoid circular imports
     logger.info(f"In async_service run_llm_call_in_executor (line 353) check on model id: {model_id}")
@@ -380,6 +414,7 @@ async def run_llm_call_in_executor(app, provider_name, story_content, question_c
                 question_id, 
                 model_name, 
                 model_id,
+                run_id=run_id,
                 **parameters
             )
     

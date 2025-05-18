@@ -224,7 +224,7 @@ def apply_saved_parameters(model_parameters, saved_parameters):
 #     return parameters
 
 def save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id, question_id, 
-                              payload_json, response_content, full_response_json, prompt_id=None):
+                              payload_json, response_content, full_response_json, prompt_id=None, run_id=None):
     logger.info(f"save_prompt_and_response (line 218) received prompt_id: {prompt_id} (type: {type(prompt_id)})")
     with session_scope() as session:
         if prompt_id is None:
@@ -244,16 +244,18 @@ def save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id,
         else:
             prompt_id = int(prompt_id) if not isinstance(prompt_id, int) else prompt_id
             logger.info(f"save_prompt_and_response (line 236) if using retrieved prompt_id: {prompt_id} (type: {type(prompt_id)})")
+            logger.info(f"llm_service line 247 run_id: {run_id}")
         response_entry = Response(
             prompt_id=prompt_id,
             response_content=response_content,
-            full_response=full_response_json
+            full_response=full_response_json,
+            run_id=run_id,
         )
         session.add(response_entry)
         session.commit()
         return response_entry.response_id
 
-def call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, prompt_id=None, **parameters):
+def call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, prompt_id=None, run_id = None, **parameters):
     logger.info(f"LLM call: {provider_name}/{model_name} with story_id={story_id}, question_id={question_id}")
     logger.info(f"Parameters: {parameters}")
 
@@ -273,20 +275,20 @@ def call_llm(provider_name, story, question, story_id, question_id, model_name, 
             }
 
         if provider_name == "groq":
-            return call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, prompt_id=prompt_id, **parameters)
+            return call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, prompt_id=prompt_id, run_id=run_id, **parameters)
         elif provider_name == "hf":
-            return call_LLM_HF(story, question, story_id, question_id, model_name, model_id, prompt_id=prompt_id, **parameters)
+            return call_LLM_HF(story, question, story_id, question_id, model_name, model_id, prompt_id=prompt_id, run_id=run_id, **parameters)
         else:
             raise ValueError(f"Unknown provider: {provider_name}")
     else:
         if provider_name == "groq":
-            return call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, prompt_id=None, **parameters)
+            return call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, prompt_id=None, run_id = run_id, **parameters)
         elif provider_name == "hf":
-            return call_LLM_HF(story, question, story_id, question_id, model_name, model_id, prompt_id=None, **parameters)
+            return call_LLM_HF(story, question, story_id, question_id, model_name, model_id, prompt_id=None, run_id = run_id, **parameters)
         else:
             raise ValueError(f"Unknown provider: {provider_name}")
 
-def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, prompt_id=None, **parameters):
+def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, prompt_id=None, run_id = None, **parameters):
     try:
         logger.info(f"In llm_service, call_llm_GROQ (line 280) check on model_id:{model_id}")
         temperature = float(parameters.get('temperature', 0.5))
@@ -324,7 +326,8 @@ def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, 
             payload_json=payload_json,
             response_content=response_content,
             full_response_json=full_response_json,
-            prompt_id=prompt_id
+            prompt_id=prompt_id,
+            run_id=run_id
         )
 
         return {"response_id": response_id, "response": response_content}
@@ -336,7 +339,7 @@ def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, 
         logger.exception("Unexpected error in call_LLM_GROQ")
         return None
 
-def call_LLM_HF(story, question, story_id, question_id, model_name, model_id, prompt_id=None, **parameters):
+def call_LLM_HF(story, question, story_id, question_id, model_name, model_id, prompt_id=None, run_id = None, **parameters):
     try:
         temperature = float(parameters.get('temperature', 0.5))
         max_tokens = int(parameters.get('max_tokens', 1024))
@@ -377,7 +380,8 @@ def call_LLM_HF(story, question, story_id, question_id, model_name, model_id, pr
             payload_json=json.dumps(payload),
             response_content=response_content,
             full_response_json=full_response_json,
-            prompt_id=prompt_id
+            prompt_id=prompt_id,
+            run_id=run_id
         )
 
         return {"response_id": response_id, "response": response_content}
