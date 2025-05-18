@@ -3,8 +3,8 @@ from app import db
 # Association Table (No Explicit Model Needed)
 word_field_association = db.Table(
     'word_field',
-    db.Column('word_id', db.Integer, db.ForeignKey('word.word_id'), primary_key=True),
-    db.Column('field_id', db.Integer, db.ForeignKey('field.field_id'), primary_key=True)
+    db.Column('word_id', db.Integer, db.ForeignKey('word.word_id', ondelete = 'CASCADE'), primary_key=True),
+    db.Column('field_id', db.Integer, db.ForeignKey('field.field_id', ondelete='CASCADE'), primary_key=True)
 )
 
 # Word Table

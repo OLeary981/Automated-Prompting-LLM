@@ -29,7 +29,7 @@ pytest tests/unit/test_models/template/test_field.py -v
 Jobs list:
 Report - contents page (chronological vs categories?)
 Category functionality:
-- database migration to add a template-category table
+- database migration to add a template-category table?
 - story_builder_service changes to ensure that categories are added when new templates are saved and when stories are made using the template.
 Models confusion reduction:
 - database migration to rename a table LLMModel or similar.

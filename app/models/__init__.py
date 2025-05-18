@@ -3,7 +3,7 @@ from .story import Story, Category, StoryCategory
 from .template import Template, Field, Word, word_field_association
 from .question import Question
 from .llm import Provider, Model
-
+from .run import Run
 
 __all__ = [
     # Story models
@@ -30,5 +30,7 @@ __all__ = [
     
     # Template system models
     'Word', 
-    'Field'
+    'Field',
+
+    'Run' #added in migration
 ]

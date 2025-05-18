@@ -1,12 +1,14 @@
-from flask import Flask, render_template, session
-from flask_sqlalchemy import SQLAlchemy
-import os
 import json  # Add this import
 import logging
 import os
 
+from flask import Flask, render_template, session
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
+
 # Initialize the database
 db = SQLAlchemy()
+
 
 def configure_logging(app):
     log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
@@ -25,25 +27,6 @@ def configure_logging(app):
     app.logger.info(f"Logging to {log_file}")
 
 
-# def configure_logging(app):
-#     """Set up logging for the application"""
-#     log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
-#     os.makedirs(log_dir, exist_ok=True)
-#     log_file = os.path.join(log_dir, 'app.log')
-    
-#     # Create a file handler
-#     file_handler = logging.FileHandler(log_file)
-#     file_handler.setLevel(logging.DEBUG)
-    
-#     # Create a formatter
-#     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-#     file_handler.setFormatter(formatter)
-    
-#     # Add the handler to the root logger
-#     logging.getLogger().addHandler(file_handler)
-#     logging.getLogger().setLevel(logging.DEBUG)
-    
-#     app.logger.info(f"Logging to {log_file}")
 
 def create_app(config=None): 
     # Create the Flask app
@@ -58,7 +41,7 @@ def create_app(config=None):
         
     # Initialize the database with the app
     db.init_app(app)
-    
+    migrate = Migrate(app, db) #grey as is a registration of migration not a function call
     # Register routes
     from .blueprints import register_blueprints
     register_blueprints(app)
@@ -95,7 +78,9 @@ def create_app(config=None):
 
     @app.context_processor
     def inject_current_question_content():
-        from app.services import question_service #had to move this down here to avoid circular import
+        from app.services import (
+            question_service,  #had to move this down here to avoid circular import
+        )
         question_id = session.get('question_id')
         question_content = None
         if question_id:
