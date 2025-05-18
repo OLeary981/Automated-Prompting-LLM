@@ -63,8 +63,9 @@ def list():
         session.pop('template_ids')
     if 'clear_prompts' in request.args and 'prompt_ids' in session:
         session.pop('prompt_ids')
-
-    # Get all filter parameters
+    
+     # Get all filter parameters
+    run_id = request.args.get('run_id', '')
     provider = request.args.get('provider', '')
     model = request.args.get('model', '')
     flagged_only = bool(request.args.get('flagged_only'))
@@ -72,17 +73,25 @@ def list():
     start_date = request.args.get('start_date', '')
     end_date = request.args.get('end_date', '')
     sort = request.args.get('sort', 'date_desc')   
-    
+
+    # If a run is selected, override provider/model/question_id with those from the run
+    if run_id:
+        run_provider, run_model, run_question_id = response_service.get_filters_for_run(run_id)
+        if run_provider:
+            provider = run_provider
+        if run_model:
+            model = run_model
+        if run_question_id:
+            question_id = str(run_question_id)
+
+    # ...rest of your logic unchanged...
     # Get pagination parameters
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', current_app.config["PER_PAGE"], type=int)
-    
-    # SOURCE-based filtering (primary selection)
     source = request.args.get('source', '')
     source_id = request.args.get('source_id') or request.args.get('prompt_id') or request.args.get('story_id') or request.args.get('template_id')
     source_count = request.args.get('story_count') or request.args.get('template_count')
-    
-    # Determine which filter should be applied
+
     filter_kwargs = {
         'provider': provider,
         'model': model,
@@ -92,6 +101,37 @@ def list():
         'end_date': end_date,
         'sort': sort
     }
+    if run_id:
+        filter_kwargs['run_id'] = run_id
+
+    # # Get all filter parameters
+    # provider = request.args.get('provider', '')
+    # model = request.args.get('model', '')
+    # flagged_only = bool(request.args.get('flagged_only'))
+    # question_id = request.args.get('question_id', '')
+    # start_date = request.args.get('start_date', '')
+    # end_date = request.args.get('end_date', '')
+    # sort = request.args.get('sort', 'date_desc')   
+    
+    # # Get pagination parameters
+    # page = request.args.get('page', 1, type=int)
+    # per_page = request.args.get('per_page', current_app.config["PER_PAGE"], type=int)
+    
+    # # SOURCE-based filtering (primary selection)
+    # source = request.args.get('source', '')
+    # source_id = request.args.get('source_id') or request.args.get('prompt_id') or request.args.get('story_id') or request.args.get('template_id')
+    # source_count = request.args.get('story_count') or request.args.get('template_count')
+    
+    # # Determine which filter should be applied
+    # filter_kwargs = {
+    #     'provider': provider,
+    #     'model': model,
+    #     'flagged_only': flagged_only,
+    #     'question_id': question_id,
+    #     'start_date': start_date,
+    #     'end_date': end_date,
+    #     'sort': sort
+    # }
     
     # Add source-specific filters
     response_ids = session.get('response_ids', [])
@@ -118,7 +158,8 @@ def list():
     # Track if we're filtering by specific responses or have secondary filters
     has_response_filter = bool(response_ids and 'clear_responses' not in request.args)
     has_secondary_filters = any([provider, model, flagged_only, question_id, start_date, end_date])
-    
+    runs = response_service.get_all_runs()
+
     return render_template('see_all_responses.html', 
                           responses=pagination.items,
                           pagination=pagination,
@@ -131,6 +172,7 @@ def list():
                           source_id=source_id,
                           source_info=source_info,
                           current_filters={
+                              'run_id': run_id,
                               'provider': provider,
                               'model': model,
                               'flagged_only': flagged_only,
@@ -139,7 +181,33 @@ def list():
                               'start_date': start_date,
                               'end_date': end_date,
                               'sort': sort
-                          })
+                        
+                          },
+                          runs = runs
+                          
+                          )
+    
+    # return render_template('see_all_responses.html', 
+    #                       responses=pagination.items,
+    #                       pagination=pagination,
+    #                       providers=filter_options['providers'],
+    #                       models=filter_options['models'],
+    #                       questions=filter_options['questions'],
+    #                       has_response_filter=has_response_filter,
+    #                       has_secondary_filters=has_secondary_filters,
+    #                       source=source,
+    #                       source_id=source_id,
+    #                       source_info=source_info,
+    #                       current_filters={
+    #                           'provider': provider,
+    #                           'model': model,
+    #                           'flagged_only': flagged_only,
+    #                           'question_id': question_id,
+    #                           'story_id': request.args.get('story_id', ''),
+    #                           'start_date': start_date,
+    #                           'end_date': end_date,
+    #                           'sort': sort
+    #                       })
 
 @responses_bp.route('/update_response_flag', methods=['POST'])
 def update_response_flag():

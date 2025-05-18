@@ -1,15 +1,23 @@
-from typing import Any, Dict, List, Optional, Tuple, Union
 import csv
 import datetime
 import io
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 from sqlalchemy import func, select
-from ..models import Response, Prompt, Model, Provider, Story, Question, Template
-from .. import db
+
 from app.utils.pagination import Pagination
+
+from .. import db
+from ..models import Model, Prompt, Provider, Question, Response, Run, Story, Template
+
 
 def _to_int_list(id_list: List[Union[str, int]]) -> List[int]:
     """Convert a list of IDs to integers."""
     return [int(x) for x in id_list]
+
+def get_all_runs():
+    stmt = select(Run).order_by(Run.run_id.desc())
+    return db.session.execute(stmt).scalars().all()
 
 def update_response_flag_and_notes(response_id, flagged_for_review, review_notes):
     """Update the flagged_for_review and review_notes fields for a single response."""
@@ -90,7 +98,8 @@ def build_response_query(
     story_ids: Optional[List[Union[str, int]]] = None,
     start_date: Optional[Union[str, datetime.datetime]] = None,
     end_date: Optional[Union[str, datetime.datetime]] = None,
-    sort: str = 'date_desc'
+    sort: str = 'date_desc',
+    run_id: Optional[Union[str, int]] = None,
 ):
     """
     Build a query for responses with all filters applied.
@@ -120,6 +129,8 @@ def build_response_query(
         stmt = stmt.filter(Prompt.question_id == question_id)
     if story_id:
         stmt = stmt.filter(Prompt.story_id == story_id)
+    if run_id:
+        stmt = stmt.filter(Response.run_id == int(run_id))
 
     if start_date:
         try:
@@ -313,3 +324,20 @@ def generate_csv_export(responses):
     # Return the file content
     return mem_file.getvalue()
 
+def get_filters_for_run(run_id):
+    """
+    Given a run_id, return provider, model, and question_id for the first response in that run.
+    """
+    response = db.session.query(Response).filter_by(run_id=run_id).first()
+    if not response:
+        return None, None, None
+    prompt = db.session.query(Prompt).get(response.prompt_id)
+    if not prompt:
+        return None, None, None
+    model = db.session.query(Model).get(prompt.model_id)
+    provider = model.provider if model else None
+    return (
+        provider.provider_name if provider else None,
+        model.name if model else None,
+        prompt.question_id
+    )
