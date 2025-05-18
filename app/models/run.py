@@ -10,4 +10,4 @@ class Run(db.Model):
 
     
     # Relationship to responses - each run can have multiple responses
-    responses = db.relationship('Response', backref='run', lazy=True)
+    responses = db.relationship('Response', backref='run', lazy=True, passive_deletes=True)

@@ -34,7 +34,7 @@ class Response(db.Model):
     review_notes = db.Column(db.Text)
 
     prompt = db.relationship('Prompt', backref=db.backref('responses', lazy=True))
-    run_id = db.Column(db.Integer, db.ForeignKey('run.run_id'), nullable=True) #added as part of run migration
+    run_id = db.Column(db.Integer, db.ForeignKey('run.run_id', ondelete ='RESTRICT'), nullable=False) #added as part of run migration
 
     def __repr__(self):
         return f'<Response {self.response_id}>'

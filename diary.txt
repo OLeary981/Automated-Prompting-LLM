@@ -11,7 +11,7 @@ coverage run -m pytest tests/unit/test_services/test_response_service.py
 
 To run all just pytest
 #-s disables output capturing so we can see print statements.
-
+pytest tests/unit/test_models/test_run.py -v
 pytest tests/functional/test_blueprints/test_stories_routes.py 
 pytest tests/functional/test_blueprints/test_templates_routes.py 
 pytest -s tests/unit/test_services/test_response_service.py 
