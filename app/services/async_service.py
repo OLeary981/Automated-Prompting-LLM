@@ -79,7 +79,7 @@ def create_run_for_job(description=None):
     db.session.commit()
     return run.run_id
 
-def create_job(model_id, story_ids, question_id, parameters, prompts_data=None):
+def create_job(model_id, story_ids, question_id, parameters, prompts_data=None, run_description=None):
     job_id = str(uuid.uuid4())
     with processing_jobs_lock:
         if prompts_data:
@@ -118,7 +118,9 @@ def create_job(model_id, story_ids, question_id, parameters, prompts_data=None):
                     "parameters": parameters
                 }
             }
-    run_id = create_run_for_job(description=f"Job {job_id} for model {model_id}")
+    if not run_description:
+        run_description = f"Test for for model {model_id} with stories {story_ids}"
+    run_id = create_run_for_job(run_description)
     processing_jobs[job_id]["run_id"] = run_id
     return job_id
 

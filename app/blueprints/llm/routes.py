@@ -71,11 +71,13 @@ def select_parameters():
         return redirect(url_for('llm.select_model'))
     
     if request.method == 'POST':
-        # Store the selected parameters in the session
-        parameters = {param: request.form.get(param) for param in request.form}
+        # Store only actual parameters, not run_description
+        parameters = {param: request.form.get(param) for param in request.form if param != 'run_description'}
         session['parameters'] = parameters
+        # Store run_description separately if needed
+        session['run_description'] = request.form.get('run_description', '')[:255]
         return redirect(url_for('llm.loading'))
-    
+        
     # GET request - show parameter form
     model_id = session.get('model_id')
     saved_parameters = session.get('parameters', {})
@@ -102,9 +104,10 @@ def loading():
         question_id = int(session.get("question_id"))
         model_id = int(session.get("model_id"))
         parameters = session.get('parameters', {})
+        run_description = request.form.get('run_description', '')[:254] 
         
         # Use the service to create a new job
-        job_id = async_service.create_job(model_id, story_ids, question_id, parameters)
+        job_id = async_service.create_job(model_id, story_ids, question_id, parameters, run_description)
         session['job_id'] = job_id
         logger.debug(f"Created new job: {job_id} with {len(story_ids)} stories to process")
     else:
@@ -242,6 +245,7 @@ def loading():
 @llm_bp.route('/rerun_prompts', methods=['POST'])
 def rerun_prompts():
     logger.info("In the rerun_prompts route")
+    run_description = request.form.get('run_description', '')[:254]
     prompt_ids = session.get('prompt_ids', [])
     if not prompt_ids:
         flash('No prompts selected to rerun.', 'warning')
@@ -288,7 +292,8 @@ def rerun_prompts():
                 'max_tokens': first_prompt.max_tokens,
                 'top_p': first_prompt.top_p
             },
-            prompts_data=prompts_data
+            prompts_data=prompts_data,
+            run_description=run_description
         )
         session['job_id'] = job_id
         async_service.cleanup_old_jobs()

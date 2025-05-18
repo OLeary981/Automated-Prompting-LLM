@@ -266,6 +266,26 @@
                 </ul>
             </nav>
 </div>
+<div class="modal fade" id="rerunDescriptionModal" tabindex="-1" aria-labelledby="rerunDescriptionModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="rerun-form" method="POST" action="{{ url_for('llm.rerun_prompts') }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="rerunDescriptionModalLabel">Rerun Selected Prompts</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <label for="run-description" class="form-label">Optional run description (max 255 chars):</label>
+          <input type="text" class="form-control" id="run-description" name="run_description" maxlength="255" placeholder="Describe this rerun (optional)">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">Rerun Prompts</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -489,14 +509,9 @@
         const selectedCount = parseInt(document.getElementById('selected-count').textContent);
 
         if (selectedCount > 0) {
-            if (confirm(`Are you sure you want to rerun ${selectedCount} selected prompts?`)) {
-                // Submit the form to rerun prompts
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '{{ url_for("llm.rerun_prompts") }}';
-                document.body.appendChild(form);
-                form.submit();
-            }
+            // Show the modal instead of confirm
+            var modal = new bootstrap.Modal(document.getElementById('rerunDescriptionModal'));
+            modal.show();
         } else {
             alert('Please select at least one prompt to rerun.');
         }
