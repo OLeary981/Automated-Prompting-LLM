@@ -1,18 +1,28 @@
 import csv
-import datetime
-import io
-from flask import Response, current_app, flash, jsonify, redirect, request, send_file, session, url_for
-from . import responses_bp
 
 #previously view_resoponses
 import datetime
 import io
-from flask import flash, render_template, redirect, request, session, url_for, jsonify, Response as FlaskResponse
-from flask import send_file
-from . import responses_bp
-from ...models import Response, Prompt, Model, Provider, Story, Question, Template
+
+from flask import (
+    Response,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    session,
+    url_for,
+)
+from flask import Response as FlaskResponse
+
 from ... import db
-from ...services import response_service
+from ...models import Model, Prompt, Provider, Question, Response, Story, Template
+from ...services import async_service, response_service
+from . import responses_bp
+
 
 @responses_bp.route('/list', methods=['GET', 'POST'])
 def list():
@@ -57,7 +67,7 @@ def list():
     # Get all filter parameters
     provider = request.args.get('provider', '')
     model = request.args.get('model', '')
-    flagged_only = 'flagged_only' in request.args
+    flagged_only = bool(request.args.get('flagged_only'))
     question_id = request.args.get('question_id', '')
     start_date = request.args.get('start_date', '')
     end_date = request.args.get('end_date', '')
@@ -133,7 +143,7 @@ def list():
 
 @responses_bp.route('/update_response_flag', methods=['POST'])
 def update_response_flag():
-    """AJAX endpoint to quickly toggle a response's flag status"""
+    """AJAX endpoint to quickly toggle a response's flag status - without reloading the page"""
     if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({'success': False, 'message': 'Invalid request'}), 400
     
@@ -347,4 +357,37 @@ def view_template_responses():
                            template_count=template_count,
                            template_id=template_ids[0] if template_count == 1 else None))
 
+@responses_bp.route('/responses_for_run', methods=['GET', 'POST'])
+def responses_for_run():
+    """
+    Display and allow review/flagging of all LLM responses for the current run (job).
+    - On GET: Shows all responses for the run (from session or async_service).
+    - On POST: Updates flag/review notes for a single response, then reloads the page.
+    """
+    if request.method == 'POST':
+        response_id = request.form.get('response_id')
+        if response_id:
+            flagged_for_review = f'flagged_for_review_{response_id}' in request.form
+            review_notes = request.form.get(f'review_notes_{response_id}', '')
+            success, message = response_service.update_response_flag_and_notes(
+                response_id, flagged_for_review, review_notes
+            )
+            flash(message, 'success' if success else 'danger')
+        return redirect(url_for('responses.responses_for_run'))
 
+    response_ids = response_service.get_response_ids_for_run(session, async_service)
+    response_list, is_batch_rerun = response_service.build_response_list(response_ids)
+
+    model = session.get('model') if not is_batch_rerun else None
+    provider = session.get('provider') if not is_batch_rerun else None
+    question_id = session.get('question_id')
+    question = db.session.query(Question).get(question_id).content if question_id and not is_batch_rerun else None
+
+    return render_template(
+        'llm_response.html',
+        response_list=response_list,
+        is_batch_rerun=is_batch_rerun,
+        model=model,
+        provider=provider,
+        question=question
+    )
