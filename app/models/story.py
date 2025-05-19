@@ -28,8 +28,8 @@ class Category(db.Model):
 class StoryCategory(db.Model):
     __tablename__ = 'story_category'
 
-    story_id = db.Column(db.Integer, db.ForeignKey('story.story_id'), primary_key=True)
-    category_id = db.Column(db.Integer, db.ForeignKey('category.category_id'), primary_key=True)
+    story_id = db.Column(db.Integer, db.ForeignKey('story.story_id', ondelete = 'CASCADE'), primary_key=True)
+    category_id = db.Column(db.Integer, db.ForeignKey('category.category_id', ondelete = 'CASCADE'), primary_key=True)
 
     story = db.relationship('Story', backref=db.backref('story_categories', lazy=True))
     category = db.relationship('Category', backref=db.backref('story_categories', lazy=True))

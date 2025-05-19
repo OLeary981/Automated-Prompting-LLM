@@ -53,46 +53,46 @@
     </div>
 
 
-{% if has_response_filter or session.get('prompt_ids') or session.get('story_ids') or session.get('template_ids') %}
+    {% if has_response_filter or session.get('prompt_ids') or session.get('story_ids') or session.get('template_ids') %}
     <div class="alert alert-info alert-persistent">
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 {% if source_info %}
-                    <span>
-                        <i class="bi bi-funnel-fill"></i>
-                        <strong>Primary Selection:</strong> Responses for {{ source_info }}
-                    </span>
-                    {% if source == 'prompt_batch' %}
-                        <a href="{{ url_for('prompts.list') }}" class="btn btn-sm btn-outline-secondary ms-2">
-                            <i class="bi bi-list"></i> Back to Prompts
-                        </a>
-                    {% elif source == 'story' %}
-                        <a href="{{ url_for('stories.list') }}" class="btn btn-sm btn-outline-secondary ms-2">
-                            <i class="bi bi-list"></i> Back to Stories
-                        </a>
-                    {% elif source == 'template' %}
-                        <a href="{{ url_for('templates.list') }}" class="btn btn-sm btn-outline-secondary ms-2">
-                            <i class="bi bi-list"></i> Back to Templates
-                        </a>
-                    {% endif %}
+                <span>
+                    <i class="bi bi-funnel-fill"></i>
+                    <strong>Primary Selection:</strong> Responses for {{ source_info }}
+                </span>
+                {% if source == 'prompt_batch' %}
+                <a href="{{ url_for('prompts.list') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="bi bi-list"></i> Back to Prompts
+                </a>
+                {% elif source == 'story' %}
+                <a href="{{ url_for('stories.list') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="bi bi-list"></i> Back to Stories
+                </a>
+                {% elif source == 'template' %}
+                <a href="{{ url_for('templates.list') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="bi bi-list"></i> Back to Templates
+                </a>
+                {% endif %}
                 {% else %}
-                    {# Fallback: show batch selection if source_info is not set #}
-                    {% set selection_types = [
-                        {'key': 'prompt_ids', 'label': 'prompts', 'url': url_for('prompts.list')},
-                        {'key': 'story_ids', 'label': 'stories', 'url': url_for('stories.list')},
-                        {'key': 'template_ids', 'label': 'templates', 'url': url_for('templates.list')}
-                    ] %}
-                    {% set shown_selection = false %}
-                    {% for sel in selection_types if session.get(sel.key) and not shown_selection %}
-                        <span>
-                            <i class="bi bi-funnel-fill"></i>
-                            <strong>Primary Selection:</strong> {{ session.get(sel.key)|length }} {{ sel.label }} selected
-                        </span>
-                        <a href="{{ sel.url }}" class="btn btn-sm btn-outline-secondary ms-2">
-                            <i class="bi bi-pencil-square"></i> Modify Selection
-                        </a>
-                        {% set shown_selection = true %}
-                    {% endfor %}
+                {# Fallback: show batch selection if source_info is not set #}
+                {% set selection_types = [
+                {'key': 'prompt_ids', 'label': 'prompts', 'url': url_for('prompts.list')},
+                {'key': 'story_ids', 'label': 'stories', 'url': url_for('stories.list')},
+                {'key': 'template_ids', 'label': 'templates', 'url': url_for('templates.list')}
+                ] %}
+                {% set shown_selection = false %}
+                {% for sel in selection_types if session.get(sel.key) and not shown_selection %}
+                <span>
+                    <i class="bi bi-funnel-fill"></i>
+                    <strong>Primary Selection:</strong> {{ session.get(sel.key)|length }} {{ sel.label }} selected
+                </span>
+                <a href="{{ sel.url }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="bi bi-pencil-square"></i> Modify Selection
+                </a>
+                {% set shown_selection = true %}
+                {% endfor %}
                 {% endif %}
             </div>
             <div>
@@ -103,13 +103,14 @@
             </div>
         </div>
     </div>
-{% endif %}
+    {% endif %}
 
     <!-- Filters Card - Now renamed to emphasize these are secondary filters -->
     <div class="card mb-4">
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
+
             <h5 class="mb-0">Refine Results</h5>
-            {% if request.args.get('provider') or request.args.get('model') or request.args.get('flagged_only') or
+            {% if current_filters.run_id or request.args.get('provider') or request.args.get('model') or request.args.get('flagged_only') or
             request.args.get('question_id') or request.args.get('start_date') or request.args.get('end_date') %}
             <a href="{{ url_for('responses.list', 
                       source=source, 
@@ -123,8 +124,28 @@
         <div class="collapse show" id="filterCollapse">
             <div class="card-body">
                 <form method="GET" action="{{ url_for('responses.list') }}" class="row gy-3 gx-4">
-                    <!-- First row: Provider, Model, Question -->
+                    <!-- Run filter dropdown at the top of the filter form -->
+                    <div class="col-md-12 mb-3">
+                        <label for="run_id" class="form-label">Run:</label>
+                        <select class="form-select form-select-sm" id="run_id" name="run_id" onchange = "submitRunOnly(this)"                            >
+                            <option value="">All Runs</option>
+                            {% for run in runs %}
+                            <option value="{{ run.run_id }}" {% if current_filters.run_id|string==run.run_id|string
+                                %}selected{% endif %}>
+                                Run {{ run.run_id }}{% if run.description %} — {{ run.description|truncate(80) }}{%
+                                endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% if current_filters.run_id %}
+                    <div class="alert alert-warning">
+                        Run {{ current_filters.run_id }} is selected, so Provider, Model, and Question filters are
+                        overridden.
+                    </div>
+                    {% endif %}
 
+                    <!-- First row: Provider, Model, Question -->
                     <div class="col-md-3">
                         <label for="provider" class="form-label">Provider:</label>
                         <div class="w-100"></div>
@@ -404,4 +425,20 @@
             });
     }
 </script>
+<script>
+function submitRunOnly(select) {
+    // Create a new form and submit only the run_id
+    var form = document.createElement('form');
+    form.method = 'GET';
+    form.action = "{{ url_for('responses.list') }}";
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'run_id';
+    input.value = select.value;
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+
 {% endblock %}

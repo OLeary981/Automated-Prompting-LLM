@@ -1,14 +1,28 @@
 # This allows me to share fixtures (test data) across different files/modules (real python https://realpython.com/pytest-python-testing/)
 
-import pytest
-import os
-from app import create_app, db
-from app.models import Template, Story, Question, Word, Field, Category, StoryCategory
-from app.models import Model, Provider, Prompt, Response
-import tempfile
-import logging
-from sqlalchemy import text, event
 import datetime
+import logging
+import os
+import tempfile
+
+import pytest
+from sqlalchemy import event, text
+
+from app import create_app, db
+from app.models import (
+    Category,
+    Field,
+    Model,
+    Prompt,
+    Provider,
+    Question,
+    Response,
+    Run,
+    Story,
+    StoryCategory,
+    Template,
+    Word,
+)
 
 # Disable verbose test logging
 logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
@@ -89,11 +103,21 @@ def session(app):
 
 @pytest.fixture(scope='function')
 def test_data(session):
-    from app.models import (
-        Provider, Model, Template, Story, Category, StoryCategory,
-        Question, Prompt, Response, Field, Word
-    )
     import datetime
+
+    from app.models import (
+        Category,
+        Field,
+        Model,
+        Prompt,
+        Provider,
+        Question,
+        Response,
+        Story,
+        StoryCategory,
+        Template,
+        Word,
+    )
 
     # Create Providers
     provider1 = Provider(provider_name="Test Provider")
@@ -212,18 +236,26 @@ def test_data(session):
     session.add_all([prompt1, prompt2])
     session.commit()
 
+    # Create Runs for test responses (needed after migration to make run_id non-nulable)
+    run1 = Run(description="Test Run 1")
+    run2 = Run(description="Test Run 2")
+    session.add_all([run1, run2])
+    session.commit()
+
     # Responses
     now = datetime.datetime.utcnow()
     response1 = Response(
         prompt_id=prompt1.prompt_id,
         response_content="conf_test_response_content",
-        full_response="...", timestamp=now, flagged_for_review=False
+        full_response="...", timestamp=now, flagged_for_review=False,
+        run_id=run1.run_id
     )
     response2 = Response(
         prompt_id=prompt2.prompt_id,
         response_content="The story evokes feelings of playfulness and energy.",
         full_response="...", timestamp=now, flagged_for_review=True,
-        review_notes="Contains overly simplistic analysis"
+        review_notes="Contains overly simplistic analysis",
+        run_id=run2.run_id
     )
     session.add_all([response1, response2])
     session.commit()
@@ -238,6 +270,7 @@ def test_data(session):
                 'parameters': {'temperature': '0.7'},
                 'stories_source': 'source',
                 'template_ids': ['10', '11'],
+                
             }
     
     return {
@@ -271,7 +304,8 @@ def test_data(session):
                 "ball": ball_word.word_id,
                 "table": table_word.word_id,
                 "floor": floor_word.word_id,
-            }
+            },
+            "runs": [run1.run_id, run2.run_id],
         },
         "objects": {
             "template1": template1,  # Use with care: still session-bound

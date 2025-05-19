@@ -128,103 +128,8 @@ def apply_saved_parameters(model_parameters, saved_parameters):
 
 
 
-# import copy
-# import json
-# import logging
-# import time
-# import requests
-# from contextlib import contextmanager
-# from sqlalchemy.orm import scoped_session, sessionmaker
-# from flask_sse import sse
-# from groq import APIError, Groq
-
-# from app import db
-# from app.models import Model, Prompt, Provider, Question, Response, Story
-# from config import Config
-
-# logger = logging.getLogger(__name__)
-
-# GROQ_API_KEY = Config.GROQ_API_KEY
-# groq_client = Groq(api_key=GROQ_API_KEY)
-
-
-# def get_session():
-#     return scoped_session(sessionmaker(bind=db.engine))
-
-# @contextmanager
-# def session_scope():
-#     session = get_session()
-#     try:
-#         yield session
-#         session.commit()
-#     except:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.remove()
-
-
-# def get_model_name_by_id(model_id):
-#     with session_scope() as session:
-#         model = session.query(Model).get(model_id)
-#         return model.name if model else None
-
-# def get_all_models():
-#     with session_scope() as session:
-#         return session.query(Model).join(Provider).all()
-
-# def get_models_by_provider(provider_id):
-#     with session_scope() as session:
-#         return session.query(Model).filter_by(provider_id=provider_id).all()
-
-# def get_model_by_id(model_id):
-#     with session_scope() as session:
-#         model = session.query(Model).get(model_id)
-#         if model:
-#             parsed = json.loads(model.parameters)
-#             model.parsed_parameters = {param['name']: copy.deepcopy(param) for param in parsed['parameters']}
-#         return model
-
-# def get_model_parameters(model_id, saved_parameters=None):
-#     model = get_model_by_id(model_id)
-#     if not model:
-#         return {}
-#     parameters = model.parsed_parameters
-#     if saved_parameters:
-#         parameters = apply_saved_parameters(parameters, saved_parameters)
-#     return parameters
-
-# def get_provider_name_by_model_id(model_id):
-#     with session_scope() as session:
-#         model = session.query(Model).get(model_id)
-#         return model.provider.provider_name if model else None
-
-# def get_request_delay_by_model_id(model_id):
-#     with session_scope() as session:
-#         model = session.query(Model).get(model_id)
-#         return model.request_delay if model else 0
-
-# def apply_saved_parameters(model_parameters, saved_parameters):
-#     if not saved_parameters:
-#         return model_parameters
-
-#     parameters = copy.deepcopy(model_parameters)
-#     for param_name, param_details in parameters.items():
-#         if param_name in saved_parameters:
-#             saved_value = saved_parameters[param_name]
-#             try:
-#                 if param_details['type'] == 'float':
-#                     saved_value = float(saved_value)
-#                 elif param_details['type'] == 'int':
-#                     saved_value = int(saved_value)
-#                 if param_details['min_value'] <= saved_value <= param_details['max_value']:
-#                     param_details['default'] = saved_value
-#             except (ValueError, TypeError):
-#                 pass
-#     return parameters
-
 def save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id, question_id, 
-                              payload_json, response_content, full_response_json, prompt_id=None):
+                              payload_json, response_content, full_response_json, prompt_id=None, run_id=None):
     logger.info(f"save_prompt_and_response (line 218) received prompt_id: {prompt_id} (type: {type(prompt_id)})")
     with session_scope() as session:
         if prompt_id is None:
@@ -244,16 +149,18 @@ def save_prompt_and_response(model_id, temperature, max_tokens, top_p, story_id,
         else:
             prompt_id = int(prompt_id) if not isinstance(prompt_id, int) else prompt_id
             logger.info(f"save_prompt_and_response (line 236) if using retrieved prompt_id: {prompt_id} (type: {type(prompt_id)})")
+            logger.info(f"llm_service line 247 run_id: {run_id}")
         response_entry = Response(
             prompt_id=prompt_id,
             response_content=response_content,
-            full_response=full_response_json
+            full_response=full_response_json,
+            run_id=run_id,
         )
         session.add(response_entry)
         session.commit()
         return response_entry.response_id
 
-def call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, prompt_id=None, **parameters):
+def call_llm(provider_name, story, question, story_id, question_id, model_name, model_id, prompt_id=None, run_id = None, **parameters):
     logger.info(f"LLM call: {provider_name}/{model_name} with story_id={story_id}, question_id={question_id}")
     logger.info(f"Parameters: {parameters}")
 
@@ -273,20 +180,20 @@ def call_llm(provider_name, story, question, story_id, question_id, model_name, 
             }
 
         if provider_name == "groq":
-            return call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, prompt_id=prompt_id, **parameters)
+            return call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, prompt_id=prompt_id, run_id=run_id, **parameters)
         elif provider_name == "hf":
-            return call_LLM_HF(story, question, story_id, question_id, model_name, model_id, prompt_id=prompt_id, **parameters)
+            return call_LLM_HF(story, question, story_id, question_id, model_name, model_id, prompt_id=prompt_id, run_id=run_id, **parameters)
         else:
             raise ValueError(f"Unknown provider: {provider_name}")
     else:
         if provider_name == "groq":
-            return call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, prompt_id=None, **parameters)
+            return call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, prompt_id=None, run_id = run_id, **parameters)
         elif provider_name == "hf":
-            return call_LLM_HF(story, question, story_id, question_id, model_name, model_id, prompt_id=None, **parameters)
+            return call_LLM_HF(story, question, story_id, question_id, model_name, model_id, prompt_id=None, run_id = run_id, **parameters)
         else:
             raise ValueError(f"Unknown provider: {provider_name}")
 
-def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, prompt_id=None, **parameters):
+def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, prompt_id=None, run_id = None, **parameters):
     try:
         logger.info(f"In llm_service, call_llm_GROQ (line 280) check on model_id:{model_id}")
         temperature = float(parameters.get('temperature', 0.5))
@@ -324,7 +231,8 @@ def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, 
             payload_json=payload_json,
             response_content=response_content,
             full_response_json=full_response_json,
-            prompt_id=prompt_id
+            prompt_id=prompt_id,
+            run_id=run_id
         )
 
         return {"response_id": response_id, "response": response_content}
@@ -336,7 +244,7 @@ def call_LLM_GROQ(story, question, story_id, question_id, model_name, model_id, 
         logger.exception("Unexpected error in call_LLM_GROQ")
         return None
 
-def call_LLM_HF(story, question, story_id, question_id, model_name, model_id, prompt_id=None, **parameters):
+def call_LLM_HF(story, question, story_id, question_id, model_name, model_id, prompt_id=None, run_id = None, **parameters):
     try:
         temperature = float(parameters.get('temperature', 0.5))
         max_tokens = int(parameters.get('max_tokens', 1024))
@@ -377,7 +285,8 @@ def call_LLM_HF(story, question, story_id, question_id, model_name, model_id, pr
             payload_json=json.dumps(payload),
             response_content=response_content,
             full_response_json=full_response_json,
-            prompt_id=prompt_id
+            prompt_id=prompt_id,
+            run_id=run_id
         )
 
         return {"response_id": response_id, "response": response_content}

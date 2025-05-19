@@ -1,7 +1,8 @@
 import pytest
-from app.models.story import Story, Category, StoryCategory
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
+
+from app.models.story import Category, Story, StoryCategory
 
 
 class TestStoryModel:
@@ -33,7 +34,7 @@ class TestStoryModel:
     def test_template_story_link_from_fixture(self, app, session, test_data):
         """Test that template.stories returns all stories with that template_id."""
         with app.app_context():
-            from app.models import Template, Story
+            from app.models import Story, Template
             template_id = test_data["ids"]["templates"][0]
             template = session.get(Template, template_id)
             # Get all stories with this template_id
@@ -309,3 +310,32 @@ class TestStoryCategoryRelationship:
             repr_str = repr(story_category)
             assert str(story_id) in repr_str
             assert str(category_id) in repr_str
+
+    def test_story_deletion_blocked_if_used_in_prompt(self, app, session, test_data):
+        """Test that a story cannot be deleted if used by a prompt."""
+        with app.app_context():
+            from app.models import Prompt, Story, Template
+
+            # Create a story
+            story = Story(content="Deletable story")
+            session.add(story)
+            session.commit()
+
+            # Link the story to a prompt
+            prompt = Prompt(
+                model_id=test_data["ids"]["models"][0],
+                story_id=story.story_id,
+                question_id=test_data["ids"]["questions"][0],
+                temperature=0.7,
+                max_tokens=100,
+                top_p=1.0,
+                payload="Test payload content"
+            )
+            session.add(prompt)
+            session.commit()
+
+            # Now try to delete the story (should raise IntegrityError)
+            session.delete(story)
+            with pytest.raises(IntegrityError):
+                session.commit()
+            session.rollback()

@@ -1,6 +1,9 @@
 import pytest
-from app.models.prompt_response import Prompt, Response
 from sqlalchemy.exc import IntegrityError
+
+from app.models import Run
+from app.models.prompt_response import Prompt, Response
+
 
 @pytest.fixture(autouse=True)
 def push_app_context(app):
@@ -48,10 +51,12 @@ class TestPromptResponseModel:
     def test_response_true_creation(self, session, test_data):
         # Arrange: get a valid prompt_id from the fixture
         prompt_id = test_data["ids"]["prompts"][0]
+        run_id = test_data["ids"]["runs"][0] #added as test failed after migration
         # Act: create and add a new Response
         response = Response(
             prompt_id=prompt_id,
-            response_content="unit_test_created_response"
+            response_content="unit_test_created_response",
+            run_id=run_id #added as test failed after migration
         )
         session.add(response)
         session.commit()
@@ -63,11 +68,14 @@ class TestPromptResponseModel:
         # Optionally check relationship
         assert fetched.prompt == session.get(Prompt, prompt_id)
 
-    def test_response_without_prompt(self, session):
+    def test_response_without_prompt(self, session, test_data):
+        run_id = test_data["ids"]["runs"][0]
         # Try to create a response with a non-existent prompt_id
         response = Response(
             prompt_id=999999,  # Non-existent prompt
-            response_content="Orphan response"
+            response_content="Orphan response",
+            run_id = run_id
+
         )
         session.add(response)
         with pytest.raises(IntegrityError):
@@ -78,7 +86,8 @@ class TestPromptResponseModel:
         prompt_id = test_data["ids"]["prompts"][0]
         response = Response(
             prompt_id=prompt_id,
-            response_content=None
+            response_content=None,
+            run_id=test_data["ids"]["runs"][0]
         )
         session.add(response)
         with pytest.raises(IntegrityError):
