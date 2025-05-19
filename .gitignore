@@ -5,3 +5,4 @@ settings.json
 database.db
 logs/app.log
 .coverage
+diary.txt

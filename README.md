@@ -13,7 +13,6 @@ A Flask application for managing and automating prompts to Large Language Models
 * [Initial Setup](#initial-setup)
 * [Usage](#usage-guide)
 * [Project Structure](#project-structure)
-* [Screenshots](#screenshots)
 * [Acknowledgements](#acknowledgements)
 
 ## Demo
