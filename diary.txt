@@ -8,6 +8,7 @@ coverage report --skip-covered -m
 coverage html
 
 coverage run -m pytest tests/unit/test_services/test_response_service.py
+pytest tests/functional/test_blueprints/test_responses_routes.py -v
 
 To run all just pytest
 #-s disables output capturing so we can see print statements.

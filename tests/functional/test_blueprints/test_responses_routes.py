@@ -1,6 +1,7 @@
 import pytest
 from flask import url_for
 
+
 @pytest.fixture(autouse=True)
 def push_app_context(app):
     ctx = app.app_context()
@@ -182,7 +183,7 @@ def test_view_prompt_responses_no_results(client, responses_url_map, mocker):
         return_value=[]
     )
     response = client.get(url_for(responses_url_map["view_prompt_responses"]), follow_redirects=True)
-    assert b"No responses found for the selected prompts" in response.data
+    assert b"No responses found for this selection" in response.data
 
 def test_view_story_responses_no_results(client, responses_url_map, mocker):
     with client.session_transaction() as sess:

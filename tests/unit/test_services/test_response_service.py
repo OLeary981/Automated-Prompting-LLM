@@ -1,7 +1,10 @@
 import datetime
+
 import pytest
+
+from app.models import Model, Provider, Question, Response, Story, Template
 from app.services import response_service
-from app.models import Response, Provider, Model, Question, Story, Template
+
 
 @pytest.fixture(autouse=True)
 def push_app_context(app):
@@ -13,9 +16,9 @@ def push_app_context(app):
 class TestResponseService:
     """Test suite for the response_service module."""
 
-    def test_get_filter_options(self, session, test_data):
+    def test_get_dynamic_filter_options(self, session, test_data):
         """Test that get_filter_options returns all providers, models, and questions."""
-        options = response_service.get_filter_options()
+        options = response_service.get_dynamic_filter_options()
         assert "providers" in options
         assert "models" in options
         assert "questions" in options

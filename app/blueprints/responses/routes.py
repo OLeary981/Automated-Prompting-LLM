@@ -110,6 +110,9 @@ def list():
         **filter_kwargs
     )
 
+    if not pagination.items:
+        flash('No responses found for this selection', 'info')
+
     filter_options = response_service.get_dynamic_filter_options(
         run_id=run_id,
         story_ids=session.get('story_ids'),
