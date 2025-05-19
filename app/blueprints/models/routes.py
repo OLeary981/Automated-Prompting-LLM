@@ -1,13 +1,24 @@
-import json
-
 from flask import current_app, flash, redirect, render_template, request, url_for
 from sqlalchemy.exc import SQLAlchemyError
 
-from app import db
 from app.blueprints.models import models_bp
-from app.models import Model, Provider
-from config import Config
+from app.models.llm import Model, Provider
+from app.services import models_service
 
+# @models_bp.route('/list')
+# def list():
+#     """List all models with their providers."""
+#     model_dicts = models_service.get_all_models()
+#     # Convert the dictionaries back to Model-like objects
+#     class ModelProxy:
+#         """A simple proxy class that behaves like a Model object."""
+#         def __init__(self, data):
+#             for key, value in data.items():
+#                 setattr(self, key, value)
+    
+#     # Convert each dictionary to a ModelProxy object
+#     models = [ModelProxy(model_dict) for model_dict in model_dicts]
+#     return render_template('models/list.html', models=models)
 
 @models_bp.route('/list')
 def list():
@@ -27,39 +38,17 @@ def add():
             endpoint = request.form.get('endpoint', '')
             request_delay = float(request.form.get('request_delay', 0))
             
-            # Build parameters JSON
-            parameters = []
-            param_names = request.form.getlist('param_name[]')
-            param_descriptions = request.form.getlist('param_description[]')
-            param_types = request.form.getlist('param_type[]')
-            param_defaults = request.form.getlist('param_default[]')
-            param_min_values = request.form.getlist('param_min_value[]')
-            param_max_values = request.form.getlist('param_max_value[]')
+            # Process parameters from form data
+            parameters = models_service.process_parameter_form_data(request.form)
             
-            for i in range(len(param_names)):
-                if param_names[i]:  # Only add if name exists
-                    parameters.append({
-                        "name": param_names[i],
-                        "description": param_descriptions[i],
-                        "type": param_types[i],
-                        "default": float(param_defaults[i]) if param_types[i] == 'float' else int(param_defaults[i]),
-                        "min_value": float(param_min_values[i]) if param_types[i] == 'float' else int(param_min_values[i]),
-                        "max_value": float(param_max_values[i]) if param_types[i] == 'float' else int(param_max_values[i])
-                    })
-            
-            parameters_json = json.dumps({"parameters": parameters})
-            
-            # Create new model
-            model = Model(
+            # Create model
+            model = models_service.create_model(
                 name=name,
                 provider_id=provider_id,
                 endpoint=endpoint,
                 request_delay=request_delay,
-                parameters=parameters_json
+                parameters=parameters
             )
-            
-            db.session.add(model)
-            db.session.commit()
             
             flash(f'Model "{name}" added successfully.', 'success')
             return redirect(url_for('models.list'))
@@ -67,110 +56,76 @@ def add():
         except (ValueError, TypeError) as e:
             flash(f'Invalid form data: {str(e)}', 'danger')
         except SQLAlchemyError as e:
-            db.session.rollback()
             flash(f'Database error: {str(e)}', 'danger')
     
-    # GET request - show the form
+    # GET request - show the form with default parameters
+    #providers = models_service.get_model_providers()
     providers = Provider.query.all()
-    return render_template('models/add.html', providers=providers)
+    parameters = models_service.create_default_parameters()
+    groq_models = models_service.get_new_groq_models()
+    
+    return render_template(
+        'models/add.html', 
+        providers=providers, 
+        parameters=parameters,
+        groq_models=groq_models
+    )
+
 
 @models_bp.route('/edit/<int:model_id>', methods=['GET', 'POST'])
 def edit(model_id):
     """Edit an existing model."""
-    model = Model.query.get_or_404(model_id)
+    model = models_service.get_model_by_id(model_id)
+    
+    if not model:
+        flash('Model not found.', 'danger')
+        return redirect(url_for('models.list'))
     
     if request.method == 'POST':
         try:
-            # Update model with form data
-            model.name = request.form['name']
-            model.provider_id = request.form['provider_id']
-            model.endpoint = request.form.get('endpoint', '')
-            model.request_delay = float(request.form.get('request_delay', 0))
+            # Get form data
+            name = request.form['name']
+            provider_id = request.form['provider_id']
+            endpoint = request.form.get('endpoint', '')
+            request_delay = float(request.form.get('request_delay', 0))
             
-            # Build parameters JSON - this stays the same
-            parameters = []
-            param_names = request.form.getlist('param_name[]')
-            param_descriptions = request.form.getlist('param_description[]')
-            param_types = request.form.getlist('param_type[]')
-            param_defaults = request.form.getlist('param_default[]')
-            param_min_values = request.form.getlist('param_min_value[]')
-            param_max_values = request.form.getlist('param_max_value[]')
+            # Process parameters from form data
+            parameters = models_service.process_parameter_form_data(request.form)
             
-            for i in range(len(param_names)):
-                if param_names[i]:  # Only add if name exists
-                    param_value = param_defaults[i]
-                    min_value = param_min_values[i]
-                    max_value = param_max_values[i]
-                    
-                    # Convert to the right type
-                    if param_types[i] == 'float':
-                        param_value = float(param_value)
-                        min_value = float(min_value)
-                        max_value = float(max_value)
-                    elif param_types[i] == 'integer':
-                        param_value = int(param_value)
-                        min_value = int(min_value)
-                        max_value = int(max_value)
-                    
-                    parameters.append({
-                        "name": param_names[i],
-                        "description": param_descriptions[i],
-                        "type": param_types[i],
-                        "default": param_value,
-                        "min_value": min_value,
-                        "max_value": max_value
-                    })
+            # Update model
+            updated_model = models_service.update_model(
+                model_id=model_id,
+                name=name,
+                provider_id=provider_id,
+                endpoint=endpoint,
+                request_delay=request_delay,
+                parameters=parameters
+            )
             
-            model.parameters = json.dumps({"parameters": parameters})
-            
-            db.session.commit()
-            flash(f'Model "{model.name}" updated successfully.', 'success')
+            flash(f'Model "{updated_model.name}" updated successfully.', 'success')
             return redirect(url_for('models.list'))
             
         except (ValueError, TypeError) as e:
             flash(f'Invalid form data: {str(e)}', 'danger')
         except SQLAlchemyError as e:
-            db.session.rollback()
             flash(f'Database error: {str(e)}', 'danger')
     
     # GET request - show the edit form
-    providers = Provider.query.all()
-    
-    # Parse the parameters JSON into a list for the template
-    try:
-        parameters_data = json.loads(model.parameters)
-        parameters = parameters_data.get('parameters', [])
-    except (json.JSONDecodeError, AttributeError):
-        # If no parameters exist, create default ones
-        parameters = []
-        for name, param_config in Config.SYSTEM_DEFAULTS.items():
-            parameters.append({
-                "name": name,
-                "description": param_config["description"],
-                "type": param_config["type"],
-                "default": param_config["default"],
-                "min_value": param_config["min"],
-                "max_value": param_config["max"]
-            })
-    
-    # Enhance parameters with display information
-    for param in parameters:
-        param['display_min_max'] = param['type'] in ('float', 'integer')
+    providers = models_service.get_model_providers()
+    parameters = models_service.parse_model_parameters(model)
+    groq_models = models_service.get_groq_models()
     
     return render_template(
         'models/edit.html', 
         model=model, 
         providers=providers,
-        parameters=parameters
+        parameters=parameters,
+        groq_models=groq_models
     )
-
-
-
 
 
 @models_bp.route('/providers')
 def providers_list():
     """List all providers."""
-    providers = Provider.query.all()
+    providers = models_service.get_model_providers()
     return render_template('models/providers_list.html', providers=providers)
-
