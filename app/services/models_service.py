@@ -44,7 +44,7 @@ def get_all_models() -> List[Dict[str, Any]]:
             'endpoint': model.endpoint,
             'request_delay': model.request_delay,
             'parameters': parameters,  # Include parsed parameters
-            'raw_parameters': model.parameters  # Include raw JSON string if needed
+            'raw_parameters': model.parameters  # Include raw JSON string 
         }
         result.append(model_dict)
     

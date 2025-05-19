@@ -75,7 +75,7 @@ def add():
 @models_bp.route('/edit/<int:model_id>', methods=['GET', 'POST'])
 def edit(model_id):
     """Edit an existing model."""
-    model = models_service.get_model_by_id(model_id)
+    model = Model.query.get(model_id)
     
     if not model:
         flash('Model not found.', 'danger')
@@ -111,16 +111,15 @@ def edit(model_id):
             flash(f'Database error: {str(e)}', 'danger')
     
     # GET request - show the edit form
-    providers = models_service.get_model_providers()
+    providers = Provider.query.all()
     parameters = models_service.parse_model_parameters(model)
-    groq_models = models_service.get_groq_models()
-    
+ 
     return render_template(
         'models/edit.html', 
         model=model, 
         providers=providers,
         parameters=parameters,
-        groq_models=groq_models
+        
     )
 
 
