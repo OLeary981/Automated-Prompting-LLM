@@ -1,11 +1,14 @@
-from app import db
-from config import Config
-from app.models import Story, Question, Model, Response, Prompt, Provider
-import requests
-import json
-import time
 import copy
+import json
 import logging
+import time
+
+import requests
+
+from app import db
+from app.models import Model, Prompt, Provider, Question, Response, Story
+from config import Config
+
 from .provider_factory import ProviderFactory
 
 logger = logging.getLogger(__name__)
@@ -82,9 +85,9 @@ def call_model_with_provider(provider_name, story, question, story_id, question_
         payload_json = result["payload_json"]
         
         # Save the prompt and response
-        temperature = float(parameters.get('temperature', 0.5))
-        max_tokens = int(parameters.get('max_tokens', 1024))
-        top_p = float(parameters.get('top_p', 0.65))
+        temperature = float(_get_param("temperature", parameters))
+        max_tokens  = int(_get_param("max_tokens",  parameters))
+        top_p       = float(_get_param("top_p",      parameters))
         
         response_id = save_prompt_and_response(
             model_id=model_id,

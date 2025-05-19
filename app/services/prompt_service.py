@@ -1,8 +1,13 @@
 import datetime
+
 from sqlalchemy import func, select
-from ..models import Prompt, Model, Provider, Story, Question, Response
+
+from app import session_scope
+
 from .. import db
+from ..models import Model, Prompt, Provider, Question, Response, Story
 from ..utils.pagination import Pagination
+
 
 def _parse_date(date_str):
     try:
@@ -161,3 +166,42 @@ def update_prompt_selection(current_selection, action, data):
         selection = _toggle(selection, prompt_id, is_selected)
 
     return list(selection)
+
+
+
+def hydrate_prompt(prompt_id, fetch_content=True):
+    """
+    Hydrate a prompt with all needed data.
+    
+    Args:
+        prompt_id: ID of the prompt to hydrate
+        fetch_content: If True, fetch actual content not just IDs
+        
+    Returns:
+        dict: Complete prompt data with related entities
+    """
+    with session_scope() as session:
+        prompt = session.query(Prompt).get(prompt_id)
+        if not prompt:
+            raise ValueError(f"Prompt ID {prompt_id} not found")
+            
+        result = {
+            "prompt_id": prompt.prompt_id,
+            "model_id": prompt.model_id,
+            "story_id": prompt.story_id,
+            "question_id": prompt.question_id,
+            "parameters": {
+                "temperature": prompt.temperature,
+                "max_tokens": prompt.max_tokens,
+                "top_p": prompt.top_p
+            }
+        }
+        
+        if fetch_content:
+            # Optimize with join to minimize queries
+            story = session.query(Story).get(prompt.story_id)
+            question = session.query(Question).get(prompt.question_id)
+            result["story_content"] = story.content if story else None
+            result["question_content"] = question.content if question else None
+            
+        return result

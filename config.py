@@ -1,4 +1,5 @@
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -22,3 +23,9 @@ class Config:
     GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 
     PER_PAGE = 10  # Number of items per page for pagination (NEED TO GO THROUGH ROUTES TO APPLY!)
+
+    SYSTEM_DEFAULTS = {
+    "temperature": 0.7,
+    "max_tokens": 1024,
+    "top_p": 0.8,
+    }
