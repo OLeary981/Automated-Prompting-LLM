@@ -11,7 +11,7 @@ A Flask application for managing and automating prompts to Large Language Models
 * [Installation](#installation)
 * [Database Setup](#database-setup)
 * [Initial Setup](#initial-setup)
-* [Usage](#usage-guide)
+* [Usage Guide](#usage-guide)
 * [Project Structure](#project-structure)
 * [Acknowledgements](#acknowledgements)
 
@@ -36,12 +36,12 @@ $ git clone https://github.com/OLeary981/Automated-Prompting-LLM.git
 $ cd Automated-Prompting-LLM
 
 #Create and activate a virtual Environment:
-$ python -m venv.venv
+$ python -m venv .venv
 
-On Windows
+#On Windows
 .venv\Scripts\activate
 
-On macOS/Linux
+#On macOS/Linux
 source .venv/bin/activate
 
 # Install dependencies
@@ -49,13 +49,16 @@ $ pip install -r requirements.txt
 
 # Create a .env file and copy .env.example
 $ cp .env.example .env
+```
+
+```env
 FLASK_APP=run.py
 FLASK_ENV=development
 SECRET_KEY=your-secret-key
 DATABASE_URI=sqlite:///app.db
 GROQ_API_KEY=your-groq-api-key
-
 ```
+
 ## Database Setup
 
 This application uses SQLAlchemy with Flask-Migrate to manage the database schema. The database is automatically created when you first run the application, but you need to apply migrations to create the tables.
@@ -75,9 +78,8 @@ After installing dependencies and setting up your `.env` file:
 ```bash
 # Start the development server
 $ flask run
-The application will be available at `http://127.0.0.1:5000`.
-
 ```
+The application will be available at `http://127.0.0.1:5000`.
 
 ## Usage Guide
 
@@ -118,7 +120,9 @@ Use templates to create standardized story structures:
 This project uses Flask-Migrate (Alembic) for database migrations. 
 
 To apply migrations after pulling updates:
+```bash
 flask db upgrade
+```
 
 ## Project Structure
 
