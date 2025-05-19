@@ -124,10 +124,10 @@ def _get_param(name: str, provided: dict) -> Any:
     # Loud but non-fatal signal.
     logger.warning(
         "Parameter %s missing from request; "
-        "falling back to SYSTEM_DEFAULTS[\"%s\"]=%r",
-        name, name, SYSTEM_DEFAULTS[name],
+        "falling back to SYSTEM_DEFAULTS[\"%s\"].default=%r",
+        name, name, SYSTEM_DEFAULTS[name]["default"],
     )
-    return SYSTEM_DEFAULTS[name]
+    return SYSTEM_DEFAULTS[name]["default"]
 
 def apply_saved_parameters(model_parameters, saved_parameters):
     if not saved_parameters:

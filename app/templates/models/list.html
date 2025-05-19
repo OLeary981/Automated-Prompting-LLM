@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container pt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Models</h1>
+        <div>
+            <a href="{{ url_for('models.add') }}" class="btn btn-primary">Add New Model</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Provider</th>
+                            <th>Endpoint</th>
+                            <th>Request Delay</th>
+                            <th>Parameters</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for model in models %}
+                        <tr>
+                            <td>{{ model.model_id }}</td>
+                            <td>{{ model.name }}</td>
+                            <td>{{ model.provider.provider_name }}</td>
+                            <td>{{ model.endpoint }}</td>
+                            <td>{{ model.request_delay }}</td>
+                            <td>
+                                <!-- Updated for Bootstrap 4 -->
+                                <button type="button" class="btn btn-sm btn-info" 
+                                    data-toggle="modal" 
+                                    data-target="#parametersModal{{ model.model_id }}">
+                                    View Parameters
+                                </button>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('models.edit', model_id=model.model_id) }}" class="btn btn-sm btn-primary">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if not models %}
+            <p class="text-center my-4">No models found. <a href="{{ url_for('models.add') }}">Add a new model</a>.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Modal section -->
+    {% for model in models %}
+    <div class="modal fade" id="parametersModal{{ model.model_id }}" tabindex="-1" role="dialog" aria-labelledby="parametersModalLabel{{ model.model_id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="parametersModalLabel{{ model.model_id }}">{{ model.name }} Parameters</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    {% set params = model.parameters|from_json %}
+                    {% if params and params.parameters %}
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Range</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for param in params.parameters %}
+                                <tr>
+                                    <td>{{ param.name }}</td>
+                                    <td>{{ param.type }}</td>
+                                    <td>{{ param.default }}</td>
+                                    <td>{{ param.min_value }} to {{ param.max_value }}</td>
+                                    <td>{{ param.description }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>No parameters defined</p>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

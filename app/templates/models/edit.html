@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container pt-4">
+    <h1>Edit Model: {{ model.name }}</h1>
+    
+    <form method="POST" id="modelForm" class="mt-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Basic Information</h5>
+                
+                <div class="form-group">
+                    <label for="name">Model Name</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ model.name }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="provider_id">Provider</label>
+                    <select class="form-control" id="provider_id" name="provider_id" required>
+                        <option value="" disabled>Select Provider</option>
+                        {% for provider in providers %}
+                        <option value="{{ provider.provider_id }}" {% if provider.provider_id == model.provider_id %}selected{% endif %}>
+                            {{ provider.provider_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="endpoint">Endpoint URL</label>
+                    <input type="text" class="form-control" id="endpoint" name="endpoint" value="{{ model.endpoint or '' }}">
+                    <small class="form-text text-muted">Leave blank if not applicable</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="request_delay">Request Delay (seconds)</label>
+                    <input type="number" class="form-control" id="request_delay" name="request_delay" 
+                           min="0" step="0.1" value="{{ model.request_delay }}">
+                    <small class="form-text text-muted">Delay between consecutive API requests to avoid rate limiting</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title">Parameters</h5>
+                    <button type="button" class="btn btn-primary" id="addParameterBtn">Add Parameter</button>
+                </div>
+                
+                <div id="parameters-container" class="mt-3">
+                    <!-- Existing parameters will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between mt-4">
+            <a href="{{ url_for('models.list') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-success">Save Changes</button>
+        </div>
+    </form>
+</div>
+
+{% block scripts %}
+<script>
+// Define the parameter template in JavaScript instead of using HTML template tag
+const parameterTemplateHTML = `
+    <div class="parameter-entry card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6>Parameter</h6>
+                <button type="button" class="btn btn-sm btn-danger remove-parameter">Remove</button>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label>Name</label>
+                    <input type="text" class="form-control" name="param_name[]" required>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label>Type</label>
+                    <select class="form-control param-type" name="param_type[]" required>
+                        <option value="float">Float</option>
+                        <option value="integer">Integer</option>
+                        <option value="string">String</option>
+                        <option value="boolean">Boolean</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 form-group">
+                    <label>Default Value</label>
+                    <input type="number" class="form-control param-default" name="param_default[]" required>
+                </div>
+                <div class="col-md-4 form-group">
+                    <label>Min Value</label>
+                    <input type="number" class="form-control param-min" name="param_min_value[]" required>
+                </div>
+                <div class="col-md-4 form-group">
+                    <label>Max Value</label>
+                    <input type="number" class="form-control param-max" name="param_max_value[]" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Description</label>
+                <textarea class="form-control" name="param_description[]" rows="2"></textarea>
+            </div>
+        </div>
+    </div>
+`;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('parameters-container');
+    const addBtn = document.getElementById('addParameterBtn');
+    
+    // Add parameter button click handler
+    addBtn.addEventListener('click', function() {
+        // Create new parameter element from template string
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = parameterTemplateHTML;
+        const newParam = tempDiv.firstElementChild;
+        container.appendChild(newParam);
+        
+        // Add event listener to the newly added remove button
+        const removeBtn = newParam.querySelector('.remove-parameter');
+        removeBtn.addEventListener('click', function() {
+            this.closest('.parameter-entry').remove();
+        });
+        
+        // Add event listeners for type change
+        const typeSelect = newParam.querySelector('.param-type');
+        typeSelect.addEventListener('change', function() {
+            updateInputType(this);
+        });
+        
+        return newParam;
+    });
+    
+    // Load existing parameters
+    const parameters = {{ parameters|tojson }};
+    if (parameters && parameters.length > 0) {
+        parameters.forEach(function(param) {
+            const paramEl = addBtn.click();
+            
+            paramEl.querySelector('[name="param_name[]"]').value = param.name;
+            paramEl.querySelector('[name="param_description[]"]').value = param.description || '';
+            paramEl.querySelector('[name="param_type[]"]').value = param.type;
+            
+            const defaultInput = paramEl.querySelector('.param-default');
+            const minInput = paramEl.querySelector('.param-min');
+            const maxInput = paramEl.querySelector('.param-max');
+            
+            if (param.type === 'boolean') {
+                defaultInput.type = 'checkbox';
+                defaultInput.checked = param.default;
+                minInput.parentElement.style.display = 'none';
+                maxInput.parentElement.style.display = 'none';
+            } else if (param.type === 'string') {
+                defaultInput.type = 'text';
+                defaultInput.value = param.default || '';
+                minInput.parentElement.style.display = 'none';
+                maxInput.parentElement.style.display = 'none';
+            } else {
+                defaultInput.value = param.default;
+                minInput.value = param.min_value;
+                maxInput.value = param.max_value;
+                
+                if (param.type === 'float') {
+                    defaultInput.step = '0.1';
+                    minInput.step = '0.1';
+                    maxInput.step = '0.1';
+                }
+            }
+        });
+    } else {
+        // Add default parameters if no existing ones
+        addDefaultParameters();
+    }
+    
+    function addDefaultParameters() {
+        // Temperature parameter
+        const temp = addBtn.click();
+        temp.querySelector('[name="param_name[]"]').value = 'temperature';
+        temp.querySelector('[name="param_description[]"]').value = 'Controls randomness. Lower values make the output more deterministic, while higher values increase creativity.';
+        temp.querySelector('[name="param_type[]"]').value = 'float';
+        temp.querySelector('[name="param_default[]"]').value = '0.7';
+        temp.querySelector('[name="param_min_value[]"]').value = '0.0';
+        temp.querySelector('[name="param_max_value[]"]').value = '1.0';
+        
+        // Max tokens parameter
+        const tokens = addBtn.click();
+        tokens.querySelector('[name="param_name[]"]').value = 'max_tokens';
+        tokens.querySelector('[name="param_description[]"]').value = 'The maximum number of tokens to generate in the response.';
+        tokens.querySelector('[name="param_type[]"]').value = 'integer';
+        tokens.querySelector('[name="param_default[]"]').value = '1024';
+        tokens.querySelector('[name="param_min_value[]"]').value = '1';
+        tokens.querySelector('[name="param_max_value[]"]').value = '2048';
+        
+        // Top p parameter
+        const topP = addBtn.click();
+        topP.querySelector('[name="param_name[]"]').value = 'top_p';
+        topP.querySelector('[name="param_description[]"]').value = 'Controls nucleus sampling, where the model considers only the most likely tokens with cumulative probability up to top_p.';
+        topP.querySelector('[name="param_type[]"]').value = 'float';
+        topP.querySelector('[name="param_default[]"]').value = '0.8';
+        topP.querySelector('[name="param_min_value[]"]').value = '0.0';
+        topP.querySelector('[name="param_max_value[]"]').value = '1.0';
+    }
+    
+    function updateInputType(typeSelect) {
+        const parent = typeSelect.closest('.parameter-entry');
+        const defaultInput = parent.querySelector('.param-default');
+        const minInput = parent.querySelector('.param-min');
+        const maxInput = parent.querySelector('.param-max');
+        
+        if (typeSelect.value === 'boolean') {
+            defaultInput.type = 'checkbox';
+            minInput.parentElement.style.display = 'none';
+            maxInput.parentElement.style.display = 'none';
+        } else if (typeSelect.value === 'string') {
+            defaultInput.type = 'text';
+            minInput.parentElement.style.display = 'none';
+            maxInput.parentElement.style.display = 'none';
+        } else {
+            defaultInput.type = 'number';
+            if (typeSelect.value === 'float') {
+                defaultInput.step = '0.1';
+                minInput.step = '0.1';
+                maxInput.step = '0.1';
+            } else {
+                defaultInput.step = '1';
+                minInput.step = '1';
+                maxInput.step = '1';
+            }
+            minInput.parentElement.style.display = '';
+            maxInput.parentElement.style.display = '';
+        }
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

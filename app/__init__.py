@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 from contextlib import contextmanager
@@ -9,6 +8,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+
+from app.utils.json_filters import register_json_filters
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -80,14 +81,7 @@ def create_app(config=None):
     app.async_loop = async_service.get_event_loop()
 
     # Custom template filters
-    @app.template_filter('fromjson')
-    def from_json(value):
-        if value:
-            try:
-                return json.loads(value)
-            except:
-                return {}
-        return {}
+    register_json_filters(app)
 
     # App teardown
     @app.teardown_appcontext
