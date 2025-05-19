@@ -26,7 +26,16 @@
         <a href="{{ url_for('questions.list') }}" class="btn btn-secondary">Questions</a>
     </div>
 </div>
-
+<div class="card mt-4">
+        <div class="card-header">
+            Manage LLM Models
+        </div>
+        <div class="card-body">
+            <a href="{{ url_for('models.list') }}" class="btn btn-primary">View All Models</a>
+            <a href="{{ url_for('models.add') }}" class="btn btn-success">Add New Model</a>
+            <a href="{{ url_for('models.providers_list') }}" class="btn btn-info">Manage Providers</a>
+        </div>
+    </div>
     <div class="card mt-4">
         <div class="card-header">
             Send Prompts to LLM

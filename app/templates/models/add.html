@@ -8,7 +8,7 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Basic Information</h5>
-                {% if groq_models %}
+                
         {% if groq_models %}
 <div class="form-group">
     <label for="groq_model">Select Groq Model (Optional)</label>
@@ -47,7 +47,7 @@
         </ul>
     </div>
 </div>
-{% endif %}
+
         
         <div id="model-details" class="card mb-3" style="display: none;">
             <div class="card-body">
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     `;
     
-    // Add parameter handler
+    // Parameter handler
     addBtn.addEventListener('click', function() {
         // Create new parameter from template
         const tempDiv = document.createElement('div');
@@ -305,46 +305,43 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    
-const groqModelSelect = document.getElementById('groq_model');
-const modelDetails = document.getElementById('model-details');
+    // Groq model selection
+    const groqModelSelect = document.getElementById('groq_model');
+    const modelDetails = document.getElementById('model-details');
 
-if (groqModelSelect) {
-    groqModelSelect.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        
-        if (selectedOption.value) {
-            // Show the details section
-            modelDetails.style.display = 'block';
+    if (groqModelSelect) {
+        groqModelSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
             
-            // Update the model details
-            document.getElementById('detail-id').textContent = selectedOption.value;
-            document.getElementById('detail-owner').textContent = selectedOption.dataset.owner;
-            document.getElementById('detail-context').textContent = selectedOption.dataset.context + ' tokens';
-            
-            // Format the Unix timestamp to a readable date
-            const createdDate = new Date(parseInt(selectedOption.dataset.created) * 1000);
-            document.getElementById('detail-created').textContent = createdDate.toLocaleDateString();
-            
-            // Autofill the model name
-            document.getElementById('name').value = selectedOption.value;
-            
-            // Set the provider to Groq by finding the Groq option in the dropdown
-            const providerSelect = document.getElementById('provider_id');
-            for (let i = 0; i < providerSelect.options.length; i++) {
-                if (providerSelect.options[i].text.toLowerCase().includes('groq')) {
-                    providerSelect.selectedIndex = i;
-                    break;
+            if (selectedOption.value) {
+                // Show the details section
+                modelDetails.style.display = 'block';
+                
+                // Update the model details
+                document.getElementById('detail-id').textContent = selectedOption.value;
+                document.getElementById('detail-owner').textContent = selectedOption.dataset.owner;
+                document.getElementById('detail-context').textContent = selectedOption.dataset.context + ' tokens';
+                
+                // Format the Unix timestamp to a readable date
+                const createdDate = new Date(parseInt(selectedOption.dataset.created) * 1000);
+                document.getElementById('detail-created').textContent = createdDate.toLocaleDateString();
+                
+                // Autofill the model name
+                document.getElementById('name').value = selectedOption.value;
+                
+                // Set the provider to Groq by finding the Groq option in the dropdown
+                const providerSelect = document.getElementById('provider_id');
+                for (let i = 0; i < providerSelect.options.length; i++) {
+                    if (providerSelect.options[i].text.toLowerCase().includes('groq')) {
+                        providerSelect.selectedIndex = i;
+                        break;
+                    }
                 }
+            } else {
+                modelDetails.style.display = 'none';
             }
-            
-            // Set the endpoint for Groq models
-            document.getElementById('endpoint').value = 'https://api.groq.com/openai/v1/chat/completions';
-        } else {
-            modelDetails.style.display = 'none';
-        }
-    });
-}
-
+        });
+    }
+});
 </script>
 {% endblock %}
