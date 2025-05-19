@@ -96,6 +96,7 @@ def build_response_query(
     template_ids: Optional[List[Union[str, int]]] = None,
     response_ids: Optional[List[Union[str, int]]] = None,
     story_ids: Optional[List[Union[str, int]]] = None,
+    prompt_ids: Optional[List[Union[str, int]]] = None,
     start_date: Optional[Union[str, datetime.datetime]] = None,
     end_date: Optional[Union[str, datetime.datetime]] = None,
     sort: str = 'date_desc',
@@ -113,6 +114,8 @@ def build_response_query(
 
     if response_ids:
         stmt = stmt.filter(Response.response_id.in_(_to_int_list(response_ids)))
+    elif prompt_ids:
+        stmt = stmt.filter(Response.prompt_id.in_(_to_int_list(prompt_ids)))
     elif story_ids:
         stmt = stmt.filter(Prompt.story_id.in_(_to_int_list(story_ids)))
     elif template_ids:
@@ -127,7 +130,7 @@ def build_response_query(
         stmt = stmt.filter(Response.flagged_for_review.is_(True))
     if question_id:
         stmt = stmt.filter(Prompt.question_id == question_id)
-    if story_id:
+    if story_id: #not currently used via all_responses, but accessed via the stories page.
         stmt = stmt.filter(Prompt.story_id == story_id)
     if run_id:
         stmt = stmt.filter(Response.run_id == int(run_id))
@@ -170,17 +173,81 @@ def get_responses_paginated(
     ).scalars().all()
     return Pagination(items, page, per_page, total)
 
-def get_filter_options() -> Dict[str, Any]:
-    """
-    Get all available filter options for the responses list.
-    """
-    providers = db.session.execute(select(Provider)).scalars().all()
-    models = db.session.execute(select(Model)).scalars().all()
-    questions = db.session.execute(select(Question)).scalars().all()
+# def get_filter_options() -> Dict[str, Any]:
+#     """
+#     Get all available filter options for the responses list.
+#     """
+#     providers = db.session.execute(select(Provider)).scalars().all()
+#     models = db.session.execute(select(Model)).scalars().all()
+#     questions = db.session.execute(select(Question)).scalars().all()
+#     return {
+#         'providers': providers,
+#         'models': models,
+#         'questions': questions
+#     }
+
+def get_valid_runs(story_ids=None, template_ids=None, prompt_ids=None):
+    if not any([story_ids, template_ids, prompt_ids]):
+        # If no filters are set, return all runs
+        return get_all_runs()
+
+    stmt = select(Run).join(Response).join(Prompt).join(Story)
+
+    if story_ids:
+        stmt = stmt.filter(Prompt.story_id.in_(_to_int_list(story_ids)))
+    if template_ids:
+        stmt = stmt.filter(Story.template_id.in_(_to_int_list(template_ids)))
+    if prompt_ids:
+        stmt = stmt.filter(Response.prompt_id.in_(_to_int_list(prompt_ids)))
+
+    stmt = stmt.distinct().order_by(Run.run_id.desc())
+    return db.session.execute(stmt).scalars().all()
+
+# def get_dynamic_filter_options(run_id=None, story_ids=None, template_ids=None):
+#     stmt = select(Prompt).join(Response).join(Model).join(Provider).join(Question)
+
+#     if run_id:
+#         stmt = stmt.filter(Response.run_id == int(run_id))
+#     if story_ids:
+#         stmt = stmt.filter(Prompt.story_id.in_(_to_int_list(story_ids)))
+#     if template_ids:
+#         stmt = stmt.filter(Story.template_id.in_(_to_int_list(template_ids)))
+
+#     prompts = db.session.execute(stmt).scalars().all()
+
+#     # Collect unique options
+#     providers = {p.model.provider for p in prompts}
+#     models = {p.model for p in prompts}
+#     questions = {p.question for p in prompts}
+
+#     return {
+#         'providers': sorted(providers, key=lambda p: p.provider_name),
+#         'models': sorted(models, key=lambda m: m.name),
+#         'questions': sorted(questions, key=lambda q: q.question_id),
+#     }
+
+def get_dynamic_filter_options(run_id=None, story_ids=None, template_ids=None, prompt_ids=None):
+    stmt = select(Prompt).join(Response).join(Model).join(Provider).join(Question).join(Story)
+
+    if run_id:
+        stmt = stmt.filter(Response.run_id == int(run_id))
+    if story_ids:
+        stmt = stmt.filter(Prompt.story_id.in_(_to_int_list(story_ids)))
+    if template_ids:
+        stmt = stmt.filter(Story.template_id.in_(_to_int_list(template_ids)))
+    if prompt_ids:
+        stmt = stmt.filter(Prompt.prompt_id.in_(_to_int_list(prompt_ids)))
+
+    prompts = db.session.execute(stmt).scalars().all()
+
+    providers = {p.model.provider for p in prompts}
+    models = {p.model for p in prompts}
+    questions = {p.question for p in prompts}
+
     return {
-        'providers': providers,
-        'models': models,
-        'questions': questions
+        'providers': sorted(providers, key=lambda p: p.provider_name),
+        'models': sorted(models, key=lambda m: m.name),
+        'questions': sorted(questions, key=lambda q: q.question_id),
     }
 
 def get_source_info(source: str, source_id: Optional[int] = None, source_count: Optional[int] = None) -> Optional[str]:
@@ -284,6 +351,50 @@ def get_responses_for_templates(template_ids):
     )
     return db.session.execute(stmt).scalars().all()
 
+def build_filter_kwargs(request, session):
+    run_id = request.args.get('run_id', '')
+    provider = request.args.get('provider', '')
+    model = request.args.get('model', '')
+    flagged_only = 'flagged_only' in request.args
+    question_id = request.args.get('question_id', '')
+    story_id = request.args.get('story_id', '')
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
+    sort = request.args.get('sort', 'date_desc')
+
+    response_ids = session.get('response_ids', [])
+    story_ids = session.get('story_ids', [])
+    template_ids = session.get('template_ids', [])
+    prompt_ids = session.get('prompt_ids', [])
+
+    filter_kwargs = {
+        'flagged_only': flagged_only,
+        'sort': sort
+    }
+
+    if run_id:
+        filter_kwargs['run_id'] = run_id
+    else:
+        filter_kwargs.update({
+            'provider': provider,
+            'model': model,
+            'question_id': question_id,
+            'story_id': story_id,
+            'start_date': start_date,
+            'end_date': end_date
+        })
+
+    if response_ids and 'clear_responses' not in request.args:
+        filter_kwargs['response_ids'] = response_ids
+    elif story_ids and 'clear_stories' not in request.args:
+        filter_kwargs['story_ids'] = story_ids
+    elif template_ids and 'clear_templates' not in request.args:
+        filter_kwargs['template_ids'] = template_ids
+    elif prompt_ids and 'clear_prompts' not in request.args:
+        filter_kwargs['prompt_ids'] = prompt_ids
+
+    return filter_kwargs
+
 def generate_csv_export(responses):
     """
     Generate a CSV file from a list of responses
@@ -296,7 +407,7 @@ def generate_csv_export(responses):
     csv_writer.writerow(['ID', 'Date', 'Time', 'Provider', 'Model', 
                          'Temperature', 'Max Tokens', 'Top P',
                          'Story ID', 'Story', 'Question ID', 'Question', 
-                         'Response', 'Flagged', 'Review Notes'])
+                         'Response', 'Run_ID', 'Run Description', 'Flagged', 'Review Notes'])
     
     # Write data rows
     for response in responses:
@@ -314,6 +425,8 @@ def generate_csv_export(responses):
             response.prompt.question_id,
             response.prompt.question.content,
             response.response_content,
+            response.run_id,
+            response.run.description if hasattr(response, 'run') and response.run else '',
             'Yes' if response.flagged_for_review else 'No',
             response.review_notes or ''
         ])
