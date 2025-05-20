@@ -65,21 +65,19 @@ This application uses SQLAlchemy with Flask-Migrate to manage the database schem
 A basic database is provided with some sample data, but you need to apply migrations to create the final versions of the table.
 
 ### Quick Setup (Development)
-For a fresh database with initial data:
 
-```bash
-# This will create a new database.db file in the instance folder if run before starting the app - flask db upgrade still needed
-python database.py
-```
-### Initial Setup
+1. After installing dependencies and setting up your `.env` file, create an instance folder at your project root.
 
-After installing dependencies and setting up your `.env` file:
-
-1. Initialize the database (first-time setup only):
+2. For a fresh database with initial data:
+  ```bash
+  # This will create a new database.db file in the instance folder 
+  python database.py
+  ```
+3. Apply the migrrations:
    ```bash
    flask db upgrade
    ```
-2. This will create all necessary tables based on the latest migration version.
+4. This will create all necessary tables based on the latest migration version.
 
 ## Running the Application
 
