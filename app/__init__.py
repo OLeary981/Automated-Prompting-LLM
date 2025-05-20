@@ -11,7 +11,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 from app.utils.json_filters import register_json_filters
 
-# Initialize extensions
+# Extensions
 db = SQLAlchemy()
 migrate = Migrate()
 
@@ -49,7 +49,10 @@ def configure_logging(app):
     log_file = os.path.join(log_dir, 'app.log')
 
     root_logger = logging.getLogger()
-    if not any(isinstance(h, logging.FileHandler) and getattr(h, 'baseFilename', None) == log_file for h in root_logger.handlers):
+    if not any(
+    isinstance(h, logging.FileHandler) and getattr(h, 'baseFilename', None) == log_file
+    for h in root_logger.handlers
+    ):
         file_handler = logging.FileHandler(log_file)
         file_handler.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')

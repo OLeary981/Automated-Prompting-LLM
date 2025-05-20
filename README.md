@@ -61,8 +61,16 @@ GROQ_API_KEY=your-groq-api-key
 
 ## Database Setup
 
-This application uses SQLAlchemy with Flask-Migrate to manage the database schema. The database is automatically created when you first run the application with some sample data, but you need to apply migrations to create the final versions of the table.
+This application uses SQLAlchemy with Flask-Migrate to manage the database schema. 
+A basic database is provided with some sample data, but you need to apply migrations to create the final versions of the table.
 
+### Quick Setup (Development)
+For a fresh database with initial data:
+
+```bash
+# This will create a new database.db file in the instance folder if run before starting the app - flask db upgrade still needed
+python database.py
+```
 ### Initial Setup
 
 After installing dependencies and setting up your `.env` file:

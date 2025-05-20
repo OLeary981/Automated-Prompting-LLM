@@ -1,7 +1,7 @@
 from app import db
 
 
-# Story Table
+
 class Story(db.Model):
     __tablename__ = 'story'
 
@@ -12,9 +12,7 @@ class Story(db.Model):
     template = db.relationship('Template', backref=db.backref('stories', lazy=True))
 
     def __repr__(self):
-        return f'<Story {self.story_id} - {self.content}>'
-    
-
+        return f'<Story {self.story_id} - {self.content}>'   
 class Category(db.Model):
     __tablename__ = 'category'
 
