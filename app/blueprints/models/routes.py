@@ -1,4 +1,4 @@
-from flask import current_app, flash, redirect, render_template, request, url_for
+from flask import flash, redirect, render_template, request, url_for
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.blueprints.models import models_bp
