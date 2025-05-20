@@ -102,7 +102,7 @@ def edit(model_id):
                 parameters=parameters
             )
             
-            flash(f'Model "{updated_model.name}" updated successfully.', 'success')
+            flash(f'Model "{updated_model["name"]}" updated successfully.', 'success')
             return redirect(url_for('models.list'))
             
         except (ValueError, TypeError) as e:

@@ -157,7 +157,7 @@ def update_model(
     endpoint: str, 
     request_delay: float,
     parameters: List[Dict[str, Any]]
-) -> Model:
+) -> Dict[str, Any]:
     """
     Update an existing model in the database.
     
@@ -170,7 +170,7 @@ def update_model(
         parameters: New list of parameter configurations
         
     Returns:
-        The updated Model object
+        The id and the name of the updated model
         
     Raises:
         ValueError: If validation fails
@@ -190,8 +190,8 @@ def update_model(
         model.parameters = parameters_json
         
         # The commit is handled by the session_scope context manager
-        
-        return model
+        model_name = model.name
+        return {"id": model_id, "name": model_name}
 
 
 def create_default_parameters() -> List[Dict[str, Any]]:
