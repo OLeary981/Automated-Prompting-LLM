@@ -22,20 +22,7 @@ groq_client = Groq(api_key=GROQ_API_KEY)
 SYSTEM_DEFAULTS = Config.SYSTEM_DEFAULTS
 
 
-# def get_session():
-#     return scoped_session(sessionmaker(bind=db.engine))
 
-# @contextmanager
-# def session_scope():
-#     session = get_session()
-#     try:
-#         yield session
-#         session.commit()
-#     except:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.remove()
 
 
 def get_model_name_by_id(model_id):

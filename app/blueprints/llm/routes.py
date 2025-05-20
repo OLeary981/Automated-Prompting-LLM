@@ -18,7 +18,7 @@ from flask import (
 )
 
 from ... import db
-from ...models import Model, Prompt, Question, Response
+from ...models import Prompt
 from ...services import async_service, llm_service, prompt_service
 from . import llm_bp
 
@@ -183,66 +183,7 @@ def rerun_prompts():
 
 
 
-# @llm_bp.route('/rerun_prompts', methods=['POST'])
-# def rerun_prompts():
-#     logger.info("In the rerun_prompts route")
-#     run_description = request.form.get('run_description', '')[:254]
-#     prompt_ids = session.get('prompt_ids', [])
-#     if not prompt_ids:
-#         flash('No prompts selected to rerun.', 'warning')
-#         return redirect(url_for('prompts.list'))
 
-#     try:
-#         int_prompt_ids = [int(pid) for pid in prompt_ids]
-#         prompts = [db.session.query(Prompt).get(pid) for pid in int_prompt_ids if db.session.query(Prompt).get(pid)]
-#         if not prompts:
-#             flash('Selected prompts not found.', 'warning')
-#             return redirect(url_for('prompts.list'))
-
-#         # Use the first prompt for shared fields
-#         first_prompt = prompts[0]
-#         story_ids = []
-#         prompts_data = []
-#         for prompt in prompts:
-#             if prompt.story_id not in story_ids:
-#                 story_ids.append(prompt.story_id)
-#             prompts_data.append({
-#                 'prompt_id': prompt.prompt_id,
-#                 'model_id': prompt.model_id,
-#                 'story_id': prompt.story_id,
-#                 'question_id': prompt.question_id,
-#                 'parameters': {
-#                     'temperature': prompt.temperature,
-#                     'max_tokens': prompt.max_tokens,
-#                     'top_p': prompt.top_p
-#                 }
-#             })
-
-#         # Optionally update session for context
-#         session['model_id'] = first_prompt.model_id
-#         session['question_id'] = first_prompt.question_id
-#         session['story_ids'] = [str(sid) for sid in story_ids]
-
-#         # Create the job using the shared fields from the first prompt
-#         job_id = async_service.create_job(
-#             model_id=first_prompt.model_id,
-#             story_ids=story_ids,
-#             question_id=first_prompt.question_id,
-#             parameters={
-#                 'temperature': first_prompt.temperature,
-#                 'max_tokens': first_prompt.max_tokens,
-#                 'top_p': first_prompt.top_p
-#             },
-#             prompts_data=prompts_data,
-#             run_description=run_description
-#         )
-#         session['job_id'] = job_id
-#         async_service.cleanup_old_jobs()
-#         return redirect(url_for('llm.loading'))
-
-#     except Exception as e:
-#         flash(f'Error setting up prompt rerun: {str(e)}', 'danger')
-#         return redirect(url_for('prompts.list'))
 
 
 @llm_bp.route('/start_processing/<job_id>')
@@ -270,7 +211,7 @@ def start_processing(job_id):
         app = current_app._get_current_object()
         
         
-        # Start processing in background - THIS PART IS MISSING OR INCOMPLETE
+        # Start processing in background G
         task = asyncio.run_coroutine_threadsafe(
             async_service.process_llm_requests(
                 app,
@@ -347,7 +288,7 @@ def progress_stream(job_id):
                         # Store response IDs in the job data instead of the session
                         job["response_ids"] = response_ids
                         
-                        # Try to store in session but it will fail outside request context
+                        # Try to store in session (might want to make this work later) but it will fail outside request context
                         try:
                             # This will fail with "name 'app' is not defined" - that's ok
                             # We'll use job["response_ids"] in the llm_response route
