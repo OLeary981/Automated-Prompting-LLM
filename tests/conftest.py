@@ -62,7 +62,7 @@ def app():
         if result != 1:
             print("WARNING: Foreign key constraints could not be enabled!")
     
-        yield app  # This should NOT be inside the context
+        yield app  
 
     
     try:

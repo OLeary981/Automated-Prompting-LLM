@@ -1,11 +1,22 @@
-from flask import current_app, flash, render_template, request, redirect, url_for, session, jsonify
-from sqlalchemy import select
-from ... import db
-from ...services import  story_builder_service,  category_service, story_service
-from ...models import  Story,  Word, Field, Template
-from . import templates_bp
 import json
+
+from flask import (
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+from sqlalchemy import select
+
+from ... import db
+from ...models import Field, Story, Template, Word
+from ...services import category_service, story_builder_service, story_service
 from ...utils.pagination import Pagination
+from . import templates_bp
 
 #Notes for self - check for duplication of retrieval of words etc from database. 
 #I think maybe theres a mix/overlap between story_builder_service and routes etc
@@ -16,14 +27,6 @@ def list():
     sort_by = request.args.get('sort_by', 'desc')
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', current_app.config["PER_PAGE"], type=int)
-
-    # stmt = select(Template)
-    # if search_text:
-    #     stmt = stmt.where(Template.content.ilike(f'%{search_text}%'))
-    # if sort_by == 'asc':
-    #     stmt = stmt.order_by(Template.template_id.asc())
-    # else:
-    #     stmt = stmt.order_by(Template.template_id.desc())
 
     all_templates = story_builder_service.get_templates_filtered(search_text, sort_by)
     total = len(all_templates)

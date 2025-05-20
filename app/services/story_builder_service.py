@@ -189,31 +189,6 @@ def generate_stories(template_id, field_data, category_ids=None):
     # Use the existing template_filler function with category support
     return template_filler(template, template_id, field_data, category_ids)
 
-# def generate_story_permutations(template_content, field_data):
-#     """Generate all possible story permutations from a template and field data."""
-#     # Extract field names from template
-#     field_names = re.findall(r'\{(.*?)\}', template_content)
-#     unique_field_names = list(set(field_names))
-    
-#     # Ensure all required fields have values
-#     for field_name in unique_field_names:
-#         if field_name not in field_data or not field_data[field_name]:
-#             raise ValueError(f"Field '{field_name}' has no values assigned")
-    
-#     # Generate all possible combinations of field values
-#     field_values_list = [field_data[field_name] for field_name in unique_field_names]
-#     combinations = list(itertools.product(*field_values_list))
-    
-#     # Generate stories by substituting field values
-#     stories = []
-#     for combo in combinations:
-#         story = template_content
-#         for i, field_name in enumerate(unique_field_names):
-#             # Replace all occurrences of this field
-#             story = story.replace(f"{{{field_name}}}", str(combo[i]))
-#         stories.append(story)
-    
-#     return stories
 
 def update_field_words(field_data):
     """Update field words based on user selection"""

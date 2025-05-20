@@ -110,7 +110,8 @@
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
 
             <h5 class="mb-0">Refine Results</h5>
-            {% if current_filters.run_id or request.args.get('provider') or request.args.get('model') or request.args.get('flagged_only') or
+            {% if current_filters.run_id or request.args.get('provider') or request.args.get('model') or
+            request.args.get('flagged_only') or
             request.args.get('question_id') or request.args.get('start_date') or request.args.get('end_date') %}
             <a href="{{ url_for('responses.list', 
                       source=source, 
@@ -127,7 +128,8 @@
                     <!-- Run filter dropdown at the top of the filter form -->
                     <div class="col-md-12 mb-3">
                         <label for="run_id" class="form-label">Run:</label>
-                        <select class="form-select form-select-sm" id="run_id" name="run_id" onchange = "submitRunOnly(this)"                            >
+                        <select class="form-select form-select-sm" id="run_id" name="run_id"
+                            onchange="submitRunOnly(this)">
                             <option value="">All Runs</option>
                             {% for run in runs %}
                             <option value="{{ run.run_id }}" {% if current_filters.run_id|string==run.run_id|string
@@ -357,39 +359,56 @@
             </div>
 
             <!-- Pagination -->
-            <nav aria-label="Page navigation">
-                <ul class="pagination">
-                    {% if pagination.has_prev %}
-                    <li class="page-item">
-                        <a class="page-link"
-                            href="{{ url_for('responses.list', page=pagination.prev_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else None, question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Previous</a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled"><span class="page-link">Previous</span></li>
-                    {% endif %}
+{% set pagination_args = {
+    'provider': current_filters.provider,
+    'model': current_filters.model,
+    'flagged_only': 'true' if current_filters.flagged_only else None,
+    'question_id': current_filters.question_id,
+    'story_id': current_filters.story_id,
+    'start_date': current_filters.start_date,
+    'end_date': current_filters.end_date,
+    'sort': current_filters.sort,
+    'run_id': current_filters.run_id,
+    'source': source,
+    'source_id': source_id
+} %}
 
-                    {% for page_num in pagination.iter_pages() %}
-                    {% if page_num %}
-                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
-                        <a class="page-link"
-                            href="{{ url_for('responses.list', page=page_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else None, question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">{{
-                            page_num }}</a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled"><span class="page-link">...</span></li>
-                    {% endif %}
-                    {% endfor %}
 
-                    {% if pagination.has_next %}
-                    <li class="page-item">
-                        <a class="page-link"
-                            href="{{ url_for('responses.list', page=pagination.next_num, provider=current_filters.provider, model=current_filters.model, flagged_only='true' if current_filters.flagged_only else None, question_id=current_filters.question_id, story_id=current_filters.story_id, start_date=current_filters.start_date, end_date=current_filters.end_date, sort=current_filters.sort) }}">Next</a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled"><span class="page-link">Next</span></li>
-                    {% endif %}
-                </ul>
-            </nav>
+           <nav aria-label="Page navigation">
+    <ul class="pagination">
+        {% if pagination.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('responses.list', 
+                page=pagination.prev_num, 
+                **pagination_args) }}">Previous</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        {% for page_num in pagination.iter_pages() %}
+        {% if page_num %}
+            <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('responses.list', 
+                    page=page_num, 
+                    **pagination_args) }}">{{ page_num }}</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('responses.list', 
+                page=pagination.next_num, 
+                **pagination_args) }}">Next</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
 </div>
 
 {% endblock %}
@@ -426,19 +445,19 @@
     }
 </script>
 <script>
-function submitRunOnly(select) {
-    // Create a new form and submit only the run_id
-    var form = document.createElement('form');
-    form.method = 'GET';
-    form.action = "{{ url_for('responses.list') }}";
-    var input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'run_id';
-    input.value = select.value;
-    form.appendChild(input);
-    document.body.appendChild(form);
-    form.submit();
-}
+    function submitRunOnly(select) {
+        // Create a new form and submit only the run_id
+        var form = document.createElement('form');
+        form.method = 'GET';
+        form.action = "{{ url_for('responses.list') }}";
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'run_id';
+        input.value = select.value;
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    }
 </script>
 
 {% endblock %}

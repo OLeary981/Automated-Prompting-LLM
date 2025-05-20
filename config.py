@@ -1,4 +1,5 @@
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -22,3 +23,27 @@ class Config:
     GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 
     PER_PAGE = 10  # Number of items per page for pagination (NEED TO GO THROUGH ROUTES TO APPLY!)
+
+    SYSTEM_DEFAULTS = {
+    "temperature": {
+        "default": 0.7,
+        "min": 0.0,
+        "max": 1.0,
+        "type": "float",
+        "description": "Controls randomness. Lower values make the output more deterministic, while higher values increase creativity."
+    },
+    "max_tokens": {
+        "default": 1024,
+        "min": 1,
+        "max": 2048,
+        "type": "integer",
+        "description": "The maximum number of tokens to generate in the response."
+    },
+    "top_p": {
+        "default": 0.8,
+        "min": 0.0,
+        "max": 1.0,
+        "type": "float",
+        "description": "Controls nucleus sampling, where the model considers only the most likely tokens with cumulative probability up to top_p."
+    }
+}

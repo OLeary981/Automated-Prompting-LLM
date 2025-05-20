@@ -31,7 +31,6 @@ def test_iter_pages_with_gaps():
     assert 1 in pages
     assert 10 in pages
 
-
 #Edge cases:
 def test_pagination_less_than_one_page():
     items = list(range(3))

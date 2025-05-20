@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container pt-4">
+    <h1>Edit Model: {{ model.name }}</h1>
+    
+    <form method="POST" id="modelForm" class="mt-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Basic Information</h5>
+                
+                <div class="form-group">
+                    <label for="name">Model Name</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ model.name }}" readonly>
+                    <small class="form-text text-muted">Model name cannot be changed</small>
+                </div>
+                
+                <!-- Add helpful resource links -->
+                <div class="mt-2 small">
+                    <i class="bi bi-info-circle"></i> Helpful resources:
+                    <ul class="pl-4 mb-0">
+                        <li>
+                            <a href="https://console.groq.com/docs/api-reference" target="_blank">
+                                Groq API Reference <i class="bi bi-box-arrow-up-right small"></i>
+                            </a>
+                            <span class="text-muted">- Model documentation and parameter ranges</span>
+                        </li>
+                        <li>
+                            <a href="https://console.groq.com/dashboard/limits" target="_blank">
+                                Account Rate Limits <i class="bi bi-box-arrow-up-right small"></i>
+                            </a>
+                            <span class="text-muted">- Check your usage and limits (login required)</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="form-group mt-3">
+                    <label for="provider_id">Provider</label>
+                    <select class="form-control" id="provider_id" name="provider_id" required>
+                        <option value="" disabled>Select Provider</option>
+                        {% for provider in providers %}
+                        <option value="{{ provider.provider_id }}" {% if provider.provider_id == model.provider_id %}selected{% endif %}>
+                            {{ provider.provider_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="endpoint">Endpoint URL</label>
+                    <input type="text" class="form-control" id="endpoint" name="endpoint" value="{{ model.endpoint or '' }}">
+                    <small class="form-text text-muted">Leave blank if not applicable</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="request_delay">Request Delay (seconds)</label>
+                    <input type="number" class="form-control" id="request_delay" name="request_delay" 
+                           min="0" step="0.1" value="{{ model.request_delay }}">
+                    <small class="form-text text-muted">Delay between consecutive API requests to avoid rate limiting</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rest of the form remains unchanged -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title">Parameters</h5>
+                    <button type="button" class="btn btn-primary" id="addParameterBtn">Add Parameter</button>
+                </div>
+                
+                <div id="parameters-container" class="mt-3">
+                    <!-- Render existing parameters from the server -->
+                    {% for param in parameters %}
+                    <div class="parameter-entry card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6>Parameter</h6>
+                                <button type="button" class="btn btn-sm btn-danger remove-parameter">Remove</button>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 form-group">
+                                    <label>Name</label>
+                                    <input type="text" class="form-control" name="param_name[]" value="{{ param.name }}" required>
+                                </div>
+                                <div class="col-md-6 form-group">
+                                    <label>Type</label>
+                                    <select class="form-control param-type" name="param_type[]" required>
+                                        <option value="float" {% if param.type == 'float' %}selected{% endif %}>Float</option>
+                                        <option value="integer" {% if param.type == 'integer' %}selected{% endif %}>Integer</option>
+                                        <option value="string" {% if param.type == 'string' %}selected{% endif %}>String</option>
+                                        <option value="boolean" {% if param.type == 'boolean' %}selected{% endif %}>Boolean</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 form-group">
+                                    <label>Default Value</label>
+                                    {% if param.type == 'boolean' %}
+                                    <input type="checkbox" class="form-control param-default" name="param_default[]" {% if param.default %}checked{% endif %}>
+                                    {% elif param.type == 'string' %}
+                                    <input type="text" class="form-control param-default" name="param_default[]" value="{{ param.default }}" required>
+                                    {% else %}
+                                    <input type="number" class="form-control param-default" name="param_default[]" 
+                                           value="{{ param.default }}" 
+                                           step="{% if param.type == 'float' %}0.1{% else %}1{% endif %}" required>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if param.display_min_max %}
+                                <div class="col-md-4 form-group min-value-group">
+                                    <label>Min Value</label>
+                                    <input type="number" class="form-control param-min" name="param_min_value[]" 
+                                           value="{{ param.min_value }}" 
+                                           step="{% if param.type == 'float' %}0.1{% else %}1{% endif %}" required>
+                                </div>
+                                <div class="col-md-4 form-group max-value-group">
+                                    <label>Max Value</label>
+                                    <input type="number" class="form-control param-max" name="param_max_value[]" 
+                                           value="{{ param.max_value }}" 
+                                           step="{% if param.type == 'float' %}0.1{% else %}1{% endif %}" required>
+                                </div>
+                                {% else %}
+                                <input type="hidden" name="param_min_value[]" value="0">
+                                <input type="hidden" name="param_max_value[]" value="0">
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea class="form-control" name="param_description[]" rows="2">{{ param.description }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between mt-4">
+            <a href="{{ url_for('models.list') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-success">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- JavaScript remains unchanged -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('parameters-container');
+    const addBtn = document.getElementById('addParameterBtn');
+    
+    // Template for new parameters
+    const paramTemplate = `
+        <div class="parameter-entry card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6>Parameter</h6>
+                    <button type="button" class="btn btn-sm btn-danger remove-parameter">Remove</button>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label>Name</label>
+                        <input type="text" class="form-control" name="param_name[]" required>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Type</label>
+                        <select class="form-control param-type" name="param_type[]" required>
+                            <option value="float">Float</option>
+                            <option value="integer">Integer</option>
+                            <option value="string">String</option>
+                            <option value="boolean">Boolean</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 form-group">
+                        <label>Default Value</label>
+                        <input type="number" class="form-control param-default" name="param_default[]" value="0" step="0.1" required>
+                    </div>
+                    <div class="col-md-4 form-group min-value-group">
+                        <label>Min Value</label>
+                        <input type="number" class="form-control param-min" name="param_min_value[]" value="0" step="0.1" required>
+                    </div>
+                    <div class="col-md-4 form-group max-value-group">
+                        <label>Max Value</label>
+                        <input type="number" class="form-control param-max" name="param_max_value[]" value="1" step="0.1" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea class="form-control" name="param_description[]" rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add parameter handler
+    addBtn.addEventListener('click', function() {
+        // Create new parameter from template
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = paramTemplate;
+        const newParam = tempDiv.firstElementChild;
+        container.appendChild(newParam);
+        
+        // Add type change handler
+        const typeSelect = newParam.querySelector('.param-type');
+        typeSelect.addEventListener('change', function() {
+            updateInputType(this);
+        });
+        
+        // Add remove button handler
+        newParam.querySelector('.remove-parameter').addEventListener('click', function() {
+            this.closest('.parameter-entry').remove();
+        });
+    });
+    
+    // Add event listeners to existing parameter cards
+    document.querySelectorAll('.parameter-entry').forEach(function(entry) {
+        // Add type change handler
+        const typeSelect = entry.querySelector('.param-type');
+        typeSelect.addEventListener('change', function() {
+            updateInputType(this);
+        });
+        
+        // Add remove button handler
+        const removeBtn = entry.querySelector('.remove-parameter');
+        removeBtn.addEventListener('click', function() {
+            this.closest('.parameter-entry').remove();
+        });
+    });
+    
+    function updateInputType(typeSelect) {
+        const parent = typeSelect.closest('.parameter-entry');
+        const defaultInput = parent.querySelector('.param-default');
+        const minValueGroup = parent.querySelector('.min-value-group');
+        const maxValueGroup = parent.querySelector('.max-value-group');
+        
+        if (typeSelect.value === 'boolean') {
+            defaultInput.type = 'checkbox';
+            minValueGroup.style.display = 'none';
+            maxValueGroup.style.display = 'none';
+        } else if (typeSelect.value === 'string') {
+            defaultInput.type = 'text';
+            defaultInput.value = '';
+            minValueGroup.style.display = 'none';
+            maxValueGroup.style.display = 'none';
+        } else {
+            defaultInput.type = 'number';
+            if (typeSelect.value === 'float') {
+                defaultInput.step = '0.1';
+                minValueGroup.querySelector('input').step = '0.1';
+                maxValueGroup.querySelector('input').step = '0.1';
+            } else {
+                defaultInput.step = '1';
+                minValueGroup.querySelector('input').step = '1';
+                maxValueGroup.querySelector('input').step = '1';
+            }
+            minValueGroup.style.display = '';
+            maxValueGroup.style.display = '';
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,7 +1,41 @@
+# Virtual Environment
 venv/
+.venv/
+
+# Environment variables
 .env
+.env.*
+!.env.example
+
+# Python cache files
 __pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Editor settings
 settings.json
+.vscode/
+.idea/
+
+# Database files
 database.db
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# Logs
+logs/
+*.log
 logs/app.log
+
+# Coverage reports
+coverage/
 .coverage
+htmlcov/
+coverage.xml
+*.cover
+
+#project diary
+diary.txt

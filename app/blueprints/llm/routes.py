@@ -18,8 +18,8 @@ from flask import (
 )
 
 from ... import db
-from ...models import Model, Prompt, Question, Response
-from ...services import async_service, llm_service, question_service
+from ...models import Prompt
+from ...services import async_service, llm_service, prompt_service
 from . import llm_bp
 
 logger = logging.getLogger(__name__)
@@ -76,6 +76,7 @@ def select_parameters():
         session['parameters'] = parameters
         # Store run_description separately if needed
         session['run_description'] = request.form.get('run_description', '')[:255]
+        print(f"Stored run description: {session['run_description']}")
         return redirect(url_for('llm.loading'))
         
     # GET request - show parameter form
@@ -104,10 +105,17 @@ def loading():
         question_id = int(session.get("question_id"))
         model_id = int(session.get("model_id"))
         parameters = session.get('parameters', {})
-        run_description = request.form.get('run_description', '')[:254] 
-        
+        #run_description = request.form.get('run_description', '')[:254]
+        run_description = session.get('run_description')
+        print(f"Run description in loading route: {run_description}")
         # Use the service to create a new job
-        job_id = async_service.create_job(model_id, story_ids, question_id, parameters, run_description)
+        job_id = async_service.create_job(
+            model_id=model_id, 
+            story_ids=story_ids,
+            question_id=question_id,
+            parameters=parameters,
+            run_description=run_description
+        )
         session['job_id'] = job_id
         logger.debug(f"Created new job: {job_id} with {len(story_ids)} stories to process")
     else:
@@ -120,9 +128,6 @@ def loading():
     async_service.cleanup_old_jobs()
     
     return render_template('loading.html', job_id=job_id)
-
-
-
 
 @llm_bp.route('/rerun_prompts', methods=['POST'])
 def rerun_prompts():
@@ -145,19 +150,10 @@ def rerun_prompts():
         story_ids = []
         prompts_data = []
         for prompt in prompts:
+            prompt_data = prompt_service.hydrate_prompt(prompt.prompt_id, fetch_content=False)
+            prompts_data.append(prompt_data)
             if prompt.story_id not in story_ids:
                 story_ids.append(prompt.story_id)
-            prompts_data.append({
-                'prompt_id': prompt.prompt_id,
-                'model_id': prompt.model_id,
-                'story_id': prompt.story_id,
-                'question_id': prompt.question_id,
-                'parameters': {
-                    'temperature': prompt.temperature,
-                    'max_tokens': prompt.max_tokens,
-                    'top_p': prompt.top_p
-                }
-            })
 
         # Optionally update session for context
         session['model_id'] = first_prompt.model_id
@@ -186,6 +182,10 @@ def rerun_prompts():
         return redirect(url_for('prompts.list'))
 
 
+
+
+
+
 @llm_bp.route('/start_processing/<job_id>')
 def start_processing(job_id):
     logger.info(f"In the start processing route, Starting processing for job: {job_id}")
@@ -211,7 +211,7 @@ def start_processing(job_id):
         app = current_app._get_current_object()
         
         
-        # Start processing in background - THIS PART IS MISSING OR INCOMPLETE
+        # Start processing in background G
         task = asyncio.run_coroutine_threadsafe(
             async_service.process_llm_requests(
                 app,
@@ -288,7 +288,7 @@ def progress_stream(job_id):
                         # Store response IDs in the job data instead of the session
                         job["response_ids"] = response_ids
                         
-                        # Try to store in session but it will fail outside request context
+                        # Try to store in session (might want to make this work later) but it will fail outside request context
                         try:
                             # This will fail with "name 'app' is not defined" - that's ok
                             # We'll use job["response_ids"] in the llm_response route
