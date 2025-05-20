@@ -81,6 +81,7 @@ def create_run_for_job(description=None):
 
 def create_job(model_id, story_ids, question_id, parameters, prompts_data=None, run_description=None):
     job_id = str(uuid.uuid4())
+    print(f"In create_job: {run_description}")
     with processing_jobs_lock:
         if prompts_data:
             processing_jobs[job_id] = {
@@ -118,8 +119,8 @@ def create_job(model_id, story_ids, question_id, parameters, prompts_data=None, 
                     "parameters": parameters
                 }
             }
-    if not run_description:
-        run_description = f"Test for for model {model_id} with stories {story_ids}"
+    if run_description is None or run_description.strip() == "":
+        run_description = f"Test for model {model_id} with stories {story_ids}"
     run_id = create_run_for_job(run_description)
     processing_jobs[job_id]["run_id"] = run_id
     return job_id

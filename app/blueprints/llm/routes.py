@@ -76,6 +76,7 @@ def select_parameters():
         session['parameters'] = parameters
         # Store run_description separately if needed
         session['run_description'] = request.form.get('run_description', '')[:255]
+        print(f"Stored run description: {session['run_description']}")
         return redirect(url_for('llm.loading'))
         
     # GET request - show parameter form
@@ -104,10 +105,17 @@ def loading():
         question_id = int(session.get("question_id"))
         model_id = int(session.get("model_id"))
         parameters = session.get('parameters', {})
-        run_description = request.form.get('run_description', '')[:254] 
-        
+        #run_description = request.form.get('run_description', '')[:254]
+        run_description = session.get('run_description')
+        print(f"Run description in loading route: {run_description}")
         # Use the service to create a new job
-        job_id = async_service.create_job(model_id, story_ids, question_id, parameters, run_description)
+        job_id = async_service.create_job(
+            model_id=model_id, 
+            story_ids=story_ids,
+            question_id=question_id,
+            parameters=parameters,
+            run_description=run_description
+        )
         session['job_id'] = job_id
         logger.debug(f"Created new job: {job_id} with {len(story_ids)} stories to process")
     else:
