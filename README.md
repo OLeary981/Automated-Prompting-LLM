@@ -17,7 +17,7 @@ A Flask application for managing and automating prompts to Large Language Models
 
 ## Demo
 
-If you have a live demo, GIF, or video, link or embed it here.
+TBC...
 
 ## Features
 
