@@ -164,20 +164,36 @@ class TestStoryBuilderService:
         assert field is not None
         assert set(w.word for w in field.words) == {"happy", "sad"}
 
-    def test_template_filler_and_generate_stories(self, session, test_data):
-        """Test filling a template and generating stories with categories."""
+    def test_template_filler_with_multiple_permutations(self, session, test_data):
+        """Test filling a template with multiple values generates all permutations."""
         template_id = test_data["ids"]["templates"][0]
         template = session.get(Template, template_id)
-        field_data = {"animal": ["cat"], "action": ["run"]}
-        # Add a category for association
+        
+        # Provide multiple values for each field to test permutations
+        field_data = {"animal": ["cat", "dog"], "action": ["run", "jump"]}
+        
+        # Generate stories with these permutations
         category_id = test_data["ids"]["categories"][0]
         story_ids = story_builder_service.generate_stories(template_id, field_data, [category_id])
-        assert len(story_ids) == 1
-        story = session.get(Story, story_ids[0])
-        assert "cat" in story.content and "run" in story.content
-        # Check category association
-        sc = session.query(StoryCategory).filter_by(story_id=story.story_id, category_id=category_id).first()
-        assert sc is not None
+        
+        # Should generate 4 stories (2×2 permutations)
+        assert len(story_ids) == 4
+        
+        # Get all the generated stories
+        stories = [session.get(Story, sid) for sid in story_ids]
+        story_contents = [s.content for s in stories]
+        
+        # Check all permutations were created
+        assert any("cat" in s and "run" in s for s in story_contents)
+        assert any("cat" in s and "jump" in s for s in story_contents)
+        assert any("dog" in s and "run" in s for s in story_contents)
+        assert any("dog" in s and "jump" in s for s in story_contents)
+        
+        # Check all stories have the category association
+        for story_id in story_ids:
+            sc = session.query(StoryCategory).filter_by(
+                story_id=story_id, category_id=category_id).first()
+            assert sc is not None
 
     def test_template_filler_missing_field_with_no_words(self, session, test_data):
         """Test template_filler uses default for a field with no words in DB."""
